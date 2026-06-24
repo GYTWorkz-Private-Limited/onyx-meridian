@@ -1,0 +1,58 @@
+# Zoho CRM connector — property contract.
+# Produced by the research-mode extraction-agent → builder-agent pipeline.
+# status: research_derived — endpoints reflect the Zoho CRM v8 API as modelled by
+# the extraction agent but were NOT re-verified against live docs in this build
+# (no network egress). Promote to `complete` after a doc + smoke-test pass.
+connector:
+  platform: zoho
+  domain: crm
+  display_name: Zoho CRM
+  description: >
+    Read/write Zoho CRM modules via the v8 REST API. Pull uses GET on the module
+    with page_token cursoring and If-Modified-Since for incremental sync; push
+    uses the records insert/update endpoints and the /upsert endpoint.
+  status: research_derived
+  version: 1
+  module: meridian.connectors.catalog.zoho.crm
+  class: ZohoCRMConnector
+
+auth:
+  type: zoho_oauth
+
+capabilities:
+  pull: true
+  push: true
+  incremental: true
+  upsert: true
+
+properties:
+  - name: access_token
+    required: true
+    secret: true
+    description: "OAuth access token; sent as `Authorization: Zoho-oauthtoken <token>`."
+  - name: api_domain
+    required: false
+    secret: false
+    default: https://www.zohoapis.com
+    description: Data-centre API domain (.com / .eu / .in / .com.au / .jp).
+    example: https://www.zohoapis.com
+  - name: api_version
+    required: false
+    secret: false
+    default: v8
+    description: Zoho CRM API version path segment.
+    example: v8
+
+objects:
+  - api_name: Leads
+    domain_model: Lead
+    fields: [id, First_Name, Last_Name, Company, Email, Phone, Lead_Status, Modified_Time]
+  - api_name: Contacts
+    domain_model: Contact
+    fields: [id, First_Name, Last_Name, Email, Phone, Account_Name, Modified_Time]
+  - api_name: Accounts
+    domain_model: Account
+    fields: [id, Account_Name, Industry, Website, Phone, Modified_Time]
+  - api_name: Deals
+    domain_model: Deal
+    fields: [id, Deal_Name, Stage, Amount, Closing_Date, Account_Name, Modified_Time]

@@ -1,0 +1,45 @@
+# HubSpot CRM connector — property contract (shared `_props.` prefix).
+connector:
+  platform: hubspot
+  domain: crm
+  display_name: HubSpot CRM
+  description: >
+    Read/write HubSpot CRM objects via the v3 API. Pull uses the list endpoint
+    (or the search endpoint for incremental modified-since sync); push uses the
+    batch create / update / upsert endpoints.
+  status: complete
+  version: 1
+  module: meridian.connectors.catalog.hubspot.crm
+  class: HubSpotCRMConnector
+
+auth:
+  type: private_app_token
+
+capabilities:
+  pull: true
+  push: true
+  incremental: true
+  upsert: true
+
+properties:
+  - name: access_token
+    required: true
+    secret: true
+    description: HubSpot private-app access token (Bearer).
+  - name: base_url
+    required: false
+    secret: false
+    default: https://api.hubapi.com
+    description: API base URL (override for the EU data residency host).
+    example: https://api.hubapi.com
+
+objects:
+  - api_name: contacts
+    domain_model: Contact
+    fields: [firstname, lastname, email, phone, company, hs_lastmodifieddate]
+  - api_name: companies
+    domain_model: Account
+    fields: [name, domain, industry, phone, hs_lastmodifieddate]
+  - api_name: deals
+    domain_model: Deal
+    fields: [dealname, amount, dealstage, pipeline, closedate, hs_lastmodifieddate]

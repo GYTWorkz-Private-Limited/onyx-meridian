@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Onyx Meridian — Enterprise AI Workforce</title>
+<style>
+  :root{
+    /* primary blue + white */
+    --blue-900:#0b2a6b; --blue-800:#13367f; --blue-700:#1d4ed8; --blue-600:#2563eb;
+    --blue-500:#3b82f6; --blue-300:#93c5fd; --blue-100:#dbeafe; --blue-50:#eff6ff;
+    --white:#ffffff;
+    /* neutrals */
+    --ink:#0f172a; --slate:#475569; --muted:#94a3b8; --line:#e2e8f0;
+    --bg:#f1f5f9; --surface:#ffffff; --surface-2:#f8fafc;
+    /* accents */
+    --green:#16a34a; --green-bg:#dcfce7; --amber:#d97706; --amber-bg:#fef3c7;
+    --red:#dc2626; --red-bg:#fee2e2; --purple:#7c3aed; --purple-bg:#ede9fe;
+    --teal:#0d9488; --teal-bg:#ccfbf1; --cyan:#0891b2;
+    --radius:14px; --radius-sm:9px;
+    --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+    --shadow-lg:0 12px 40px rgba(15,23,42,.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue-600);text-decoration:none}
+  h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.01em}
+  .app{display:grid;grid-template-columns:248px 1fr;height:100vh;overflow:hidden}
+
+  /* ---------- sidebar ---------- */
+  .side{background:linear-gradient(185deg,var(--blue-900),var(--blue-800) 60%,#0a1f52);
+    color:#dbe6ff;display:flex;flex-direction:column;padding:18px 14px;overflow-y:auto}
+  .brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+  .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#fff,var(--blue-300));
+    display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.25);flex:none}
+  .logo svg{width:22px;height:22px}
+  .brand .name{font-weight:800;color:#fff;font-size:15px;letter-spacing:.2px}
+  .brand .sub{font-size:11px;color:var(--blue-300)}
+  .nav-group{font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:#7f9cdb;
+    margin:16px 10px 6px;font-weight:700}
+  .nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;
+    color:#c5d6ff;cursor:pointer;font-weight:500;margin-bottom:2px;transition:.15s;border:1px solid transparent}
+  .nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+  .nav-item.active{background:linear-gradient(90deg,var(--blue-600),var(--blue-500));color:#fff;
+    box-shadow:0 6px 18px rgba(37,99,235,.5);border-color:rgba(255,255,255,.12)}
+  .nav-item svg{width:18px;height:18px;flex:none;opacity:.95}
+  .nav-item .badge{margin-left:auto;background:rgba(255,255,255,.18);color:#fff;border-radius:20px;
+    padding:1px 8px;font-size:11px;font-weight:700}
+  .side-foot{margin-top:auto;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1);font-size:11.5px;color:#8fa9e0}
+
+  /* ---------- main ---------- */
+  .main{overflow-y:auto;display:flex;flex-direction:column}
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);padding:14px 30px;display:flex;align-items:center;gap:16px}
+  .topbar h1{font-size:20px}
+  .topbar .crumb{color:var(--muted);font-size:12.5px;font-weight:500}
+  .topbar .spacer{flex:1}
+  .search{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:10px;padding:7px 12px;color:var(--muted);width:260px}
+  .search input{border:0;background:none;outline:none;width:100%;font-size:13px;color:var(--ink)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue-600),var(--purple));
+    color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+  .content{padding:26px 30px 60px;max-width:1240px;width:100%}
+  .view{display:none;animation:fade .3s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- primitives ---------- */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card.pad{padding:20px}
+  .grid{display:grid;gap:18px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)} .g23{grid-template-columns:1.6fr 1fr}
+  @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2,.g23{grid-template-columns:1fr}}
+  .row{display:flex;align-items:center;gap:12px}
+  .between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .muted{color:var(--muted)} .slate{color:var(--slate)}
+  .section-title{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--slate);font-weight:700;margin:30px 0 12px}
+  .lead{color:var(--slate);max-width:760px;margin:4px 0 0}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;color:var(--ink);
+    padding:9px 15px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--blue-300);background:var(--blue-50)}
+  .btn.primary{background:linear-gradient(135deg,var(--blue-600),var(--blue-500));color:#fff;border-color:transparent;
+    box-shadow:0 6px 16px rgba(37,99,235,.35)}
+  .btn.primary:hover{filter:brightness(1.05)}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--blue-600)}
+  .btn.danger{color:var(--red);border-color:#f3c4c4}.btn.danger:hover{background:var(--red-bg)}
+  .btn.sm{padding:6px 11px;font-size:12px}
+  .btn svg{width:16px;height:16px}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:30px;font-size:11.5px;font-weight:700;border:1px solid transparent}
+  .pill .dot{width:7px;height:7px;border-radius:50%}
+  .p-blue{background:var(--blue-50);color:var(--blue-700)} .p-blue .dot{background:var(--blue-600)}
+  .p-green{background:var(--green-bg);color:#15803d}.p-green .dot{background:var(--green)}
+  .p-amber{background:var(--amber-bg);color:#b45309}.p-amber .dot{background:var(--amber)}
+  .p-red{background:var(--red-bg);color:#b91c1c}.p-red .dot{background:var(--red)}
+  .p-purple{background:var(--purple-bg);color:#6d28d9}.p-purple .dot{background:var(--purple)}
+  .p-teal{background:var(--teal-bg);color:#0f766e}.p-teal .dot{background:var(--teal)}
+  .p-gray{background:#eef2f7;color:#64748b}.p-gray .dot{background:#94a3b8}
+
+  .stat .k{font-size:12px;color:var(--slate);font-weight:600;display:flex;align-items:center;gap:8px}
+  .stat .v{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+  .stat .v small{font-size:14px;color:var(--muted);font-weight:600}
+  .trend{font-size:12px;font-weight:700} .trend.up{color:var(--green)} .trend.down{color:var(--red)}
+  .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none}
+  .ic svg{width:20px;height:20px}
+  .ic.blue{background:var(--blue-50);color:var(--blue-600)} .ic.green{background:var(--green-bg);color:var(--green)}
+  .ic.purple{background:var(--purple-bg);color:var(--purple)} .ic.amber{background:var(--amber-bg);color:var(--amber)}
+  .ic.teal{background:var(--teal-bg);color:var(--teal)} .ic.red{background:var(--red-bg);color:var(--red)}
+
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line)}
+  td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tbody tr{transition:.12s}tbody tr:hover{background:var(--blue-50)}
+  .bar{height:7px;border-radius:6px;background:var(--line);overflow:hidden}
+  .bar>span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--blue-600),var(--blue-400,#60a5fa))}
+  .bar.green>span{background:linear-gradient(90deg,var(--green),#4ade80)}
+  .bar.amber>span{background:linear-gradient(90deg,var(--amber),#fbbf24)}
+
+  .chip{display:inline-block;padding:3px 9px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);
+    font-size:11.5px;font-weight:600;color:var(--slate);margin:2px}
+  .chip.code{font-family:ui-monospace,Menlo,monospace;color:var(--blue-700);background:var(--blue-50);border-color:var(--blue-100)}
+  .kbd{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);border:1px solid var(--line);
+    padding:1px 6px;border-radius:6px}
+
+  /* clickable cards */
+  .clickable{cursor:pointer;transition:.15s}.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--blue-300)}
+
+  /* timeline / phases */
+  .phase{display:flex;gap:14px;padding:14px 0;border-bottom:1px dashed var(--line);position:relative}
+  .phase:last-child{border-bottom:0}
+  .phase .num{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:2px solid var(--line);
+    display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--muted);flex:none;z-index:2}
+  .phase.done .num{background:var(--green);border-color:var(--green);color:#fff}
+  .phase.run .num{background:var(--blue-600);border-color:var(--blue-600);color:#fff;animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.5)}50%{box-shadow:0 0 0 7px rgba(37,99,235,0)}}
+  .phase .pbody h4{font-size:14px} .phase .pbody p{margin:3px 0 0;color:var(--slate);font-size:13px}
+  .phase .out{margin-top:8px;font-size:12px;color:var(--green);font-weight:600;display:none}
+  .phase.done .out{display:block}
+
+  /* kanban */
+  .kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:start}
+  @media(max-width:1100px){.kanban{grid-template-columns:repeat(2,1fr)}}
+  .col{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px;min-height:120px}
+  .col h4{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);display:flex;justify-content:space-between;margin-bottom:10px}
+  .tk{background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:9px;box-shadow:0 1px 2px rgba(15,23,42,.05);cursor:pointer;transition:.12s}
+  .tk:hover{border-color:var(--blue-300);transform:translateY(-1px)}
+  .tk .tt{font-weight:600;font-size:12.5px}
+  .tk .meta{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .ava-mini{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff}
+
+  /* autonomy ladder */
+  .ladder{display:flex;gap:8px}
+  .rung{flex:1;text-align:center;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);font-size:12px;font-weight:700;color:var(--muted)}
+  .rung.on{background:linear-gradient(135deg,var(--blue-600),var(--blue-500));color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(37,99,235,.3)}
+  .rung.passed{background:var(--blue-50);color:var(--blue-700);border-color:var(--blue-100)}
+  .rung small{display:block;font-weight:500;opacity:.85;margin-top:2px}
+
+  /* slider */
+  input[type=range]{width:100%;accent-color:var(--blue-600)}
+
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);z-index:100;display:none;place-items:center;padding:24px}
+  .modal-bg.open{display:grid}
+  .modal{background:#fff;border-radius:18px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);overflow:hidden;animation:pop .2s ease}
+  @keyframes pop{from{transform:scale(.95);opacity:0}to{transform:none;opacity:1}}
+  .modal .mhead{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .modal .mbody{padding:22px}
+  .x{cursor:pointer;color:var(--muted);font-size:22px;line-height:1}
+
+  .badge-soft{font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;background:var(--blue-50);color:var(--blue-700)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--slate)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .divider{height:1px;background:var(--line);margin:18px 0}
+  .tag-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z" stroke="#1d4ed8" stroke-width="1.6"/><path d="M12 7v10M7 9.5v5M17 9.5v5" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <div><div class="name">Onyx Meridian</div><div class="sub">AI Workforce Control Plane</div></div>
+    </div>
+
+    <div class="nav-group">Operate</div>
+    <div class="nav-item active" data-view="dashboard" data-icon="grid"><span>Overview</span></div>
+    <div class="nav-item" data-view="departments" data-icon="building"><span>Departments</span></div>
+    <div class="nav-item" data-view="employees" data-icon="users"><span>AI Employees</span><span class="badge">7</span></div>
+    <div class="nav-item" data-view="taskboard" data-icon="check"><span>Taskboard</span></div>
+    <div class="nav-item" data-view="approvals" data-icon="shield"><span>Approval Gates</span><span class="badge">3</span></div>
+
+    <div class="nav-group">Build</div>
+    <div class="nav-item" data-view="onboard" data-icon="sparkle"><span>Onboarding Agent</span></div>
+    <div class="nav-item" data-view="workflows" data-icon="flow"><span>Workflows</span></div>
+    <div class="nav-item" data-view="connectors" data-icon="plug"><span>Connectors</span></div>
+    <div class="nav-item" data-view="knowledge" data-icon="graph"><span>Knowledge Sphere</span></div>
+
+    <div class="nav-group">Govern</div>
+    <div class="nav-item" data-view="cost" data-icon="coin"><span>Cost Control</span></div>
+
+    <div class="side-foot">
+      <div class="row" style="gap:8px"><span class="sw" style="background:var(--green)"></span> 6 departments live</div>
+      <div style="margin-top:6px">Pilot • V1 GA target Oct 2026</div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="topbar">
+      <div><h1 id="pageTitle">Overview</h1><div class="crumb" id="crumb">Enterprise AI workforce at a glance</div></div>
+      <div class="spacer"></div>
+      <div class="search" id="searchBox"><input placeholder="Search employees, tasks, workflows…"/></div>
+      <div class="avatar">HG</div>
+    </div>
+
+    <div class="content" id="content"><!-- views injected --></div>
+  </main>
+</div>
+
+<!-- modal -->
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+
+<script>
+/* ----------------------------------------------------------- icons --------- */
+function icon(n){const p={
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  building:'<path d="M3 21h18M5 21V5l7-2v18M19 21V9l-7-2"/><path d="M9 9h0M9 13h0M9 17h0M15 13h0M15 17h0"/>',
+  users:'<circle cx="9" cy="8" r="3.2"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 5.2a3 3 0 0 1 0 5.6M17 20a5 5 0 0 0-3-4.6"/>',
+  check:'<path d="M4 12.5 9 17l11-11"/>',
+  shield:'<path d="M12 3 5 6v5c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3Z"/><path d="m9 11.5 2 2 4-4"/>',
+  sparkle:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/><circle cx="12" cy="12" r="2.2"/>',
+  flow:'<rect x="3" y="4" width="6" height="5" rx="1.5"/><rect x="15" y="4" width="6" height="5" rx="1.5"/><rect x="9" y="15" width="6" height="5" rx="1.5"/><path d="M6 9v3h12V9M12 12v3"/>',
+  plug:'<path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0V8ZM12 16v5"/>',
+  graph:'<circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="8" r="2.4"/><circle cx="9" cy="18" r="2.4"/><path d="M8 7.3 16 8M7.5 8 8.3 15.7M11 17l5.5-7"/>',
+  coin:'<ellipse cx="12" cy="6" rx="8" ry="3.2"/><path d="M4 6v12c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2V6M4 12c0 1.8 3.6 3.2 8 3.2s8-1.4 8-3.2"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/>',
+  bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  doc:'<path d="M6 2h8l4 4v16H6V2Z"/><path d="M14 2v4h4M9 12h6M9 16h6"/>',
+}[n]||'';return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';}
+
+/* ----------------------------------------------------------- data ---------- */
+const COLORS=['#2563eb','#7c3aed','#0d9488','#d97706','#dc2626','#0891b2','#16a34a'];
+const departments=[
+  {id:'fis',name:'Finance & Invoicing',status:'active',employees:2,workflows:5,budget:1800,spent:642,eff:'4.1×',units:['Accounts Receivable','Accounts Payable']},
+  {id:'ops',name:'Operations',status:'active',employees:1,workflows:4,budget:1500,spent:410,eff:'3.6×',units:['Service Delivery']},
+  {id:'cs',name:'Customer Service',status:'active',employees:2,workflows:6,budget:2000,spent:1180,eff:'5.2×',units:['Support','Onboarding']},
+  {id:'mkt',name:'Marketing',status:'active',employees:1,workflows:3,budget:1200,spent:300,eff:'2.9×',units:['Demand Gen']},
+  {id:'legal',name:'Legal',status:'active',employees:1,workflows:2,budget:900,spent:140,eff:'3.1×',units:['Contracts']},
+  {id:'proj',name:'Projects',status:'onboarding',employees:0,workflows:0,budget:0,spent:0,eff:'—',units:[]},
+];
+const connectors=[
+  {key:'salesforce.crm',platform:'Salesforce',domain:'CRM',status:'complete',auth:'OAuth2',used:4},
+  {key:'hubspot.crm',platform:'HubSpot',domain:'CRM',status:'complete',auth:'Private-app token',used:2},
+  {key:'netsuite.erp',platform:'NetSuite',domain:'ERP',status:'complete',auth:'TBA OAuth1',used:3},
+  {key:'zoho.crm',platform:'Zoho',domain:'CRM',status:'research_derived',auth:'Zoho OAuth',used:1},
+  {key:'workday.hr',platform:'Workday',domain:'HR',status:'research_derived',auth:'OAuth2',used:0},
+  {key:'gmail.comms',platform:'Gmail',domain:'Comms',status:'incomplete',auth:'OAuth2',used:0},
+];
+const employees=[
+  {id:'e1',name:'Ada — AR Clerk',dept:'Finance & Invoicing',role:'fis.ar_clerk',tier:'T1',status:'deployed',autonomy:'supervised',wip:'2 / 3',spent:312,budget:900,eff:'4.1×',hb:'12s ago',
+   resp:['Chase overdue invoices','Reconcile payments','Flag disputes for review'],kpis:['Days-sales-outstanding','Collection rate'],
+   workflows:['Overdue collections','Payment reconciliation'],connectors:['netsuite.erp','gmail.comms'],sched:'Daily 07:00, hourly sweep'},
+  {id:'e2',name:'Boon — AP Specialist',dept:'Finance & Invoicing',role:'fis.ap_specialist',tier:'T1',status:'deployed',autonomy:'assist',wip:'1 / 2',spent:330,budget:900,eff:'3.8×',hb:'40s ago',
+   resp:['Match POs to invoices','Schedule approved payments'],kpis:['On-time payment %','Match accuracy'],
+   workflows:['3-way match','Payment run'],connectors:['netsuite.erp'],sched:'Twice daily'},
+  {id:'e3',name:'Cleo — Support Triage',dept:'Customer Service',role:'cs.triage',tier:'T2',status:'deployed',autonomy:'autonomous',wip:'4 / 6',spent:780,budget:1200,eff:'5.2×',hb:'3s ago',
+   resp:['Classify tickets','Draft first responses','Escalate at-risk accounts'],kpis:['First-response time','CSAT'],
+   workflows:['Ticket triage','Escalation routing','KB answer'],connectors:['salesforce.crm','gmail.comms'],sched:'Continuous heartbeat'},
+  {id:'e4',name:'Dex — Onboarding Guide',dept:'Customer Service',role:'cs.onboarding',tier:'T2',status:'deployed',autonomy:'supervised',wip:'2 / 4',spent:400,budget:800,eff:'4.6×',hb:'1m ago',
+   resp:['Drive activation checklist','Schedule kickoff'],kpis:['Time-to-activation'],
+   workflows:['Activation checklist'],connectors:['hubspot.crm'],sched:'Weekdays 09:00'},
+  {id:'e5',name:'Eli — Demand Gen',dept:'Marketing',role:'mkt.demandgen',tier:'T2',status:'deployed',autonomy:'assist',wip:'1 / 3',spent:300,budget:1200,eff:'2.9×',hb:'5m ago',
+   resp:['Score inbound leads','Draft nurture sequences'],kpis:['MQL→SQL rate'],
+   workflows:['Lead scoring'],connectors:['hubspot.crm'],sched:'Hourly'},
+  {id:'e6',name:'Faye — Contract Reviewer',dept:'Legal',role:'legal.contracts',tier:'T3',status:'deployed',autonomy:'shadow',wip:'0 / 1',spent:140,budget:900,eff:'3.1×',hb:'8m ago',
+   resp:['Redline standard clauses','Flag non-standard terms'],kpis:['Review turnaround'],
+   workflows:['Clause review'],connectors:['salesforce.crm'],sched:'On demand'},
+  {id:'e7',name:'Gus — Service Ops',dept:'Operations',role:'ops.delivery',tier:'T2',status:'suspended',autonomy:'supervised',wip:'0 / 3',spent:410,budget:1500,eff:'3.6×',hb:'2h ago',
+   resp:['Track SLAs','Auto-assign jobs'],kpis:['SLA adherence'],
+   workflows:['SLA watch','Job assignment'],connectors:['salesforce.crm'],sched:'Paused — budget review'},
+];
+const tasks=[
+  {id:'t1',title:'Send reminder — INV-4821 (30d overdue)',owner:'Ada',col:'doing',pri:'high',gate:false},
+  {id:'t2',title:'Escalate INV-4733 to collections',owner:'Ada',col:'gate',pri:'critical',gate:true},
+  {id:'t3',title:'Reconcile payment $12,400 → ACME',owner:'Ada',col:'todo',pri:'medium',gate:false},
+  {id:'t4',title:'3-way match: PO-991 vs INV-220',owner:'Boon',col:'doing',pri:'medium',gate:false},
+  {id:'t5',title:'Triage ticket #88210 — outage',owner:'Cleo',col:'doing',pri:'critical',gate:false},
+  {id:'t6',title:'Draft KB answer — SSO setup',owner:'Cleo',col:'done',pri:'low',gate:false},
+  {id:'t7',title:'Approve payment run (14 invoices)',owner:'Boon',col:'gate',pri:'high',gate:true},
+  {id:'t8',title:'Score 32 inbound leads',owner:'Eli',col:'todo',pri:'medium',gate:false},
+  {id:'t9',title:'Activation kickoff — Northwind',owner:'Dex',col:'todo',pri:'medium',gate:false},
+  {id:'t10',title:'Redline MSA — Globex',owner:'Faye',col:'wait',pri:'high',gate:false},
+  {id:'t11',title:'Reminder sent — INV-4799',owner:'Ada',col:'done',pri:'low',gate:false},
+  {id:'t12',title:'Escalation routed — #88001',owner:'Cleo',col:'done',pri:'medium',gate:false},
+];
+const cols=[{k:'todo',t:'To do'},{k:'doing',t:'In progress'},{k:'wait',t:'Waiting'},{k:'gate',t:'At gate'},{k:'done',t:'Done'}];
+const approvals=[
+  {id:'a1',type:'deploy',title:'Deploy “Hana — Projects PM” into Projects',emp:'Hana',risk:'medium',why:'New AI employee — first deploy into onboarding unit. Issues scoped credential.'},
+  {id:'a2',type:'budget_override',title:'Budget override — Cleo exceeded $1,200/mo',emp:'Cleo',risk:'high',why:'Auto-suspended at budget cap. Approve a one-month override to $1,500 or reduce cadence.'},
+  {id:'a3',type:'autonomy_promote',title:'Promote Ada: Supervised → Autonomous (collections)',emp:'Ada',risk:'medium',why:'Ensure eval passed (override rate 4%, 0 incidents over 30 days). Promotes one rung.'},
+];
+const phases=[
+  {n:0,t:'Intake & inventory',d:'Catalogue handed documents (SOPs, org chart, 3 recorded meetings) and probe the 4 wired connections. Raise intake questions for gaps.',out:'14 documents ingested · 4 connections live · 3 intake questions'},
+  {n:1,t:'Domain discovery',d:'Derive entities + sanctioned edges from docs and a sampling pull. Seeds the Knowledge Sphere & Domain Graph.',out:'Entities: Customer, Invoice, Payment, Dispute · 6 edges'},
+  {n:2,t:'Process decomposition',d:'Mine units of work from SOPs and observed state transitions; dedupe; map to business units.',out:'17 units of work · grouped into 2 units (AR, AP)'},
+  {n:3,t:'Workflow synthesis',d:'Order units of work into DAGs; insert human gates at every commitment / irreversible push.',out:'5 candidate workflows · 7 gates proposed'},
+  {n:4,t:'Connector binding',d:'Bind connectors from the repository; request research-mode build for any missing platform.',out:'netsuite.erp bound · gmail.comms → extraction agent queued'},
+  {n:5,t:'Cost & effectiveness',d:'Estimate AI-decide + AI-do + integration cost per task; attach effectiveness metric.',out:'Est. $0.0035/task · baseline 4.1× vs human'},
+  {n:6,t:'Process Spec + review gate',d:'Emit one reviewable, fully-cited Process Spec. Stop. Await human approval.',out:'fis.process-spec.yaml ready for review'},
+  {n:7,t:'Materialize',d:'On approval: create units, archetypes, workflows, connections; provision AI employees.',out:'awaiting approval'},
+];
+
+/* ----------------------------------------------------------- helpers ------- */
+const $=s=>document.querySelector(s);
+const statusPill=s=>({active:'p-green',deployed:'p-green',complete:'p-green',onboarding:'p-amber',
+  research_derived:'p-amber',suspended:'p-red',incomplete:'p-gray',planned:'p-gray'}[s]||'p-gray');
+const priPill=p=>({critical:'p-red',high:'p-amber',medium:'p-blue',low:'p-gray'}[p]);
+const initials=n=>n.split(/[ —]/).filter(Boolean)[0][0];
+const colorFor=n=>COLORS[(n.charCodeAt(0))%COLORS.length];
+function pill(txt,cls){return `<span class="pill ${cls}"><span class="dot"></span>${txt}</span>`}
+
+/* ----------------------------------------------------------- views --------- */
+const views={};
+
+views.dashboard=()=>`
+  <div class="grid g4">
+    ${stat('Departments live','5','blue','building','+1 onboarding')}
+    ${stat('AI employees','7','purple','users','6 deployed · 1 paused')}
+    ${stat('Spend this month','$2,672','green','coin','of $7,400 budget')}
+    ${stat('Avg effectiveness','4.1×','amber','bolt','vs human baseline')}
+  </div>
+
+  <div class="section-title">The operating loop</div>
+  <div class="card pad">
+    <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:18px">
+      ${loopStep('1','Communicate','Ask what to do; answer from context','blue','sparkle')}
+      ${arrow()}
+      ${loopStep('2','Pick workflow','Match intent to a gated workflow','purple','flow')}
+      ${arrow()}
+      ${loopStep('3','Run task','Deterministic / policy / AI agent','teal','bolt')}
+      ${arrow()}
+      ${loopStep('4','Pull / push','Move data via connectors','amber','plug')}
+      ${arrow()}
+      ${loopStep('5','Gate & meter','Human commits · cost metered','green','shield')}
+    </div>
+  </div>
+
+  <div class="grid g23" style="margin-top:18px">
+    <div class="card pad">
+      <div class="between"><h3>Departments</h3><span class="muted" style="font-size:12px">budget utilisation</span></div>
+      <div style="margin-top:14px">
+        ${departments.map(d=>`
+          <div class="between clickable" style="padding:11px 8px;border-radius:10px" onclick="go('departments')">
+            <div style="min-width:160px"><div style="font-weight:600">${d.name}</div>
+              <div class="muted" style="font-size:12px">${d.employees} employees · ${d.workflows} workflows</div></div>
+            <div style="flex:1;max-width:230px"><div class="bar"><span style="width:${d.budget?Math.round(d.spent/d.budget*100):0}%"></span></div></div>
+            <div style="width:120px;text-align:right;font-size:12px"><b>$${d.spent}</b> <span class="muted">/ $${d.budget}</span></div>
+            ${pill(d.status,statusPill(d.status))}
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="card pad">
+      <div class="between"><h3>Pending gates</h3><span class="badge-soft">${approvals.length}</span></div>
+      <p class="muted" style="font-size:12.5px;margin-top:4px">AI proposes — a human commits.</p>
+      <div style="margin-top:10px">
+        ${approvals.map(a=>`
+          <div class="clickable" style="border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px" onclick="go('approvals')">
+            <div class="row" style="justify-content:space-between">${pill(a.type.replace('_',' '),'p-amber')}
+              <span class="pill ${a.risk==='high'?'p-red':'p-blue'}"><span class="dot"></span>${a.risk} risk</span></div>
+            <div style="font-weight:600;margin-top:8px;font-size:13px">${a.title}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Live activity</div>
+  <div class="card pad">
+    ${[
+      ['Cleo','autonomously resolved ticket #88195','3s ago','p-purple'],
+      ['Ada','proposed escalation of INV-4733 — at gate','2m ago','p-amber'],
+      ['Boon','completed 3-way match PO-990','6m ago','p-green'],
+      ['Onboarding Agent','emitted fis.process-spec.yaml for review','18m ago','p-blue'],
+      ['Gus','auto-suspended — budget review','2h ago','p-red'],
+    ].map(([who,what,when,c])=>`<div class="row" style="padding:9px 0;border-bottom:1px solid var(--line)">
+        <div class="ava-mini" style="background:${colorFor(who)}">${who[0]}</div>
+        <div><b>${who}</b> ${what}</div><div class="spacer" style="flex:1"></div>
+        ${pill(when,c)}</div>`).join('')}
+  </div>`;
+
+views.departments=()=>`
+  <p class="lead">Each department is a <b>Business Unit</b> — onboarded with its scopes, budget, and caretaker, then populated with roles, units of work, workflows, and a Knowledge Sphere.</p>
+  <div class="grid g3" style="margin-top:18px">
+    ${departments.map(d=>`
+      <div class="card pad clickable" onclick="${d.status==='onboarding'?"go('onboard')":`openDept('${d.id}')`}">
+        <div class="between"><div class="ic blue">${icon('building')}</div>${pill(d.status,statusPill(d.status))}</div>
+        <h3 style="margin-top:12px">${d.name}</h3>
+        <div class="tag-list">${d.units.map(u=>`<span class="chip">${u}</span>`).join('')||'<span class="muted" style="font-size:12px">units to be discovered</span>'}</div>
+        <div class="divider"></div>
+        <div class="row" style="justify-content:space-between;font-size:12.5px">
+          <span class="muted">${d.employees} employees</span><span class="muted">${d.workflows} workflows</span>
+          <span class="badge-soft">${d.eff} eff</span>
+        </div>
+        ${d.budget?`<div class="bar" style="margin-top:12px"><span style="width:${Math.round(d.spent/d.budget*100)}%"></span></div>
+          <div class="muted" style="font-size:12px;margin-top:6px">$${d.spent} / $${d.budget} this month</div>`:
+          `<button class="btn primary sm" style="margin-top:12px;width:100%">${icon('sparkle')} Run onboarding agent</button>`}
+      </div>`).join('')}
+  </div>`;
+
+views.onboard=()=>`
+  <p class="lead">The <b>discovery agent</b> explores the documentation you hand it <i>and</i> the connections you've wired, then proposes a full operating model — units of work, workflows with gates, connector bindings, and a cost model. <b>Nothing is materialized until you approve the Process Spec.</b></p>
+
+  <div class="grid g23" style="margin-top:18px">
+    <div class="card pad">
+      <div class="between"><h3>Discovery run — Finance & Invoicing</h3>
+        <button class="btn primary" id="runBtn" onclick="runDiscovery()">${icon('sparkle')} Run discovery</button></div>
+      <p class="muted" style="font-size:12.5px;margin-top:4px">Spec-first · every fact cited · <span class="kbd">UNVERIFIED</span> by default.</p>
+      <div id="phaseList" style="margin-top:14px">
+        ${phases.map(p=>`<div class="phase" id="ph-${p.n}">
+          <div class="num">${p.n}</div>
+          <div class="pbody"><h4>${p.t}</h4><p>${p.d}</p><div class="out">✓ ${p.out}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div>
+      <div class="card pad">
+        <h3>Inputs</h3>
+        <div class="section-title" style="margin:14px 0 8px">Documents</div>
+        ${['SOP — Collections.pdf','Org chart.png','AR policy v3.docx','3 recorded meetings','Dispute handling.md'].map(f=>`<div class="row" style="gap:8px;padding:5px 0"><span class="ic blue" style="width:28px;height:28px;border-radius:8px">${icon('doc')}</span><span style="font-size:13px">${f}</span></div>`).join('')}
+        <div class="section-title" style="margin:14px 0 8px">Connections</div>
+        ${connectors.filter(c=>c.used).slice(0,3).map(c=>`<div class="row" style="justify-content:space-between;padding:4px 0"><span class="chip code">${c.key}</span>${pill('live','p-green')}</div>`).join('')}
+      </div>
+      <div class="card pad" style="margin-top:18px">
+        <h3>Completeness critique</h3>
+        <p class="muted" style="font-size:12.5px">What the agent could <i>not</i> determine becomes an intake question or expert task.</p>
+        <div style="margin-top:8px">
+          ${['Day-60 escalation owner unconfirmed → intake question','gmail.comms connector missing → research queued','netsuite cursor mechanics UNVERIFIED'].map(x=>`<div class="row" style="gap:8px;padding:6px 0;font-size:12.5px"><span class="sw" style="background:var(--amber)"></span>${x}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="specCard" style="display:none;margin-top:18px" class="card pad">
+    <div class="between"><h3>Process Spec — review gate</h3>${pill('proposed','p-amber')}</div>
+    <p class="muted" style="font-size:12.5px;margin-top:4px">One reviewable artifact. Edit or approve — then it materializes into Meridian.</p>
+    <pre style="background:var(--ink);color:#cfe0ff;border-radius:12px;padding:18px;overflow:auto;font-size:12px;line-height:1.55;margin-top:12px">department: "Finance & Invoicing"
+status: proposed
+units:
+  - name: "Accounts Receivable"
+    allowed_scopes: ["invoice:read","invoice:write","customer:read"]
+units_of_work:
+  - id: uow-001
+    title: "Send overdue-invoice reminder"
+    execution_mode: workflow_policy
+    trigger: {type: schedule, cadence: "daily"}
+    connectors: ["netsuite.erp","gmail.comms"]
+    cost: {ai_decide_usd: 0.002, ai_do_usd: 0.001, integration_usd: 0.0005}
+    effectiveness: {metric: time_to_execute, human_baseline_min: 6}
+    confidence: 0.82
+    source: {type: pdf, doc_id: d12, quote: "AR sends a reminder at day 30…"}
+workflows:
+  - id: wf-collections
+    steps: [uow-001, uow-002, uow-003]
+    gates: [{after: uow-002, type: proposal, reason: "before legal escalation"}]</pre>
+    <div class="row" style="margin-top:14px;gap:10px">
+      <button class="btn primary" onclick="toast('Approved — materializing units, archetypes & workflows')">${icon('check')} Approve & materialize</button>
+      <button class="btn">Edit spec</button>
+      <button class="btn ghost">Request changes</button>
+    </div>
+  </div>`;
+
+views.workflows=()=>`
+  <p class="lead">A <b>workflow</b> is units of work composed into a DAG with <b>human gates</b> wherever there's a commitment, an irreversible push, or a spend. Any step can flip to human-responsible.</p>
+  <div class="card pad" style="margin-top:18px">
+    <div class="between"><h3>Overdue collections — Finance & Invoicing</h3>
+      <div class="row">${pill('durable','p-blue')}${pill('reversible','p-teal')}</div></div>
+    <div style="overflow:auto;margin-top:8px">${workflowSvg()}</div>
+    <div class="legend" style="margin-top:14px">
+      <span><span class="sw" style="background:var(--blue-600)"></span> AI agent step</span>
+      <span><span class="sw" style="background:var(--teal)"></span> workflow + policy</span>
+      <span><span class="sw" style="background:var(--amber)"></span> human gate</span>
+      <span><span class="sw" style="background:var(--green)"></span> completed</span>
+    </div>
+  </div>
+  <div class="section-title">All workflows</div>
+  <div class="card">
+    <table><thead><tr><th>Workflow</th><th>Department</th><th>Steps</th><th>Gates</th><th>Runs / mo</th><th>Avg cost</th><th>Status</th></tr></thead><tbody>
+    ${[['Overdue collections','Finance & Invoicing',5,2,420,'$0.004','active'],
+       ['Payment reconciliation','Finance & Invoicing',3,1,180,'$0.003','active'],
+       ['3-way match','Finance & Invoicing',4,1,640,'$0.002','active'],
+       ['Ticket triage','Customer Service',3,0,3200,'$0.005','active'],
+       ['Escalation routing','Customer Service',4,1,210,'$0.006','active'],
+       ['Lead scoring','Marketing',2,0,960,'$0.003','active'],
+       ['Clause review','Legal',3,2,40,'$0.05','active'],
+      ].map(r=>`<tr class="clickable"><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td>
+        <td>${r[3]?`<span class="badge-soft">${r[3]} gate${r[3]>1?'s':''}</span>`:'<span class="muted">—</span>'}</td>
+        <td>${r[4]}</td><td>${r[5]}</td><td>${pill(r[6],'p-green')}</td></tr>`).join('')}
+    </tbody></table>
+  </div>`;
+
+views.connectors=()=>`
+  <p class="lead">The <b>connector repository</b> is the integration spine — a standardized pull/push contract per <span class="kbd">&lt;platform&gt;.&lt;domain&gt;</span>. Missing connectors are built by the research-mode agents.</p>
+  <div class="grid g4" style="margin-top:18px">
+    ${stat('Connectors','6','blue','plug','3 complete')}
+    ${stat('Research-derived','2','amber','doc','pending doc-verify')}
+    ${stat('Missing','1','red','plug','build queued')}
+    ${stat('Pulls today','41.2k','green','bolt','+8% vs avg')}
+  </div>
+  <div class="card" style="margin-top:18px">
+    <table><thead><tr><th>Connector</th><th>Platform</th><th>Domain</th><th>Auth</th><th>Used by</th><th>Status</th><th></th></tr></thead><tbody>
+    ${connectors.map(c=>`<tr><td><span class="chip code">${c.key}</span></td><td>${c.platform}</td><td>${c.domain}</td>
+      <td class="muted">${c.auth}</td><td>${c.used} tasks</td><td>${pill(c.status.replace('_',' '),statusPill(c.status))}</td>
+      <td>${c.status==='incomplete'?`<button class="btn sm primary" onclick="toast('Extraction agent queued for ${c.platform} — deep-research → builder')">Build</button>`:
+        c.status==='research_derived'?`<button class="btn sm" onclick="toast('Verifying ${c.key} endpoints against live docs')">Verify</button>`:
+        `<button class="btn sm">Configure</button>`}</td></tr>`).join('')}
+    </tbody></table>
+  </div>
+  <div class="card pad" style="margin-top:18px">
+    <div class="row" style="gap:12px"><div class="ic purple">${icon('sparkle')}</div>
+      <div><h3>Research-mode pipeline</h3><p class="muted" style="font-size:12.5px;margin:2px 0 0">
+      extraction-agent <b>(deep research → spec)</b> → builder-agent <b>(writes code)</b>. Spec is reviewable before any code; lands as <span class="kbd">research_derived</span> until endpoints are doc-verified.</p></div></div>
+  </div>`;
+
+views.knowledge=()=>`
+  <p class="lead">Each department maintains a <b>Knowledge Sphere</b> (continuously fed by its connections) and a <b>Domain Graph</b> (entities + sanctioned edges). Workflows consume it; agents may only traverse sanctioned edges.</p>
+  <div class="grid g23" style="margin-top:18px">
+    <div class="card pad">
+      <div class="between"><h3>Domain Graph — Finance & Invoicing</h3>${pill('fed by netsuite.erp','p-teal')}</div>
+      <div style="overflow:auto;margin-top:8px">${graphSvg()}</div>
+      <p class="muted" style="font-size:12px;margin-top:8px">Solid edges are sanctioned for automation traversal. Agents proposing a path off-graph are blocked.</p>
+    </div>
+    <div>
+      <div class="card pad">
+        <h3>Sphere freshness</h3>
+        ${[['Invoices','alive','p-green','synced 2m ago'],['Customers','alive','p-green','synced 5m ago'],
+           ['Payments','stale','p-amber','last sync 6h ago'],['Disputes','never run','p-gray','no feed yet']].map(([e,s,c,note])=>`
+          <div class="between" style="padding:10px 0;border-bottom:1px solid var(--line)">
+            <div><b>${e}</b><div class="muted" style="font-size:12px">${note}</div></div>${pill(s,c)}</div>`).join('')}
+      </div>
+      <div class="card pad" style="margin-top:18px">
+        <div class="row" style="gap:10px"><div class="ic amber">${icon('bolt')}</div>
+        <div><h4>Knowledge-miss loop</h4><p class="muted" style="font-size:12px;margin-top:3px">When the sphere can't answer, a task is auto-created for a domain expert.</p></div></div>
+        <div style="margin-top:10px;border:1px dashed var(--amber);border-radius:10px;padding:10px;font-size:12.5px">
+          <b>Open:</b> “What is the day-60 dispute owner?” → assigned to AR caretaker</div>
+      </div>
+    </div>
+  </div>`;
+
+views.employees=()=>`
+  <p class="lead">An <b>AI employee</b> is a role + responsibility, bound to workflows, on a schedule. It runs a heartbeat — <i>“is there anything I should do right now?”</i> — respecting a WIP limit and prioritising by urgency, importance, and readiness.</p>
+  <div class="grid g3" style="margin-top:18px">
+    ${employees.map(e=>`
+      <div class="card pad clickable" onclick="openEmp('${e.id}')">
+        <div class="between">
+          <div class="row"><div class="avatar" style="background:${colorFor(e.name)}">${initials(e.name)}</div>
+            <div><div style="font-weight:700">${e.name.split(' — ')[0]}</div><div class="muted" style="font-size:12px">${e.name.split(' — ')[1]}</div></div></div>
+          ${pill(e.status,statusPill(e.status))}
+        </div>
+        <div class="tag-list" style="margin-top:12px"><span class="chip">${e.dept}</span><span class="chip">${e.tier}</span></div>
+        <div class="divider"></div>
+        <div class="row" style="justify-content:space-between;font-size:12.5px">
+          <span>${pill(e.autonomy,'p-purple')}</span>
+          <span class="muted">WIP ${e.wip}</span>
+          <span class="badge-soft">${e.eff}</span>
+        </div>
+        <div class="row" style="justify-content:space-between;font-size:12px;margin-top:12px">
+          <span class="muted">♥ ${e.hb}</span><span class="muted">$${e.spent} / $${e.budget}</span></div>
+      </div>`).join('')}
+  </div>`;
+
+views.taskboard=()=>`
+  <p class="lead">The shared <b>taskboard</b>. Incoming messages and scheduled triggers land here; employees fetch, work, and maintain status. Cards at a gate wait for a human to commit.</p>
+  <div class="row" style="margin:14px 0;gap:8px;flex-wrap:wrap">
+    ${pill('critical 2','p-red')}${pill('at gate 2','p-amber')}${pill('waiting 1','p-purple')}${pill('in progress 3','p-blue')}
+  </div>
+  <div class="kanban">
+    ${cols.map(c=>`<div class="col"><h4>${c.t}<span class="badge-soft">${tasks.filter(t=>t.col===c.k).length}</span></h4>
+      ${tasks.filter(t=>t.col===c.k).map(t=>`
+        <div class="tk" onclick="openTask('${t.id}')">
+          <div class="tt">${t.title}</div>
+          <div class="meta">
+            <div class="ava-mini" style="background:${colorFor(t.owner)}">${t.owner[0]}</div>
+            <span class="muted" style="font-size:11px">${t.owner}</span>
+            ${pill(t.pri,priPill(t.pri))}
+            ${t.gate?pill('gate','p-amber'):''}
+          </div>
+        </div>`).join('')}
+    </div>`).join('')}
+  </div>`;
+
+views.approvals=()=>`
+  <p class="lead"><b>Human gates</b> — “AI proposes, a human commits.” Lifecycle gates (deploy, decommission, autonomy, budget) plus per-step workflow proposals queue here.</p>
+  <div style="margin-top:18px" id="approvalList">
+    ${approvals.map(a=>approvalCard(a)).join('')}
+  </div>
+  <div class="card pad" id="emptyApprovals" style="display:none;text-align:center;padding:50px">
+    <div class="ic green" style="margin:0 auto 12px;width:48px;height:48px">${icon('check')}</div>
+    <h3>All clear</h3><p class="muted">No gates waiting on a human right now.</p>
+  </div>`;
+
+views.cost=()=>`
+  <p class="lead">The <b>cost-control center</b>: see what each employee runs, how often, the effort it consumes, and what it costs. Dial cadence down, or decommission — which cascades: revoke credential, reassign work, retire its schedules.</p>
+  <div class="grid g4" style="margin-top:18px">
+    ${stat('Spend this month','$2,672','green','coin','of $7,400')}
+    ${stat('Projected EOM','$3,910','blue','clock','within budget')}
+    ${stat('Cost / task','$0.0041','purple','bolt','3-term metered')}
+    ${stat('All-in ROI','4.1×','amber','bolt','incl. HITL')}
+  </div>
+
+  <div class="card pad" style="margin-top:18px">
+    <h3>Cost breakdown per employee</h3>
+    <table style="margin-top:8px"><thead><tr><th>Employee</th><th>Workflows</th><th>Runs / mo</th><th style="width:200px">Cadence dial</th><th>Cost / mo</th><th>Effectiveness</th><th></th></tr></thead><tbody>
+    ${employees.filter(e=>e.status!=='suspended').map((e,i)=>`<tr>
+      <td><div class="row"><div class="ava-mini" style="background:${colorFor(e.name)}">${initials(e.name)}</div><b>${e.name.split(' — ')[0]}</b></div></td>
+      <td class="muted">${e.workflows.length}</td>
+      <td>${[420,790,4100,520,960][i]||300}</td>
+      <td><input type="range" min="20" max="100" value="${[100,80,100,70,60][i]||70}" oninput="adjCost(this,${e.spent})"><span class="muted" data-cost style="font-size:11px">$${e.spent}/mo</span></td>
+      <td><b data-spent>$${e.spent}</b></td>
+      <td><span class="badge-soft">${e.eff}</span></td>
+      <td><button class="btn sm danger" onclick="confirmDecommission('${e.name.split(' — ')[0]}')">Decommission</button></td>
+    </tr>`).join('')}
+    </tbody></table>
+    <p class="muted" style="font-size:12px;margin-top:12px">Each cost = <b>AI-decide</b> + <b>AI-do</b> + <b>integration</b> (connector pull/push). Lower the dial to reduce run cadence.</p>
+  </div>
+
+  <div class="card pad" style="margin-top:18px;border-color:#f3c4c4;background:#fff7f7">
+    <div class="row" style="gap:12px"><div class="ic red">${icon('shield')}</div>
+    <div><h4>Suspended — budget review</h4><p class="muted" style="font-size:12.5px;margin-top:3px"><b>Gus — Service Ops</b> auto-suspended at its budget cap. Resume with an override, lower cadence, or decommission.</p></div>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn sm">Lower cadence</button><button class="btn sm danger" onclick="confirmDecommission('Gus')">Decommission</button></div>
+  </div>`;
+
+/* ----------------------------------------------------------- fragments ----- */
+function stat(k,v,c,ic,note){return `<div class="card pad stat">
+  <div class="between"><div class="k">${k}</div><div class="ic ${c}">${icon(ic)}</div></div>
+  <div class="v">${v}</div><div class="muted" style="font-size:12px;margin-top:2px">${note||''}</div></div>`}
+function loopStep(n,t,d,c,ic){return `<div style="text-align:center;flex:1;min-width:120px">
+  <div class="ic ${c}" style="width:46px;height:46px;margin:0 auto 8px">${icon(ic)}</div>
+  <div style="font-weight:700">${t}</div><div class="muted" style="font-size:11.5px;margin-top:2px">${d}</div></div>`}
+function arrow(){return `<div class="muted" style="font-size:22px">→</div>`}
+
+function approvalCard(a){return `<div class="card pad" id="ap-${a.id}" style="margin-bottom:14px">
+  <div class="between"><div class="row">${pill(a.type.replace('_',' '),'p-amber')}
+    <span class="pill ${a.risk==='high'?'p-red':'p-blue'}"><span class="dot"></span>${a.risk} risk</span></div>
+    <div class="row"><div class="ava-mini" style="background:${colorFor(a.emp)}">${a.emp[0]}</div><span class="muted" style="font-size:12px">${a.emp}</span></div></div>
+  <h3 style="margin-top:10px">${a.title}</h3>
+  <p class="muted" style="font-size:13px;margin-top:4px">${a.why}</p>
+  <div class="row" style="margin-top:14px;gap:10px">
+    <button class="btn primary" onclick="decide('${a.id}','approve')">${icon('check')} Approve & commit</button>
+    <button class="btn danger" onclick="decide('${a.id}','reject')">Reject</button>
+    <button class="btn ghost">View audit trail</button>
+  </div></div>`}
+
+function workflowSvg(){
+  const nodes=[['Detect overdue','#0d9488',60],['Draft reminder','#2563eb',230],['Send email','#0d9488',400],
+    ['GATE: escalate?','#d97706',570],['Open dispute','#2563eb',740]];
+  let e='';for(let i=0;i<nodes.length-1;i++){const x1=nodes[i][2]+150,x2=nodes[i+1][2];
+    e+=`<path d="M${x1} 70 C ${x1+30} 70, ${x2-30} 70, ${x2} 70" stroke="#cbd5e1" stroke-width="2" fill="none" marker-end="url(#arr)"/>`}
+  const n=nodes.map((nd,i)=>`<g><rect x="${nd[2]}" y="44" width="150" height="52" rx="12" fill="#fff" stroke="${nd[1]}" stroke-width="2"/>
+    <rect x="${nd[2]}" y="44" width="6" height="52" rx="3" fill="${nd[1]}"/>
+    <text x="${nd[2]+78}" y="68" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">${nd[0].replace('GATE: ','')}</text>
+    <text x="${nd[2]+78}" y="84" text-anchor="middle" font-size="10" fill="#94a3b8">${i===3?'human commits':'step '+(i+1)}</text></g>`).join('');
+  return `<svg width="900" height="140" style="min-width:900px"><defs><marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#cbd5e1"/></marker></defs>${e}${n}</svg>`}
+
+function graphSvg(){
+  const N={Customer:[90,60],Invoice:[300,60],Payment:[300,200],Dispute:[510,130]};
+  const E=[['Customer','Invoice','owns'],['Invoice','Payment','settled by'],['Invoice','Dispute','may raise'],['Customer','Dispute','files']];
+  let edges=E.map(([a,b,l])=>{const[x1,y1]=N[a],[x2,y2]=N[b];const dashed=l==='files';
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${dashed?'#cbd5e1':'#0d9488'}" stroke-width="2" ${dashed?'stroke-dasharray="4 4"':''}/>
+    <text x="${(x1+x2)/2}" y="${(y1+y2)/2-6}" font-size="10" fill="#94a3b8" text-anchor="middle">${l}</text>`}).join('');
+  let nodes=Object.entries(N).map(([k,[x,y]])=>`<g><circle cx="${x}" cy="${y}" r="34" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <text x="${x}" y="${y+4}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4ed8">${k}</text></g>`).join('');
+  return `<svg width="620" height="260" style="min-width:600px">${edges}${nodes}</svg>`}
+
+/* ----------------------------------------------------------- modals -------- */
+function openModal(html){$('#modal').innerHTML=html;$('#modalBg').classList.add('open')}
+function closeModal(){$('#modalBg').classList.remove('open')}
+$('#modalBg').addEventListener('click',e=>{if(e.target.id==='modalBg')closeModal()});
+
+function openEmp(id){const e=employees.find(x=>x.id===id);const rungs=['shadow','assist','supervised','autonomous'];
+  const idx=rungs.indexOf(e.autonomy);
+  openModal(`<div class="mhead"><div class="row"><div class="avatar" style="background:${colorFor(e.name)}">${initials(e.name)}</div>
+    <div><h3>${e.name}</h3><div class="muted" style="font-size:12px">${e.role} · ${e.dept} · ${e.tier}</div></div></div><span class="x" onclick="closeModal()">×</span></div>
+   <div class="mbody">
+    <div class="row" style="gap:8px;margin-bottom:14px">${pill(e.status,statusPill(e.status))}${pill('WIP '+e.wip,'p-blue')}${pill('♥ '+e.hb,'p-green')}</div>
+    <div class="section-title" style="margin:0 0 8px">Autonomy ladder</div>
+    <div class="ladder">${rungs.map((r,i)=>`<div class="rung ${i<idx?'passed':i===idx?'on':''}">${r}<small>L${i}</small></div>`).join('')}</div>
+    <div class="section-title">Responsibilities</div>${e.resp.map(r=>`<div class="row" style="gap:8px;font-size:13px;padding:3px 0">✓ ${r}</div>`).join('')}
+    <div class="section-title">Bound workflows</div><div class="tag-list">${e.workflows.map(w=>`<span class="chip">${w}</span>`).join('')}</div>
+    <div class="section-title">Connectors</div><div class="tag-list">${e.connectors.map(c=>`<span class="chip code">${c}</span>`).join('')}</div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card pad"><div class="muted" style="font-size:12px">Schedule</div><div style="font-weight:700;margin-top:4px;font-size:13px">${e.sched}</div></div>
+      <div class="card pad"><div class="muted" style="font-size:12px">Spend / Budget</div><div style="font-weight:700;margin-top:4px">$${e.spent} / $${e.budget}</div>
+        <div class="bar" style="margin-top:8px"><span style="width:${Math.round(e.spent/e.budget*100)}%"></span></div></div>
+    </div>
+    <div class="row" style="margin-top:16px;gap:10px"><button class="btn primary">Promote autonomy</button><button class="btn">Reconfigure</button>
+      <button class="btn danger" onclick="closeModal();confirmDecommission('${e.name.split(' — ')[0]}')">Decommission</button></div>
+   </div>`)}
+
+function openTask(id){const t=tasks.find(x=>x.id===id);
+  openModal(`<div class="mhead"><h3 style="font-size:16px">${t.title}</h3><span class="x" onclick="closeModal()">×</span></div>
+   <div class="mbody">
+    <div class="row" style="gap:8px">${pill(t.pri,priPill(t.pri))}${pill(t.col,'p-blue')}${t.gate?pill('at gate','p-amber'):''}</div>
+    <div class="section-title">Owner</div><div class="row"><div class="ava-mini" style="background:${colorFor(t.owner)}">${t.owner[0]}</div> ${t.owner}</div>
+    <div class="section-title">Provenance</div>
+    <div class="card pad" style="font-size:12.5px"><span class="muted">Source:</span> meeting · 2026-06-19 standup<br><i style="color:var(--slate)">“Chase anything past 30 days before month-end.”</i></div>
+    ${t.gate?`<div class="card pad" style="margin-top:14px;border-color:#fcd9a8;background:#fffaf0">
+      <b>Human gate</b><p class="muted" style="font-size:12.5px;margin-top:4px">AI proposed this step — irreversible push. Commit to proceed.</p>
+      <div class="row" style="margin-top:10px;gap:8px"><button class="btn primary sm" onclick="closeModal();toast('Committed — proceeding')">Commit</button><button class="btn sm">Edit</button><button class="btn danger sm" onclick="closeModal();toast('Dismissed')">Dismiss</button></div></div>`:
+      `<div class="row" style="margin-top:16px;gap:10px"><button class="btn primary">Advance</button><button class="btn">Reassign</button></div>`}
+   </div>`)}
+
+function openDept(id){const d=departments.find(x=>x.id===id);go('departments');
+  openModal(`<div class="mhead"><div class="row"><div class="ic blue">${icon('building')}</div><div><h3>${d.name}</h3><div class="muted" style="font-size:12px">${d.units.join(' · ')}</div></div></div><span class="x" onclick="closeModal()">×</span></div>
+   <div class="mbody">
+    <div class="grid g3"><div class="card pad stat"><div class="k">Employees</div><div class="v" style="font-size:24px">${d.employees}</div></div>
+      <div class="card pad stat"><div class="k">Workflows</div><div class="v" style="font-size:24px">${d.workflows}</div></div>
+      <div class="card pad stat"><div class="k">Effectiveness</div><div class="v" style="font-size:24px">${d.eff}</div></div></div>
+    <div class="section-title">Employees in this unit</div>
+    ${employees.filter(e=>e.dept===d.name).map(e=>`<div class="between" style="padding:9px 0;border-bottom:1px solid var(--line)">
+      <div class="row"><div class="ava-mini" style="background:${colorFor(e.name)}">${initials(e.name)}</div><b>${e.name.split(' — ')[0]}</b><span class="muted" style="font-size:12px">${e.name.split(' — ')[1]}</span></div>
+      ${pill(e.autonomy,'p-purple')}</div>`).join('')||'<p class="muted">None yet.</p>'}
+    <div class="row" style="margin-top:16px;gap:10px"><button class="btn primary" onclick="closeModal();go('onboard')">Run discovery agent</button><button class="btn" onclick="closeModal();go('knowledge')">Open Knowledge Sphere</button></div>
+   </div>`)}
+
+function confirmDecommission(name){
+  openModal(`<div class="mhead"><h3>Decommission ${name}?</h3><span class="x" onclick="closeModal()">×</span></div>
+   <div class="mbody"><p class="slate">This is a <b>cascade</b>, not a delete:</p>
+    <div style="margin:12px 0">${['Revoke the scoped credential','Reassign in-flight work to a peer','Retire every schedule this employee created','Archive the audit trail (immutable)'].map(x=>`<div class="row" style="gap:8px;padding:6px 0;font-size:13px">${icon('check')} ${x}</div>`).join('')}</div>
+    <div class="card pad" style="background:var(--amber-bg);border-color:#fcd9a8;font-size:12.5px"><b>Requires approval</b> — this opens a decommission gate for the caretaker to commit.</div>
+    <div class="row" style="margin-top:16px;gap:10px"><button class="btn danger" onclick="closeModal();toast('Decommission gate opened for caretaker approval')">Open decommission gate</button><button class="btn" onclick="closeModal()">Cancel</button></div>
+   </div>`)}
+
+/* ----------------------------------------------------------- interactions -- */
+function decide(id,act){const el=$('#ap-'+id);el.style.transition='.3s';el.style.opacity='0';el.style.transform='translateX(20px)';
+  setTimeout(()=>{el.remove();const left=document.querySelectorAll('#approvalList .card').length;
+    if(!left){$('#emptyApprovals').style.display='block'}
+    document.querySelectorAll('[data-view=approvals] .badge').forEach(b=>b.remove());},320);
+  toast(act==='approve'?'Approved & committed — audit row written':'Rejected — proposer notified')}
+
+function adjCost(slider,base){const f=slider.value/100;const v=(base*f).toFixed(0);
+  const row=slider.closest('tr');row.querySelector('[data-spent]').textContent='$'+v;
+  slider.parentElement.querySelector('[data-cost]').textContent='$'+v+'/mo'}
+
+let discovering=false;
+function runDiscovery(){if(discovering)return;discovering=true;$('#runBtn').textContent='Running…';$('#runBtn').disabled=true;
+  let i=0;const step=()=>{if(i>0)$('#ph-'+(i-1)).classList.replace('run','done');
+    if(i<phases.length){$('#ph-'+i).classList.add('run');i++;setTimeout(step,750);}
+    else{$('#runBtn').innerHTML='✓ Spec ready';$('#specCard').style.display='block';$('#specCard').scrollIntoView({behavior:'smooth'});discovering=false;}};
+  step();}
+
+function toast(msg){let t=document.createElement('div');t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:13px 22px;border-radius:12px;font-weight:600;font-size:13px;box-shadow:var(--shadow-lg);z-index:200;animation:fade .25s';
+  document.body.appendChild(t);setTimeout(()=>{t.style.transition='.3s';t.style.opacity='0'},2400);setTimeout(()=>t.remove(),2750)}
+
+/* ----------------------------------------------------------- router -------- */
+const titles={dashboard:['Overview','Enterprise AI workforce at a glance'],departments:['Departments','Business units, roles & units of work'],
+  employees:['AI Employees','Roles, autonomy, schedules & taskboards'],taskboard:['Taskboard','Shared work queue across the workforce'],
+  approvals:['Approval Gates','AI proposes — a human commits'],onboard:['Onboarding Agent','Discovery & process decomposition'],
+  workflows:['Workflows','Units of work composed with human gates'],connectors:['Connectors','The integration spine'],
+  knowledge:['Knowledge Sphere','Per-department domain graph & live knowledge'],cost:['Cost Control','Effort, cadence & spend governance']};
+function go(v){document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+  $('#content').innerHTML=`<div class="view active">${views[v]()}</div>`;
+  $('#pageTitle').textContent=titles[v][0];$('#crumb').textContent=titles[v][1];
+  $('.main').scrollTop=0;}
+document.querySelectorAll('.nav-item').forEach(n=>{n.insertAdjacentHTML('afterbegin',icon(n.dataset.icon));
+  n.addEventListener('click',()=>go(n.dataset.view))});
+$('#searchBox').insertAdjacentHTML('afterbegin',icon('search'));
+go('dashboard');
+</script>
+</body>
+</html>

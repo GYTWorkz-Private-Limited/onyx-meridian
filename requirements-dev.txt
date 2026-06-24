@@ -1,0 +1,5 @@
+# Dev + test dependencies
+-r requirements.txt
+pytest>=8.0
+httpx>=0.27          # required by Starlette's TestClient
+ruff>=0.5

@@ -1,0 +1,56 @@
+# Salesforce CRM connector — property contract.
+# Property files share the `_props.` prefix so the whole class can be globbed
+# (or .gitignore'd) together; the connector + its props live in one folder.
+connector:
+  platform: salesforce
+  domain: crm
+  display_name: Salesforce CRM
+  description: >
+    Read/write Salesforce CRM objects via the REST API (SOQL for pull, the
+    composite sObject Collections + upsert endpoints for push).
+  status: complete
+  version: 1
+  module: meridian.connectors.catalog.salesforce.crm
+  class: SalesforceCRMConnector
+
+auth:
+  type: oauth2_bearer
+
+capabilities:
+  pull: true
+  push: true
+  incremental: true
+  upsert: true
+
+# Connection config contract. `secret: true` values must be vaulted, never logged.
+properties:
+  - name: instance_url
+    required: true
+    secret: false
+    description: My Domain / instance URL, e.g. https://acme.my.salesforce.com
+    example: https://acme.my.salesforce.com
+  - name: access_token
+    required: true
+    secret: true
+    description: OAuth2 bearer access token (from the connected-app flow).
+  - name: api_version
+    required: false
+    secret: false
+    default: "v60.0"
+    description: Salesforce REST API version path segment.
+    example: v60.0
+
+# Object catalogue (canonical domain-model mapping). Pull/push target these.
+objects:
+  - api_name: Account
+    domain_model: Account
+    fields: [Id, Name, Industry, Website, Phone, LastModifiedDate]
+  - api_name: Contact
+    domain_model: Contact
+    fields: [Id, FirstName, LastName, Email, Phone, AccountId, LastModifiedDate]
+  - api_name: Lead
+    domain_model: Lead
+    fields: [Id, FirstName, LastName, Company, Email, Status, LastModifiedDate]
+  - api_name: Opportunity
+    domain_model: Deal
+    fields: [Id, Name, StageName, Amount, CloseDate, AccountId, LastModifiedDate]
