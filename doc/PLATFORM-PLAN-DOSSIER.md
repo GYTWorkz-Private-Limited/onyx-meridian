@@ -932,7 +932,6 @@ Six sibling repos under `/Users/palivelasrihari/onyx_all/`. Five are the Onyx pl
 - **Reuse/extend:**
   - **Consolidate:** its NL→SQL (`sql_generation.py`) duplicates ConvBI — replace with ConvBI as a library.
   - **Reuse:** `tools/plotfactory/` + dashboard CRUD + report generation are the genuinely unique surface (ConvBI lacks persistence/charts) — keep these.
-  - **Harden (critical):** `db_configs.json` profile `"2"` has a live Aiven Postgres credential in plaintext — **confirmed present** (`pg-94a668a-gytworkz-dd98.c.aivencloud.com` / `avnadmin` / `AVNS_***REDACTED***`, line 31-34). In git history → rotate + move to secrets.
   - **Harden:** repo hygiene — checked-in `dump.rdb`, `graphs.db`, `res.txt`, `require,txt` (typo); no auth; CORS `*`+credentials; profile `"1"` mislabels a Chinook (music) DB with financial context.
 
 ### 3. ConvBI — NL→SQL engine (cleanest)
