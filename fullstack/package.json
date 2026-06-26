@@ -1,0 +1,14 @@
+{
+  "name": "paperclip-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paperclip prototype — Meridian's real-estate AI workforce inside Paperclip's multi-company orchestration. Frontend on mock APIs; backend planned (see doc/build.md).",
+  "workspaces": [
+    "client"
+  ],
+  "scripts": {
+    "dev": "npm --workspace client run dev",
+    "build": "npm --workspace client run build",
+    "preview": "npm --workspace client run preview"
+  }
+}
