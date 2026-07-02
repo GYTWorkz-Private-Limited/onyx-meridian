@@ -12,13 +12,10 @@ export const DEPARTMENTS = [
 // Login personas. member + head share a department for a coherent demo.
 export const USERS = [
   { id: 'member-1', name: 'Alex Rivera', role: 'member', dept: 'Property Management', avatar: 'AR',
-    photo: 'https://i.pravatar.cc/150?img=12',
     title: 'Property Associate', blurb: 'Works tasks, asks AI for help, approves its own items.' },
   { id: 'head-1', name: 'Priya Nair', role: 'head', dept: 'Property Management', avatar: 'PN',
-    photo: 'https://i.pravatar.cc/150?img=47',
     title: 'Head of Property Management', blurb: 'Onboards AI employees, owns the department workforce & cost.' },
   { id: 'admin-1', name: 'Sam Chen', role: 'admin', dept: null, avatar: 'SC',
-    photo: 'https://i.pravatar.cc/150?img=33',
     title: 'Platform Administrator', blurb: 'Org-wide control: governance, connectors, effectiveness.' }
 ];
 
@@ -460,6 +457,75 @@ export function effectiveness(emp) {
     qualityUpliftPct,
     hasMapping: true,
   };
+}
+
+// ---- Business KPIs --------------------------------------------------------
+// The outcomes a department is measured on. Their source of truth is the
+// connected systems (the ERP/CRM/etc). Each KPI has a direction (is higher or
+// lower better), a unit, a manual baseline (pre-AI) and a current value, plus a
+// target. AI employees get mapped to KPIs; the harness measures each KPI before
+// and after a workflow run to compute an impact score.
+export const KPIS = [
+  // Property Management
+  { id: 'kpi-pm-1', dept: 'Property Management', name: 'Rent Collection Rate', unit: '%', direction: 'up', source: 'AppFolio', baseline: 91, current: 96.4, target: 98 },
+  { id: 'kpi-pm-2', dept: 'Property Management', name: 'Avg Days-to-Resolve Work Order', unit: 'days', direction: 'down', source: 'RealPage', baseline: 5.2, current: 2.8, target: 2 },
+  { id: 'kpi-pm-3', dept: 'Property Management', name: 'Tenant Retention Rate', unit: '%', direction: 'up', source: 'AppFolio', baseline: 78, current: 84, target: 88 },
+  // Leasing
+  { id: 'kpi-le-1', dept: 'Leasing', name: 'Lead-to-Lease Conversion', unit: '%', direction: 'up', source: 'Salesforce', baseline: 9, current: 13.5, target: 16 },
+  { id: 'kpi-le-2', dept: 'Leasing', name: 'Avg Days Vacant', unit: 'days', direction: 'down', source: 'RealPage', baseline: 34, current: 21, target: 18 },
+  { id: 'kpi-le-3', dept: 'Leasing', name: 'Application Approval Time', unit: 'hrs', direction: 'down', source: 'Entrata', baseline: 28, current: 9, target: 6 },
+  // Asset Management
+  { id: 'kpi-am-1', dept: 'Asset Management', name: 'Portfolio Occupancy', unit: '%', direction: 'up', source: 'RealPage', baseline: 88, current: 92.5, target: 95 },
+  { id: 'kpi-am-2', dept: 'Asset Management', name: 'NOI Margin', unit: '%', direction: 'up', source: 'Oracle NetSuite', baseline: 58, current: 62, target: 65 },
+  { id: 'kpi-am-3', dept: 'Asset Management', name: 'Forecast Accuracy', unit: '%', direction: 'up', source: 'Oracle NetSuite', baseline: 81, current: 90, target: 93 },
+  // Finance
+  { id: 'kpi-fi-1', dept: 'Finance', name: 'Invoice Cycle Time', unit: 'days', direction: 'down', source: 'Oracle NetSuite', baseline: 9.5, current: 4.2, target: 3 },
+  { id: 'kpi-fi-2', dept: 'Finance', name: 'AP 3-Way Match Rate', unit: '%', direction: 'up', source: 'Coupa', baseline: 84, current: 95, target: 98 },
+  { id: 'kpi-fi-3', dept: 'Finance', name: 'Month-End Close Days', unit: 'days', direction: 'down', source: 'Sage Intacct', baseline: 8, current: 5, target: 4 },
+  // Facilities
+  { id: 'kpi-fa-1', dept: 'Facilities', name: 'PM Compliance Rate', unit: '%', direction: 'up', source: 'Procore', baseline: 72, current: 89, target: 95 },
+  { id: 'kpi-fa-2', dept: 'Facilities', name: 'Mean Time to Repair', unit: 'hrs', direction: 'down', source: 'Procore', baseline: 26, current: 12, target: 8 },
+  { id: 'kpi-fa-3', dept: 'Facilities', name: 'Vendor SLA Adherence', unit: '%', direction: 'up', source: 'Procore', baseline: 80, current: 91, target: 95 },
+  // Acquisitions
+  { id: 'kpi-ac-1', dept: 'Acquisitions', name: 'Deal Cycle Time', unit: 'days', direction: 'down', source: 'Salesforce', baseline: 62, current: 41, target: 35 },
+  { id: 'kpi-ac-2', dept: 'Acquisitions', name: 'Underwriting Accuracy', unit: '%', direction: 'up', source: 'Dynamics 365', baseline: 83, current: 91, target: 94 },
+  { id: 'kpi-ac-3', dept: 'Acquisitions', name: 'Pipeline Conversion', unit: '%', direction: 'up', source: 'Salesforce', baseline: 11, current: 16, target: 20 },
+  // Legal
+  { id: 'kpi-lg-1', dept: 'Legal', name: 'Contract Turnaround Time', unit: 'days', direction: 'down', source: 'DocuSign', baseline: 7, current: 2.5, target: 2 },
+  { id: 'kpi-lg-2', dept: 'Legal', name: 'Compliance Filing On-Time Rate', unit: '%', direction: 'up', source: 'DocuSign', baseline: 86, current: 97, target: 99 },
+  { id: 'kpi-lg-3', dept: 'Legal', name: 'Clause Risk Flags Caught', unit: '%', direction: 'up', source: 'DocuSign', baseline: 74, current: 90, target: 95 },
+  // Marketing
+  { id: 'kpi-mk-1', dept: 'Marketing', name: 'Cost per Lead', unit: '$', direction: 'down', source: 'Salesforce', baseline: 42, current: 28, target: 22 },
+  { id: 'kpi-mk-2', dept: 'Marketing', name: 'Listing Time-on-Market', unit: 'days', direction: 'down', source: 'RealPage', baseline: 31, current: 19, target: 15 },
+  { id: 'kpi-mk-3', dept: 'Marketing', name: 'Campaign ROI', unit: '%', direction: 'up', source: 'Salesforce', baseline: 120, current: 168, target: 200 },
+];
+
+export function kpisForDept(dept) { return KPIS.filter(k => k.dept === dept); }
+export function kpiById(id) { return KPIS.find(k => k.id === id) || null; }
+
+// KPIs an AI employee is mapped to. Explicit mapping (emp.kpiIds) wins; otherwise
+// deterministically map a couple of the department's KPIs so seeded agents show
+// impact without manual setup.
+export function kpisForEmployee(emp) {
+  if (emp.kpiIds?.length) return emp.kpiIds.map(kpiById).filter(Boolean);
+  const dk = kpisForDept(emp.dept);
+  if (!dk.length) return [];
+  let h = 0; for (let i = 0; i < emp.id.length; i++) h = (h * 31 + emp.id.charCodeAt(i)) >>> 0;
+  const start = h % dk.length;
+  const n = 1 + (h % Math.min(2, dk.length)); // 1–2 KPIs
+  return Array.from({ length: n }, (_, i) => dk[(start + i) % dk.length]);
+}
+
+// Before/after impact of an agent on a KPI, plus a 0–100 impact score blending
+// improvement magnitude with progress toward target.
+export function kpiImpact(kpi) {
+  const before = kpi.baseline, after = kpi.current;
+  const improved = kpi.direction === 'up' ? after >= before : after <= before;
+  const changePct = before ? Math.round((Math.abs(after - before) / Math.abs(before)) * 100) : 0;
+  const span = Math.abs(kpi.target - kpi.baseline) || 1;
+  const progressed = kpi.direction === 'up' ? after - kpi.baseline : kpi.baseline - after;
+  const score = Math.max(0, Math.min(100, Math.round((progressed / span) * 100)));
+  return { before, after, improved, changePct, score };
 }
 
 // Synthesized activity feed for an employee (runs + tasks + UoW calls).

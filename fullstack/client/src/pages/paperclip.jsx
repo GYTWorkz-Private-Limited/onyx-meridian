@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useStore } from '../data/StoreContext.jsx';
 import { USERS, empById, modelById, reasoningById, monthlyCost } from '../data/store.js';
 import { ACTION_LABEL } from '../data/paperclip.js';
@@ -7,7 +7,8 @@ import { Card, Stat, Pill, Modal, Field, Select, Avatar, AgentAvatar, Empty, Sec
 import {
   Building2, Plus, Target, FolderKanban, Share2, Cpu, Activity as ActivityIcon,
   Check, ArrowRight, Bot, Calendar, DollarSign, Zap, GitBranch, ShieldCheck,
-  Boxes, Plug, MessageSquare, TrendingUp, CircleDot,
+  Boxes, Plug, MessageSquare, TrendingUp, CircleDot, Network, ZoomIn, ZoomOut,
+  Maximize2,
 } from 'lucide-react';
 
 // ---------- helpers ----------------------------------------------------------
@@ -250,57 +251,170 @@ export function Projects({ toast }) {
 }
 
 // =============================================================================
-// ORG CHART — reporting lines across departments
+// ORG CHART — live, zoomable canvas of the AI workforce
 // =============================================================================
-export function OrgChart() {
-  const { employees, adapters, currentCompany, departments } = useStore();
-  const adapterName = (id) => adapters.find(a => a.id === id)?.name || '—';
-  const depts = departments && departments.length ? departments : [...new Set(employees.map(e => e.dept))];
+// Live working status for an agent, derived from its open tasks. Mirrors the
+// logic on the AI Employees page so the two views always agree.
+function orgLiveStatus(e, tasks = []) {
+  if (e.status !== 'active') {
+    return { state: e.status || 'idle', label: e.status === 'suspended' ? 'Suspended' : 'Offline', dot: 'var(--gray-400)', running: 0, queue: 0, pulse: false };
+  }
+  const mine = tasks.filter(t => t.assigneeType === 'ai' && t.assignee === e.id && t.status !== 'done');
+  const running = mine.filter(t => t.status === 'in-progress' || t.status === 'review');
+  const queue = mine.length - running.length;
+  if (running.length) return { state: 'working', label: 'Working', dot: 'var(--green-500)', running: running.length, queue, pulse: true };
+  if (mine.length) return { state: 'queued', label: 'Queued', dot: 'var(--orange-500)', running: 0, queue: mine.length, pulse: false };
+  return { state: 'idle', label: 'Idle', dot: 'var(--gray-400)', running: 0, queue: 0, pulse: false };
+}
 
-  const AgentCard = ({ e, lead }) => (
-    <div className={`org-card ${lead ? 'org-lead' : ''}`}>
-      <AgentAvatar id={e.id} name={e.name} size={32} />
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-sm flex items-center gap-2">{e.name}
-          <span className={`status-dot ${e.status === 'active' ? 'live' : 'idle'}`} title={e.status} />
+export function OrgChart({ go }) {
+  const { employees, adapters, currentCompany, departments, tasks } = useStore();
+  const adapterName = (id) => adapters.find(a => a.id === id)?.name || '—';
+  const depts = (departments && departments.length ? departments : [...new Set(employees.map(e => e.dept))])
+    .filter(d => employees.some(e => e.dept === d));
+  const [zoom, setZoom] = useState(1);
+  const clampZoom = (z) => Math.min(1.4, Math.max(0.5, Math.round(z * 100) / 100));
+
+  // Drag-to-pan the canvas. We track the scroll origin on mouse-down and move
+  // the container's scroll offset as the pointer drags. `panned` distinguishes a
+  // genuine pan from a click so node clicks aren't swallowed by a tiny drag.
+  const canvasRef = useRef(null);
+  const drag = useRef({ active: false, startX: 0, startY: 0, left: 0, top: 0, panned: false });
+  const onPanStart = (e) => {
+    // ignore secondary buttons; let the gesture start from anywhere on the canvas
+    if (e.button !== 0) return;
+    const el = canvasRef.current; if (!el) return;
+    drag.current = { active: true, startX: e.clientX, startY: e.clientY, left: el.scrollLeft, top: el.scrollTop, panned: false };
+  };
+  const onPanMove = (e) => {
+    const d = drag.current; if (!d.active) return;
+    const dx = e.clientX - d.startX, dy = e.clientY - d.startY;
+    if (!d.panned && Math.abs(dx) + Math.abs(dy) > 5) d.panned = true;
+    if (d.panned) {
+      const el = canvasRef.current;
+      el.scrollLeft = d.left - dx;
+      el.scrollTop = d.top - dy;
+    }
+  };
+  const onPanEnd = () => { drag.current.active = false; };
+
+  const openEmployee = (e) => { if (drag.current.panned) return; go?.('employees', { employeeId: e.id }); };
+
+  // Org-wide live rollup for the header.
+  const live = employees.filter(e => e.status === 'active').map(e => orgLiveStatus(e, tasks));
+  const working = live.filter(s => s.state === 'working').length;
+  const queued = live.filter(s => s.state === 'queued').length;
+  const idle = live.filter(s => s.state === 'idle').length;
+
+  const EmployeeNode = ({ e, lead }) => {
+    const s = orgLiveStatus(e, tasks);
+    const sub = s.state === 'working' ? `${s.running} running${s.queue ? ` · ${s.queue} queued` : ''}`
+      : s.state === 'queued' ? `${s.queue} in queue`
+      : s.state === 'idle' ? 'No tasks queued' : 'Suspended';
+    return (
+      <button className={`orgx-node orgx-emp state-${s.state} ${lead ? 'is-lead' : ''}`} onClick={() => openEmployee(e)} title={`Open ${e.name}`}>
+        <span className={`orgx-statusbar state-${s.state}`} />
+        <AgentAvatar id={e.id} name={e.name} size={34} />
+        <div className="flex-1 min-w-0 text-left">
+          <div className="orgx-emp-name">{e.name}{lead && <span className="orgx-lead-tag">Lead</span>}</div>
+          <div className="orgx-emp-title">{e.title}</div>
+          <div className="orgx-emp-meta">
+            <span className="flex items-center gap-1"><Cpu size={10} /> {adapterName(e.adapterId)}</span>
+            <span className="flex items-center gap-1"><DollarSign size={10} /> {fmtUsd(e.budgetMonthlyUsd || 0)}/mo</span>
+          </div>
+          <div className={`orgx-emp-status state-${s.state}`}>
+            <span className={s.pulse ? 'status-dot pulsing' : 'status-dot'} style={{ background: s.dot }} />
+            <span className="orgx-status-label">{s.label}</span>
+            <span className="orgx-status-sub">· {sub}</span>
+          </div>
         </div>
-        <div className="text-xs text-muted truncate">{e.title}</div>
-        <div className="text-xs text-muted mt-1 flex items-center gap-2 flex-wrap">
-          <span className="flex items-center gap-1"><Cpu size={11} /> {adapterName(e.adapterId)}</span>
-          <span className="flex items-center gap-1"><DollarSign size={11} /> {fmtUsd(e.budgetMonthlyUsd || 0)}/mo</span>
-        </div>
-      </div>
-    </div>
-  );
+        <ArrowRight size={15} className="orgx-go" />
+      </button>
+    );
+  };
 
   return (
-    <div>
-      <SectionTitle icon={Share2} title="Org Chart" subtitle={`Reporting lines for ${currentCompany?.name || 'this company'} — agents have a boss, a title and a budget.`} />
+    <div className="flex flex-col gap-4 h-full">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <SectionTitle icon={Share2} title="Org Chart" subtitle={`Live reporting lines for ${currentCompany?.name || 'this company'} — click any agent to open it.`} />
+        {employees.length > 0 && (
+          <div className="orgx-rollup">
+            <span className="orgx-roll-item"><span className="status-dot pulsing" style={{ background: 'var(--green-500)' }} /> {working} working</span>
+            <span className="orgx-roll-item"><span className="status-dot" style={{ background: 'var(--orange-500)' }} /> {queued} queued</span>
+            <span className="orgx-roll-item"><span className="status-dot" style={{ background: 'var(--gray-400)' }} /> {idle} idle</span>
+          </div>
+        )}
+      </div>
+
       {employees.length === 0
         ? <Card><Empty icon={Share2} message="No agents yet. Hire agents from AI Employees or via Dept Onboarding." /></Card>
-        : <div className="flex flex-col gap-4">
-          {depts.map(dept => {
-            const inDept = employees.filter(e => e.dept === dept);
-            if (!inDept.length) return null;
-            const leads = inDept.filter(e => !e.managerId);
-            const reports = (mid) => inDept.filter(e => e.managerId === mid);
-            return (
-              <Card key={dept} className="pc-card">
-                <div className="font-semibold mb-3 flex items-center gap-2"><Building2 size={15} className="text-muted" /> {dept} <span className="text-xs text-muted">· {inDept.length}</span></div>
-                <div className="org-grid">
-                  {leads.map(lead => (
-                    <div key={lead.id} className="org-branch">
-                      <AgentCard e={lead} lead />
-                      <div className="org-reports">
-                        {reports(lead.id).map(r => <AgentCard key={r.id} e={r} />)}
-                      </div>
+        : (
+          <div
+            className={`orgx-canvas ${drag.current.active ? 'is-panning' : ''}`}
+            ref={canvasRef}
+            onMouseDown={onPanStart}
+            onMouseMove={onPanMove}
+            onMouseUp={onPanEnd}
+            onMouseLeave={onPanEnd}
+          >
+            <div className="orgx-stage" style={{ transform: `scale(${zoom})` }}>
+              <ul className="orgx-tree">
+                <li>
+                  <div className="orgx-node orgx-org">
+                    <div className="orgx-org-ic"><Network size={20} /></div>
+                    <div className="text-left">
+                      <div className="orgx-org-name">{currentCompany?.name || 'Organization'}</div>
+                      <div className="orgx-org-sub">{depts.length} department{depts.length !== 1 ? 's' : ''} · {employees.length} AI employee{employees.length !== 1 ? 's' : ''}</div>
                     </div>
-                  ))}
-                </div>
-              </Card>
-            );
-          })}
-        </div>}
+                  </div>
+                  <ul>
+                    {depts.map(dept => {
+                      const inDept = employees.filter(e => e.dept === dept);
+                      const leads = inDept.filter(e => !e.managerId);
+                      const reportsOf = (mid) => inDept.filter(e => e.managerId === mid);
+                      const dlive = inDept.filter(e => e.status === 'active').map(e => orgLiveStatus(e, tasks));
+                      const dWorking = dlive.filter(s => s.state === 'working').length;
+                      const dQueued = dlive.filter(s => s.state === 'queued').length;
+                      return (
+                        <li key={dept}>
+                          <div className="orgx-node orgx-dept">
+                            <Building2 size={15} className="text-muted shrink-0" />
+                            <div className="text-left flex-1 min-w-0">
+                              <div className="orgx-dept-name">{dept}</div>
+                              <div className="orgx-dept-sub">{inDept.length} agent{inDept.length !== 1 ? 's' : ''}{dWorking ? ` · ${dWorking} working` : ''}{dQueued ? ` · ${dQueued} queued` : ''}</div>
+                            </div>
+                          </div>
+                          <ul>
+                            {leads.map(lead => {
+                              const reps = reportsOf(lead.id);
+                              return (
+                                <li key={lead.id}>
+                                  <EmployeeNode e={lead} lead />
+                                  {reps.length > 0 && (
+                                    <ul>
+                                      {reps.map(r => <li key={r.id}><EmployeeNode e={r} /></li>)}
+                                    </ul>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              </ul>
+            </div>
+
+            <div className="orgx-controls">
+              <button className="orgx-zoom-btn" title="Zoom out" onClick={() => setZoom(z => clampZoom(z - 0.1))}><ZoomOut size={16} /></button>
+              <span className="orgx-zoom-label">{Math.round(zoom * 100)}%</span>
+              <button className="orgx-zoom-btn" title="Zoom in" onClick={() => setZoom(z => clampZoom(z + 0.1))}><ZoomIn size={16} /></button>
+              <button className="orgx-zoom-btn" title="Reset zoom" onClick={() => setZoom(1)}><Maximize2 size={15} /></button>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

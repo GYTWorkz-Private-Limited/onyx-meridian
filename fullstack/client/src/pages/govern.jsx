@@ -5,13 +5,16 @@ import {
   DEPARTMENTS, MODELS, REASONING_LEVELS, VAULT_SECRETS,
   modelById, reasoningById, monthlyCost, effectiveness, empById
 } from '../data/store.js';
-import { DollarSign, TrendingUp, Sparkles, Lock, Plus, Clock, Info, SlidersHorizontal } from 'lucide-react';
+import { DollarSign, TrendingUp, Sparkles, Lock, Plus, Clock, Info, SlidersHorizontal, Save } from 'lucide-react';
 
 // ============================================================================
 // Cost Control — real per-employee detail + the reasoning/effort cost lever
 // ============================================================================
-export function Cost() {
+export function Cost({ toast }) {
   const { employees, setReasoning } = useStore();
+  const [dirty, setDirty] = useState(false);
+  const changeReasoning = (id, level) => { setReasoning(id, level); setDirty(true); };
+  const save = () => { setDirty(false); toast?.('Reasoning & cost settings saved', 'success'); };
 
   const deptSpend = DEPARTMENTS.map(d => ({
     dept: d, total: employees.filter(e => e.dept === d).reduce((a, e) => a + monthlyCost(e), 0),
@@ -27,7 +30,13 @@ export function Cost() {
 
   return (
     <div className="flex flex-col gap-6">
-      <SectionTitle title="Cost Control" subtitle="Control spend at the source — the reasoning/effort level each AI employee runs at — and see exactly where it goes." />
+      <div className="cost-savebar">
+        <SectionTitle title="Cost Control" subtitle="Control spend at the source — the reasoning/effort level each AI employee runs at — and see exactly where it goes." />
+        <div className="flex items-center gap-3">
+          {dirty && <span className="text-xs text-muted" style={{ whiteSpace: 'nowrap' }}>Unsaved changes</span>}
+          <button className="btn btn-primary" onClick={save}><Save size={15} /> Save Changes</button>
+        </div>
+      </div>
 
       <div className="grid-cols-3">
         <Stat label="Total Monthly Spend" value={`$${total.toLocaleString()}`} delta="+$4.2k" icon={DollarSign} />
@@ -51,7 +60,7 @@ export function Cost() {
                 </div>
                 <div className="seg" style={{ display: 'flex' }}>
                   {REASONING_LEVELS.map(r => (
-                    <button key={r.id} className={e.reasoning === r.id ? 'on' : ''} onClick={() => setReasoning(e.id, r.id)}>{r.label}</button>
+                    <button key={r.id} className={e.reasoning === r.id ? 'on' : ''} onClick={() => changeReasoning(e.id, r.id)}>{r.label}</button>
                   ))}
                 </div>
                 <div className="ml-auto text-right">

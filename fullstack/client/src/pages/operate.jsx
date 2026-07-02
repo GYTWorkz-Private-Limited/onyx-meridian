@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, SectionTitle, Pill, statusTone, priTone, Modal, Avatar, AgentAvatar, Note, Field, Select, SecuredBadge, SortableTable, Skeleton, useFakeLoad } from '../components/ui.jsx';
+import { Card, SectionTitle, Pill, statusTone, priTone, Modal, Avatar, AgentAvatar, Note, Field, Select, SecuredBadge, SortableTable, Skeleton, useFakeLoad, Bar } from '../components/ui.jsx';
 import { useStore } from '../data/StoreContext.jsx';
 import {
   DEPARTMENTS, ARCHETYPES, MODELS, REASONING_LEVELS, UNITS_OF_WORK, WORKFLOWS, USERS,
   empById, uowById, wfById, modelById, reasoningById, monthlyCost, effectiveness,
-  uowsForEmployee, employeeWorkflows, employeeActivity
+  uowsForEmployee, employeeWorkflows, employeeActivity,
+  kpisForDept, kpisForEmployee, kpiImpact
 } from '../data/store.js';
 import {
   Building2, Search, Bot, Plus, Send, ArrowLeft, Workflow, Boxes, ShieldAlert, ShieldCheck,
@@ -12,9 +13,11 @@ import {
   Activity as ActivityIcon, ListChecks, RefreshCw, Calendar,
   Mic, MicOff, ChevronDown, ChevronRight, ArrowUp, DollarSign, Phone, PhoneOff, Network,
   BarChart3, FileText, FileJson, FileSpreadsheet, Folder, FolderOpen, Brain, X, HardDrive,
-  Mail, TrendingUp, Tag
+  Mail, TrendingUp, Tag, Rocket, Gauge, Target
 } from 'lucide-react';
 import { employeeMemory, fileSize, memoryStats } from '../data/memory.js';
+import { AgentDeployPage } from '../components/DeployAgent.jsx';
+import { KpiInventoryPanel } from '../components/KpiInventory.jsx';
 
 // ---- helpers ----------------------------------------------------------------
 const activeEmployeesFor = (role, user, employees) =>
@@ -155,7 +158,7 @@ export function Departments({ go, toast }) {
   const [selected, setSelected] = useState(null);
 
   if (selected) {
-    return <DeptPage dept={selected} onBack={() => setSelected(null)} go={go} />;
+    return <DeptPage dept={selected} onBack={() => setSelected(null)} go={go} toast={toast} />;
   }
 
   return (
@@ -198,12 +201,13 @@ export function Departments({ go, toast }) {
   );
 }
 
-function DeptPage({ dept, onBack, go }) {
+function DeptPage({ dept, onBack, go, toast }) {
   const { employees, tasks, unitsOfWork } = useStore();
   const emps = employees.filter(e => e.dept === dept);
   const uows = unitsOfWork.filter(u => u.dept === dept);
   const spend = emps.reduce((a, e) => a + monthlyCost(e), 0);
   const active = tasks.filter(t => t.dept === dept && t.status !== 'done').length;
+  const [deptKpis, setDeptKpis] = useState(() => kpisForDept(dept).map(k => ({ ...k })));
 
   return (
     <div className="flex flex-col gap-6">
@@ -242,6 +246,36 @@ function DeptPage({ dept, onBack, go }) {
             </div>
           ))}
           {uows.length === 0 && <div className="text-muted text-sm">No Units of Work extracted yet.</div>}
+        </div>
+      </Card>
+
+      {/* Business KPIs — identify & map to agents */}
+      <Card>
+        <div className="card-header flex items-center justify-between">
+          <h3 className="flex items-center gap-2"><Gauge size={16} className="text-blue-600" /> Business KPIs <span className="badge">{deptKpis.length}</span></h3>
+        </div>
+        <div className="card-body flex flex-col gap-4">
+          <KpiInventoryPanel key={dept} dept={dept} sourceLabel="Connected systems" value={deptKpis} onChange={setDeptKpis} toast={toast} autoScan={false} />
+          <div>
+            <div className="text-xs uppercase text-muted font-semibold mb-2" style={{ letterSpacing: '0.05em' }}>KPI → Agent mapping</div>
+            <div className="flex flex-col gap-2">
+              {deptKpis.length === 0 && <div className="text-xs text-muted">No KPIs to map yet.</div>}
+              {deptKpis.map(k => {
+                const owners = emps.filter(e => kpisForEmployee(e).some(x => x.id === k.id));
+                return (
+                  <div key={k.id} className="flex items-center justify-between gap-3 p-2 border rounded">
+                    <div className="flex items-center gap-2 text-sm font-medium min-w-0"><Gauge size={14} className="text-blue-600 shrink-0" /> <span className="truncate">{k.name}</span></div>
+                    <div className="flex items-center gap-3 flex-wrap justify-end">
+                      {owners.length === 0
+                        ? <span className="text-xs text-muted">Unmapped</span>
+                        : owners.map(o => <span key={o.id} className="flex items-center gap-1 text-xs"><AgentAvatar id={o.id} name={o.name} size={20} /> {o.name}</span>)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="text-xs text-muted mt-2">Map KPIs to agents when onboarding AI employees (the Map KPIs step), or from each agent’s profile.</div>
+          </div>
         </div>
       </Card>
 
@@ -288,8 +322,20 @@ function DeptPage({ dept, onBack, go }) {
   );
 }
 
-function Stat2({ label, value }) {
-  return <div className="p-3 rounded-lg bg-gray-50 border"><div className="text-xs text-muted">{label}</div><div className="text-xl font-bold">{value}</div></div>;
+function Stat2({ label, value, icon: Icon, accent = 'var(--blue-600)' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--border)' }}>
+      {Icon && (
+        <div style={{ width: 42, height: 42, borderRadius: 10, display: 'grid', placeItems: 'center', flexShrink: 0, color: accent, background: `color-mix(in srgb, ${accent} 15%, transparent)` }}>
+          <Icon size={20} />
+        </div>
+      )}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--gray-500)' }}>{label}</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--gray-900)', lineHeight: 1.2, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
+      </div>
+    </div>
+  );
 }
 
 // ============================================================================
@@ -298,7 +344,7 @@ function Stat2({ label, value }) {
 // ============================================================================
 // AI Employees — list, conversation, onboarding wizard
 // ============================================================================
-export function Employees({ role, user, toast }) {
+export function Employees({ role, user, toast, navParams }) {
   const store = useStore();
   const { employees, tasks } = store;
   const [search, setSearch] = useState('');
@@ -308,6 +354,14 @@ export function Employees({ role, user, toast }) {
   const [memEmp, setMemEmp] = useState(null);
 
   const [openDepts, setOpenDepts] = useState({});
+
+  // Deep-link: opening from the Org Chart (or anywhere) with an employeeId jumps
+  // straight into that employee's console.
+  useEffect(() => {
+    if (navParams?.employeeId && employees.some(e => e.id === navParams.employeeId)) {
+      setChatEmp(navParams.employeeId);
+    }
+  }, [navParams, employees]);
 
   const data = role === 'admin' ? employees : employees.filter(e => e.dept === user.dept);
   const filtered = data.filter(e =>
@@ -410,30 +464,39 @@ function EmployeeConsole({ emp, user, onBack, toast, onOpenMemory }) {
   const [tab, setTab] = useState('chat');
   const [assignOpen, setAssignOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
+  const [deployOpen, setDeployOpen] = useState(false);
   if (!emp) return null;
 
   const callable = emp.status === 'active';
 
+  // Deploy opens a dedicated full-page view (not a dialog).
+  if (deployOpen) {
+    return <AgentDeployPage emp={emp} user={user} onBack={() => setDeployOpen(false)} toast={toast} />;
+  }
+
   return (
-    <div className="flex flex-col gap-4 h-full">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-4 h-full" style={{ maxWidth: 1180, width: '100%', margin: '0 auto' }}>
+      <div className="flex items-center gap-3 flex-wrap">
         <button className="btn btn-ghost btn-sm" onClick={onBack}><ArrowLeft size={16} /> Back</button>
         <AgentAvatar id={emp.id} name={emp.name} size={40} />
-        <div className="flex-1">
+        <div className="flex-1" style={{ minWidth: 0 }}>
           <h2 className="m-0">{emp.name}</h2>
           <div className="text-sm text-muted">{emp.title} · {emp.dept} · <Pill label={emp.status} tone={statusTone(emp.status)} /></div>
         </div>
         <button className="btn btn-call" disabled={!callable} title={callable ? `Call ${emp.name}` : `${emp.name} is ${emp.status}`} onClick={() => setCallOpen(true)}><Phone size={16} /> Call</button>
         <button className="btn btn-outline" onClick={() => onOpenMemory?.()}><Brain size={16} /> Memory</button>
+        <button className="btn btn-outline" onClick={() => setDeployOpen(true)}><Rocket size={16} /> Deploy</button>
         <button className="btn btn-primary" onClick={() => setAssignOpen(true)}><ListChecks size={16} /> Assign Task</button>
         <div className="seg">
           <button className={tab === 'activity' ? 'on' : ''} onClick={() => setTab(t => t === 'activity' ? 'chat' : 'activity')}>Activity</button>
+          <button className={tab === 'performance' ? 'on' : ''} onClick={() => setTab(t => t === 'performance' ? 'chat' : 'performance')}>Performance</button>
           <button className={tab === 'profile' ? 'on' : ''} onClick={() => setTab(t => t === 'profile' ? 'chat' : 'profile')}>Profile</button>
         </div>
       </div>
 
       {tab === 'chat' && <EmployeeChat emp={emp} user={user} addApproval={addApproval} toast={toast} />}
       {tab === 'activity' && <EmployeeActivity emp={emp} tasks={tasks} />}
+      {tab === 'performance' && <EmployeePerformance emp={emp} />}
       {tab === 'profile' && <EmployeeProfile emp={emp} onOpenMemory={onOpenMemory} />}
 
       {assignOpen && (
@@ -960,6 +1023,9 @@ export function EmployeeChat({ emp, user, addApproval, toast, seedQuestion, seed
   });
   const [thinking, setThinking] = useState(false);
   const [pendingKind, setPendingKind] = useState('answer'); // shape of the skeleton loader
+  // Opening a chat establishes a session with the agent — show a brief
+  // "connecting" state (re-runs per employee) instead of snapping in instantly.
+  const connecting = useFakeLoad([emp.id], { min: 1400, max: 2800 });
   const bodyRef = useRef(null);
   const inputRef = useRef(null);
   const firstName = (user?.name || 'there').split(' ')[0];
@@ -1049,6 +1115,22 @@ export function EmployeeChat({ emp, user, addApproval, toast, seedQuestion, seed
     setInput(cap.prompt);
     requestAnimationFrame(() => inputRef.current?.focus());
   };
+
+  if (connecting) {
+    return (
+      <Card className="flex-1 chat-wrap min-h-[460px]">
+        <div className="gem-hero" style={{ background: 'var(--grad-aurora)' }}>
+          <AgentAvatar id={emp.id} name={emp.name} size={56} />
+          <div className="flex flex-col gap-1 items-center">
+            <div className="gem-greet flex items-center gap-2">
+              <RefreshCw size={18} style={{ animation: 'btnSpin 0.8s linear infinite' }} /> Connecting to {emp.name}…
+            </div>
+            <div className="gem-greet-sub">Establishing a session · {model.name}</div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="flex-1 chat-wrap min-h-[460px]">
@@ -1238,6 +1320,135 @@ function StepTrace({ steps, onDone, approved, onApprove }) {
   );
 }
 
+// Agent Performance / Retrospect — operational KPIs plus conflict detection:
+// where this agent's Units of Work overlap with peers running the same workflows.
+function EmployeePerformance({ emp }) {
+  const { employees } = useStore();
+  const h = hashStr(emp.id);
+  // deterministic operational metrics (a prototype stand-in for harness telemetry)
+  const taskSuccess = 88 + (h % 10);
+  const failRate = +(100 - taskSuccess).toFixed(0);
+  const reworkRate = 2 + (h % 5);
+  const toolAccuracy = 85 + ((h >> 3) % 12);
+  const trust = (4.2 + ((h >> 5) % 7) / 10).toFixed(1);
+  const feedbackCount = 6 + (h % 9);
+  const kpis = kpisForEmployee(emp);
+  const avgKpi = kpis.length ? Math.round(kpis.reduce((s, k) => s + kpiImpact(k).score, 0) / kpis.length) : 0;
+
+  // conflicts — peers in the same department sharing Units of Work / workflows
+  const myUows = new Set(uowsForEmployee(emp).map(u => u.id));
+  const myWfNames = new Set(employeeWorkflows(emp).map(w => w.name));
+  const peers = employees.filter(e => e.id !== emp.id && e.dept === emp.dept && e.status === 'active');
+  const conflicts = peers.map(p => {
+    const pUowIds = uowsForEmployee(p).map(u => u.id);
+    const sharedUows = [...new Set(pUowIds.filter(id => myUows.has(id)))].map(uowById).filter(Boolean);
+    const union = new Set([...myUows, ...pUowIds]);
+    const overlap = union.size ? Math.round((sharedUows.length / union.size) * 100) : 0;
+    const sharedWf = [...new Set(employeeWorkflows(p).map(w => w.name).filter(n => myWfNames.has(n)))];
+    return { peer: p, sharedUows, overlap, sharedWf };
+  }).filter(c => c.sharedUows.length > 0 || c.sharedWf.length > 0).sort((a, b) => b.overlap - a.overlap);
+
+  return (
+    <div className="perf-view flex flex-col gap-4 overflow-y-auto">
+      <div className="grid-cols-4">
+        <Stat2 label="Task success rate" value={`${taskSuccess}%`} />
+        <Stat2 label="Tool-selection accuracy" value={`${toolAccuracy}%`} />
+        <Stat2 label="Trust score" value={`${trust}/5`} />
+        <Stat2 label="Avg KPI impact" value={`${avgKpi}/100`} />
+      </div>
+
+      <Card>
+        <div className="card-header"><h3>Task outcomes</h3><span className="text-xs text-muted">Last 30 days · {emp.tasks_completed.toLocaleString()} runs</span></div>
+        <div className="card-body flex flex-col gap-3">
+          <div className="perf-meter"><span className="perf-meter-label">Succeeded</span><div className="perf-bar"><div style={{ width: `${taskSuccess}%` }} className="perf-fill ok" /></div><span className="perf-meter-val">{taskSuccess}%</span></div>
+          <div className="perf-meter"><span className="perf-meter-label">Reworked</span><div className="perf-bar"><div style={{ width: `${reworkRate}%` }} className="perf-fill warn" /></div><span className="perf-meter-val">{reworkRate}%</span></div>
+          <div className="perf-meter"><span className="perf-meter-label">Failed</span><div className="perf-bar"><div style={{ width: `${failRate}%` }} className="perf-fill bad" /></div><span className="perf-meter-val">{failRate}%</span></div>
+          <div className="perf-meter"><span className="perf-meter-label">Tool accuracy</span><div className="perf-bar"><div style={{ width: `${toolAccuracy}%` }} className="perf-fill ok" /></div><span className="perf-meter-val">{toolAccuracy}%</span></div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="card-header"><h3>User sentiment &amp; trust</h3><span className="text-xs text-muted">From the deployment feedback API</span></div>
+        <div className="card-body flex items-center gap-4">
+          <div className="trust-big">{trust}<span className="text-muted" style={{ fontSize: 16 }}>/5</span></div>
+          <div className="flex-1 text-sm">
+            <div className="font-medium">{trust >= 4.5 ? 'Trusted' : trust >= 4 ? 'Reliable' : 'Mixed'}</div>
+            <div className="text-xs text-muted">Aggregated from {feedbackCount} feedback submissions external systems posted to <code>/feedback</code>. Higher trust feeds {emp.name}’s standing across mappings.</div>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="card-header"><h3>Conflicts &amp; overlap</h3><span className="text-xs text-muted">Shared responsibilities with other {emp.dept} agents</span></div>
+        <div className="card-body flex flex-col gap-3">
+          {conflicts.length === 0 ? (
+            <div className="flex items-center gap-2 text-sm text-muted"><ShieldCheck size={15} className="text-green-600" /> No overlapping responsibilities detected — {emp.name}’s workflows are distinct from its peers.</div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 text-sm"><ShieldAlert size={15} className="text-yellow-600" /> {emp.name} shares work with <strong>{conflicts.length}</strong> peer{conflicts.length === 1 ? '' : 's'} — they may step on each other when running concurrently.</div>
+              {conflicts.map(c => (
+                <div key={c.peer.id} className="p-3 border rounded-lg flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <AgentAvatar id={c.peer.id} name={c.peer.name} size={28} />
+                    <div className="flex-1 min-w-0"><div className="font-medium text-sm">{c.peer.name}</div><div className="text-xs text-muted truncate">{c.peer.title}</div></div>
+                    <div className="flex items-center gap-2" style={{ width: 130 }}>
+                      <div style={{ flex: 1 }}><Bar value={c.overlap} tone={c.overlap >= 50 ? 'red' : 'blue'} /></div>
+                      <span className="text-xs font-mono text-muted" style={{ width: 34, textAlign: 'right' }}>{c.overlap}%</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {c.sharedWf.map(n => <span key={n} className="text-xs px-2 py-1 rounded flex items-center gap-1" style={{ background: 'var(--blue-50)', color: 'var(--blue-700)' }}><Workflow size={11} /> {n}</span>)}
+                    {c.sharedUows.map(u => <span key={u.id} className="text-xs px-2 py-1 rounded flex items-center gap-1" style={{ background: 'var(--gray-100)', color: 'var(--gray-600)' }}><Boxes size={11} /> {u.name}</span>)}
+                  </div>
+                </div>
+              ))}
+              <div className="text-xs text-muted">Use this to scope agents more tightly — split shared Units of Work or stagger schedules so they don’t double-process.</div>
+            </>
+          )}
+        </div>
+      </Card>
+
+      <KpiImpactSection emp={emp} />
+    </div>
+  );
+}
+
+// KPI impact — the KPIs this agent is mapped to, measured before (manual baseline)
+// vs. after (current), with a 0–100 impact score and an aggregate.
+const fmtKpi = (k, v) => k.unit === '$' ? `$${v}` : k.unit === '%' ? `${v}%` : `${v} ${k.unit}`;
+function KpiImpactSection({ emp }) {
+  const kpis = kpisForEmployee(emp);
+  if (!kpis.length) return null;
+  const scored = kpis.map(k => ({ k, im: kpiImpact(k) }));
+  const avg = Math.round(scored.reduce((s, x) => s + x.im.score, 0) / scored.length);
+  return (
+    <Card>
+      <div className="card-header"><h3>KPI Impact</h3><span className="text-xs text-muted">Measured before &amp; after each workflow run</span></div>
+      <div className="card-body flex flex-col gap-3">
+        <div className="flex items-center gap-2 text-sm"><Target size={15} className="text-blue-600" /> Aggregate impact score <strong>{avg}</strong>/100 across {kpis.length} mapped KPI{kpis.length === 1 ? '' : 's'}.</div>
+        {scored.map(({ k, im }) => (
+          <div key={k.id} className="kpi-impact-row">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">{k.name}</div>
+              <div className="text-xs text-muted truncate">{k.source} · {k.direction === 'up' ? 'higher is better' : 'lower is better'}</div>
+            </div>
+            <div className="kpi-ba">
+              <span className="text-muted">{fmtKpi(k, im.before)}</span>
+              <span className="kpi-arrow">→</span>
+              <span className="font-semibold" style={{ color: im.improved ? 'var(--green-600)' : 'var(--red-600)' }}>{fmtKpi(k, im.after)}</span>
+              {im.improved ? <TrendingUp size={13} className="text-green-600" /> : <TrendingUp size={13} className="text-red-600" style={{ transform: 'scaleY(-1)' }} />}
+            </div>
+            <div className="kpi-score">
+              <div style={{ width: 80 }}><Bar value={im.score} tone={im.score >= 60 ? 'green' : 'blue'} /></div>
+              <span className="text-xs font-mono text-muted" style={{ width: 30, textAlign: 'right' }}>{im.score}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 function EmployeeProfile({ emp, onOpenMemory }) {
   const m = modelById(emp.model), r = reasoningById(emp.reasoning);
   const wfs = employeeWorkflows(emp);
@@ -1246,10 +1457,10 @@ function EmployeeProfile({ emp, onOpenMemory }) {
   return (
     <div className="flex flex-col gap-4 overflow-y-auto">
       <div className="grid-cols-4">
-        <Stat2 label="Model" value={m.name} />
-        <Stat2 label="Reasoning" value={r.label} />
-        <Stat2 label="Tasks Done" value={emp.tasks_completed.toLocaleString()} />
-        <Stat2 label="Monthly Cost" value={`$${monthlyCost(emp).toLocaleString()}`} />
+        <Stat2 label="Model" value={m.name} icon={Bot} accent="var(--blue-600)" />
+        <Stat2 label="Reasoning" value={r.label} icon={Gauge} accent="#a78bfa" />
+        <Stat2 label="Tasks Done" value={emp.tasks_completed.toLocaleString()} icon={CheckCircle} accent="var(--green-600)" />
+        <Stat2 label="Monthly Cost" value={`$${monthlyCost(emp).toLocaleString()}`} icon={DollarSign} accent="#d98a5c" />
       </div>
       <Card>
         <div className="card-body flex items-center justify-between gap-4">
@@ -1257,7 +1468,7 @@ function EmployeeProfile({ emp, onOpenMemory }) {
             <div className="mem-card-ic"><Brain size={18} /></div>
             <div className="min-w-0">
               <div className="font-semibold">Memory</div>
-              <div className="text-xs text-muted truncate">Persistent workspace · {mem.folders} folders · {mem.files} files</div>
+              <div className="text-xs text-muted truncate">Open Knowledge bundle · {mem.files} concepts</div>
             </div>
           </div>
           <button className="btn btn-outline btn-sm" onClick={() => onOpenMemory?.()}><FolderOpen size={14} /> Open Memory</button>
@@ -1290,6 +1501,7 @@ function EmployeeProfile({ emp, onOpenMemory }) {
           ))}
         </div>
       </Card>
+      <KpiImpactSection emp={emp} />
       {eff.hasMapping && (
         <Note icon={Sparkles}>
           Background effectiveness for {emp.name}: ~<strong>{eff.timeSavedHours}h</strong> saved and
@@ -1390,7 +1602,7 @@ function MemoryExplorer({ emp, onClose }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-muted flex items-center gap-1"><HardDrive size={13} /> {stats.folders} folders · {stats.files} files</span>
+          <span className="text-xs text-muted flex items-center gap-1"><HardDrive size={13} /> Open Knowledge Format · {stats.files} concepts</span>
           <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={16} /> Close</button>
         </div>
       </header>
@@ -1475,10 +1687,21 @@ function OnboardWizard({ role, user, onClose, toast }) {
   });
   const [derived, setDerived] = useState(null);
   const [analyzeIdx, setAnalyzeIdx] = useState(-1);
+  const [mappedKpis, setMappedKpis] = useState([]); // kpi ids mapped to this employee
+  const [kpiInit, setKpiInit] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  // changing dept invalidates the derived workflows
-  useEffect(() => { setDerived(null); setAnalyzeIdx(-1); }, [form.dept]);
+  // changing dept invalidates the derived workflows + KPI mapping
+  useEffect(() => { setDerived(null); setAnalyzeIdx(-1); setMappedKpis([]); setKpiInit(false); }, [form.dept]);
+
+  // auto-map the most relevant KPIs on first arrival at the Map KPIs step
+  useEffect(() => {
+    if (step === 3 && !kpiInit) {
+      const dk = kpisForDept(form.dept);
+      setMappedKpis(dk.slice(0, Math.min(2, dk.length)).map(k => k.id));
+      setKpiInit(true);
+    }
+  }, [step, kpiInit, form.dept]);
 
   // kick off analysis when reaching the Compose step
   useEffect(() => {
@@ -1496,26 +1719,54 @@ function OnboardWizard({ role, user, onClose, toast }) {
   const updateWf = (i, patch) => setDerived(d => d.map((w, j) => j === i ? { ...w, ...patch } : w));
   const toggleUow = (i, id) => setDerived(d => d.map((w, j) => j === i ? { ...w, uowIds: w.uowIds.includes(id) ? w.uowIds.filter(x => x !== id) : [...w.uowIds, id] } : w));
 
-  const steps = ['Role', 'Model & Reasoning', 'Compose Workflows', 'Review'];
+  // Manual composer — derive a workflow from a free-text prompt, classify it as
+  // proactive (scheduled) or reactive, and attach the Units of Work it references.
+  const [wfPrompt, setWfPrompt] = useState('');
+  const composeFromPrompt = () => {
+    const raw = wfPrompt.trim();
+    if (!raw) return;
+    const l = raw.toLowerCase();
+    const proactive = /(every|daily|weekly|hourly|monitor|watch|sweep|schedule|nightly|each morning|recurring|cron|poll)/.test(l);
+    const schedule = proactive
+      ? (/hour/.test(l) ? 'Hourly during business hours' : /week/.test(l) ? 'Weekly on Mon at 07:00' : 'Daily at 08:00')
+      : null;
+    const dUows = UNITS_OF_WORK.filter(u => u.dept === form.dept);
+    const matched = dUows.filter(u => l.includes(u.name.toLowerCase().split(' ')[0]) || u.name.toLowerCase().split(' ').some(w => w.length > 3 && l.includes(w)));
+    const uowIds = (matched.length ? matched : dUows.slice(0, 2)).map(u => u.id);
+    const name = raw.replace(/^(create|compose|build|add|set up|make)\s+(a |an )?/i, '').replace(/\.$/, '');
+    const wf = { name: name.charAt(0).toUpperCase() + name.slice(1), trigger: proactive ? 'proactive' : 'reactive', schedule, uowIds, manual: true };
+    setDerived(d => [...(d || []), wf]);
+    setWfPrompt('');
+    toast(`Composed a ${wf.trigger} workflow from your prompt`, 'success');
+  };
+
+  const steps = ['Role', 'Model & Reasoning', 'Compose Workflows', 'Map KPIs', 'Review'];
   const analyzing = analyzeIdx >= 0 && derived === null;
   const canNext = step === 0 ? (form.name.trim() && form.title.trim()) : step === 2 ? !analyzing : true;
   const deptUows = UNITS_OF_WORK.filter(u => u.dept === form.dept);
+  const deptKpis = kpisForDept(form.dept);
+  const toggleKpi = (id) => setMappedKpis(m => m.includes(id) ? m.filter(x => x !== id) : [...m, id]);
 
   const finish = () => {
     createEmployee({
       name: form.name, title: form.title, archetype: form.archetype, dept: form.dept,
       status: 'active', model: form.model, reasoning: form.reasoning, tokensMonth: 8_000_000,
       tasks_completed: 0, workflowIds: [], description: form.description || `${form.title} for ${form.dept}.`,
-      composedWorkflows: derived || [],
+      composedWorkflows: derived || [], kpiIds: mappedKpis,
     });
     toast(`${form.name} onboarded`, 'success');
     onClose();
   };
 
   return (
-    <Modal open onClose={onClose} title="Onboard AI Employee" size="lg">
-      <div>
-        <div className="wizard-steps mb-6">
+    <div className="wizard-overlay">
+      <div className="wizard-shell">
+        <div className="wizard-topbar">
+          <div className="flex items-center gap-2 font-semibold" style={{ fontSize: 16 }}><Rocket size={18} className="text-blue-500" /> Onboard AI Employee</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><X size={16} /> Close</button>
+        </div>
+        <div className="wizard-content">
+          <div className="wizard-steps mb-6">
           {steps.map((s, i) => (
             <div key={s} className={`wizard-step ${i === step ? 'active' : i < step ? 'done' : ''}`}>
               <div className="dot">{i < step ? <CheckCircle size={15} /> : i + 1}</div>
@@ -1577,13 +1828,19 @@ function OnboardWizard({ role, user, onClose, toast }) {
 
         {step === 2 && !analyzing && derived && (
           <div className="flex flex-col gap-4">
-            <Note icon={Sparkles}>Derived <strong>{derived.length}</strong> workflow{derived.length === 1 ? '' : 's'} from {form.dept}’s Units of Work and classified each as reactive or proactive. Adjust below.</Note>
-            {derived.length === 0 && <div className="text-muted text-sm">No Units of Work mapped for {form.dept} yet — create some first on the Units of Work page.</div>}
+            <Note icon={Sparkles}>Derived <strong>{derived.length}</strong> workflow{derived.length === 1 ? '' : 's'} from {form.dept}’s Units of Work and classified each as reactive or proactive. Adjust below, or compose one from a prompt.</Note>
+            <div className="flex gap-2">
+              <input className="search-input" style={{ flex: 1, fontSize: 13 }} placeholder='Describe a workflow — e.g. "every morning, sweep delinquencies and open work orders"'
+                value={wfPrompt} onChange={e => setWfPrompt(e.target.value)} onKeyDown={e => e.key === 'Enter' && composeFromPrompt()} />
+              <button className="btn btn-primary btn-sm" disabled={!wfPrompt.trim()} onClick={composeFromPrompt}><Sparkles size={14} /> Compose</button>
+            </div>
+            {derived.length === 0 && <div className="text-muted text-sm">No Units of Work mapped for {form.dept} yet — create some first, or compose a workflow from a prompt above.</div>}
             {derived.map((w, i) => (
               <div key={i} className="p-4 border rounded-lg flex flex-col gap-3">
                 <div className="flex items-center gap-3">
                   <Workflow size={16} className="text-blue-600" />
                   <input className="search-input" style={{ flex: 1 }} value={w.name} onChange={e => updateWf(i, { name: e.target.value })} />
+                  {w.manual && <Pill label="from prompt" tone="info" />}
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-xs text-muted">Trigger</span>
@@ -1603,7 +1860,7 @@ function OnboardWizard({ role, user, onClose, toast }) {
                     return (
                       <button key={u.id} onClick={() => toggleUow(i, u.id)}
                         className="text-xs px-2 py-1 rounded flex items-center gap-1"
-                        style={{ border: '1px solid', borderColor: on ? 'var(--blue-500)' : 'var(--gray-300)', background: on ? 'var(--blue-50)' : 'white', color: on ? 'var(--blue-700)' : 'var(--gray-600)' }}>
+                        style={{ border: '1px solid', borderColor: on ? 'var(--blue-500)' : 'var(--border)', background: on ? 'var(--blue-50)' : 'var(--surface-2)', color: on ? 'var(--blue-700)' : 'var(--gray-600)' }}>
                         <Boxes size={11} /> {u.name}
                       </button>
                     );
@@ -1615,6 +1872,28 @@ function OnboardWizard({ role, user, onClose, toast }) {
         )}
 
         {step === 3 && (
+          <div className="flex flex-col gap-3">
+            <Note icon={Gauge}>Map the business KPIs {form.name || 'this employee'} will move. The system auto-mapped the most relevant ones from {form.dept}’s inventory — adjust below. Each run is measured before &amp; after to score impact.</Note>
+            {deptKpis.length === 0 && <div className="text-muted text-sm">No KPIs inventoried for {form.dept} yet — add them during department onboarding.</div>}
+            {deptKpis.map(k => {
+              const on = mappedKpis.includes(k.id);
+              return (
+                <button key={k.id} onClick={() => toggleKpi(k.id)} className="flex items-center gap-3 p-3 border rounded-lg text-left"
+                  style={{ borderColor: on ? 'var(--blue-500)' : 'var(--border)', background: on ? 'var(--blue-50)' : 'transparent' }}>
+                  <Gauge size={16} className={on ? 'text-blue-600' : 'text-muted'} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm">{k.name}</div>
+                    <div className="text-xs text-muted">Source: {k.source} · {k.direction === 'up' ? 'higher is better' : 'lower is better'} · target {k.target}{k.unit === '%' ? '%' : ` ${k.unit}`}</div>
+                  </div>
+                  {on ? <CheckCircle size={16} className="text-blue-600" /> : <Plus size={16} className="text-muted" />}
+                </button>
+              );
+            })}
+            {deptKpis.length > 0 && <div className="text-xs text-muted">{mappedKpis.length} KPI{mappedKpis.length === 1 ? '' : 's'} mapped.</div>}
+          </div>
+        )}
+
+        {step === 4 && (
           <div className="flex flex-col gap-3">
             <div className="grid-cols-2" style={{ gap: 12 }}>
               <Stat2 label="Name" value={form.name || '—'} />
@@ -1638,15 +1917,16 @@ function OnboardWizard({ role, user, onClose, toast }) {
             <Note icon={CheckCircle}>{form.name || 'This employee'} will start <strong>active</strong> with {(derived || []).length} workflow{(derived || []).length === 1 ? '' : 's'}.</Note>
           </div>
         )}
-      </div>
+        </div>
 
-      <div className="flex justify-between gap-2 mt-6 pt-4 border-t">
-        <div>{step > 0 && <button className="btn btn-outline" onClick={() => setStep(step - 1)}>Back</button>}</div>
-        {step < steps.length - 1
-          ? <button className="btn btn-primary" disabled={!canNext} onClick={() => setStep(step + 1)}>{step === 2 && analyzing ? 'Analyzing…' : 'Continue'}</button>
-          : <button className="btn btn-primary" onClick={finish}><CheckCircle size={16} /> Create Employee</button>}
+        <div className="wizard-footer">
+          <div>{step > 0 && <button className="btn btn-outline" onClick={() => setStep(step - 1)}>Back</button>}</div>
+          {step < steps.length - 1
+            ? <button className="btn btn-primary" disabled={!canNext} onClick={() => setStep(step + 1)}>{step === 2 && analyzing ? 'Analyzing…' : 'Continue'}</button>
+            : <button className="btn btn-primary" onClick={finish}><CheckCircle size={16} /> Create Employee</button>}
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }
 

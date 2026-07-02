@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onyx · Meridian — Pathway to the AI-Native Enterprise</title>
+  <meta name="description" content="Onyx connects how your people work and how your business operates — into one intelligent, governed system. Co-Work + Digital Twin, powered by composable accelerators." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- progress bar -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ============================ NAV ============================ -->
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#top" class="brand" aria-label="Onyx Meridian home">
+      <span class="logo">
+        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="9" fill="var(--ink)"/>
+          <path d="M16 7c.7 4.4 3.9 7.6 9 8.3-5.1.7-8.3 3.9-9 9-.7-5.1-3.9-8.3-9-9 5.1-.7 8.3-3.9 9-8.3Z" fill="#fff"/>
+        </svg>
+        <span class="logo-word">onyx</span>
+      </span>
+      <span class="brand-div">/</span>
+      <span class="brand-sub">meridian</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="#framework">Framework</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#accelerators">Accelerators</a>
+      <a href="#platform">Platform</a>
+      <a href="#enterprise">Enterprise</a>
+      <a href="#team">Team</a>
+    </nav>
+
+    <div class="nav-cta">
+      <a href="#demo" class="btn btn-ghost">Sign in</a>
+      <a href="#demo" class="btn btn-primary">Book a demo</a>
+    </div>
+
+    <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============================ HERO ============================ -->
+<section class="hero" id="framework">
+  <div class="hero-grid-bg" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+
+  <div class="container hero-content">
+    <div class="eyebrow center" data-reveal>Enterprise AI Framework</div>
+    <h1 class="hero-title" data-reveal>
+      Pathway to the<br /><span class="grad">AI-Native Enterprise</span>
+    </h1>
+    <p class="hero-sub" data-reveal>
+      Onyx connects how your people work and how your business operates —
+      into one intelligent, governed system.
+    </p>
+    <div class="hero-actions" data-reveal>
+      <a href="#architecture" class="btn btn-primary btn-lg">Explore the framework <span class="arrow">→</span></a>
+      <a href="#platform" class="btn btn-line btn-lg">See it live</a>
+    </div>
+
+    <!-- floating product dashboard mock -->
+    <div class="hero-stage" data-reveal>
+      <div class="dash" id="heroDash">
+        <div class="dash-head">
+          <div class="dash-dots"><span></span><span></span><span></span></div>
+          <div class="dash-title">
+            <span class="dash-app">Meridian</span>
+            <span class="dash-crumb">Operate / Order-to-Cash</span>
+          </div>
+          <div class="dash-live"><span class="live-dot"></span> Live</div>
+        </div>
+
+        <div class="dash-body">
+          <div class="dash-main">
+            <div class="kpis">
+              <div class="kpi">
+                <div class="kpi-ico kpi-blue">₹</div>
+                <div class="kpi-n" data-count="14" data-suffix="">0</div>
+                <div class="kpi-l">High-value ≥ ₹10L</div>
+                <div class="kpi-d crit">3 critical</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-ico kpi-amber">!</div>
+                <div class="kpi-n" data-count="8">0</div>
+                <div class="kpi-l">Blocked orders</div>
+                <div class="kpi-d warn">2 escalated</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-ico kpi-green">↗</div>
+                <div class="kpi-n" data-count="6.2" data-decimals="1">0</div>
+                <div class="kpi-l">Avg days stalled</div>
+                <div class="kpi-d good">−1.3 vs last week</div>
+              </div>
+            </div>
+
+            <div class="dtable">
+              <div class="dtable-head">
+                <div>High-Value Pending Orders</div>
+                <div class="dtable-sub">Orders ≥ ₹10L requiring action</div>
+              </div>
+              <table>
+                <thead>
+                  <tr><th>Order</th><th>Account</th><th>Value</th><th>Status</th><th>Risk</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td class="oid">SO-8821</td><td>Reliance Industries</td><td>₹14.2L</td><td><span class="pill pill-amber">Pending Approval</span></td><td><span class="risk high">High</span></td></tr>
+                  <tr><td class="oid">SO-7741</td><td>TCS Limited</td><td>₹12.8L</td><td><span class="pill pill-red">Data Incomplete</span></td><td><span class="risk high">High</span></td></tr>
+                  <tr><td class="oid">SO-9102</td><td>Infosys Tech</td><td>₹18.5L</td><td><span class="pill pill-blue">In Progress</span></td><td><span class="risk med">Medium</span></td></tr>
+                  <tr><td class="oid">SO-8192</td><td>HCL Technologies</td><td>₹15.7L</td><td><span class="pill pill-violet">ERP Sync</span></td><td><span class="risk med">Medium</span></td></tr>
+                  <tr><td class="oid">SO-6543</td><td>Wipro Systems</td><td>₹10.3L</td><td><span class="pill pill-gray">Pending Review</span></td><td><span class="risk low">Low</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="dash-side">
+            <div class="cowork-id">
+              <div class="cowork-ava"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M12 7V4M9 13h.01M15 13h.01"/></svg></div>
+              <div>
+                <div class="cowork-name">Co-Work</div>
+                <div class="cowork-role">AI assistant · Order-to-Cash</div>
+              </div>
+            </div>
+            <p class="cowork-msg">Hi! I'm Co-Work. I watch this workflow and act within policy. Assign me a task to get started.</p>
+
+            <div class="cowork-card">
+              <div class="cowork-card-head"><span class="cw-spark">✦</span> 3 orders above ₹10L pending for 5+ days</div>
+              <div class="cowork-card-actions">
+                <button class="cw-btn ghost">Review</button>
+                <button class="cw-btn solid">Assign to Co-Work</button>
+              </div>
+            </div>
+
+            <div class="cowork-input">
+              <span>Assign a task to Co-Work…</span>
+              <span class="cw-send">↵</span>
+            </div>
+            <div class="cowork-quick">
+              <span class="qa-label">Quick actions</span>
+              <a>Export pending orders</a>
+              <a>View blocked orders</a>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ STATS ============================ -->
+<section class="stats">
+  <div class="container stats-grid">
+    <div class="stat" data-reveal>
+      <div class="stat-n"><span data-count="7">0</span></div>
+      <div class="stat-l">Layers of enterprise context</div>
+    </div>
+    <div class="stat" data-reveal>
+      <div class="stat-n"><span data-count="5">0</span></div>
+      <div class="stat-l">Composable accelerators</div>
+    </div>
+    <div class="stat" data-reveal>
+      <div class="stat-n"><span data-count="2">0</span></div>
+      <div class="stat-l">Intelligence layers, one system</div>
+    </div>
+    <div class="stat" data-reveal>
+      <div class="stat-n"><span data-count="100">0</span><span class="stat-unit">%</span></div>
+      <div class="stat-l">Governed &amp; traceable actions</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ THE PROBLEM ============================ -->
+<section class="section problem" id="problem">
+  <div class="container two-col">
+    <div class="problem-visual" data-reveal>
+      <div class="frag-card">
+        <div class="frag-cols">
+          <div class="frag-col">
+            <div class="frag-cap red">AI-enabled</div>
+            <div class="frag-h">Fragmentation</div>
+            <div class="frag-apps">
+              <div class="frag-app">CRM <span class="ai-tag">AI</span></div>
+              <div class="frag-app">ERP <span class="ai-tag">AI</span></div>
+              <div class="frag-app">Analytics <span class="ai-tag">AI</span></div>
+              <div class="frag-app">Comms <span class="ai-tag">AI</span></div>
+              <span class="frag-x x1">✕</span>
+              <span class="frag-x x2">✕</span>
+              <span class="frag-x x3">✕</span>
+            </div>
+            <div class="frag-note red">Data without context.<br/>Insight without action.</div>
+          </div>
+          <div class="frag-divider"><span>continuous intelligence</span></div>
+          <div class="frag-col">
+            <div class="frag-cap green">AI-native</div>
+            <div class="frag-h">Continuous intelligence</div>
+            <div class="frag-flow">
+              <div class="flow-node n-knowledge">Knowledge<small>Context &amp; data</small></div>
+              <div class="flow-link"></div>
+              <div class="flow-node n-insight">Insight<small>Real-time decisions</small></div>
+              <div class="flow-link"></div>
+              <div class="flow-node n-action">Action<small>Governed &amp; traced</small></div>
+            </div>
+            <div class="frag-note green">Context moves across systems.<br/>Outcomes remain governed.</div>
+          </div>
+        </div>
+        <div class="frag-foot">Intelligence built into the workflow — not bolted on top.</div>
+      </div>
+    </div>
+
+    <div class="problem-copy">
+      <div class="eyebrow" data-reveal>The Problem</div>
+      <h2 class="h2" data-reveal>AI exists across the enterprise. But does it truly <span class="ink-accent">operate within</span> it?</h2>
+      <p data-reveal>Copilots remain trapped inside individual applications. Automation runs without business context. Insights stay disconnected from execution.</p>
+      <p data-reveal>The result is not intelligence — it is fragmentation. Organizations generate more data than ever, yet struggle to answer simple operational questions in real time.</p>
+      <p data-reveal>AI-enabled organizations add intelligence <em>around</em> existing workflows. AI-native organizations build intelligence <em>into</em> the workflows themselves — so context moves across systems, decisions happen in real time, and outcomes remain governed and traceable.</p>
+      <p class="lead-accent" data-reveal>This creates a continuous layer of intelligence connecting knowledge, insight, and action across the enterprise.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CONVERGENCE ============================ -->
+<section class="section convergence soft">
+  <div class="container two-col reverse">
+    <div class="conv-copy">
+      <div class="eyebrow" data-reveal>Convergence</div>
+      <h2 class="h2" data-reveal>Where work meets enterprise intelligence</h2>
+      <p data-reveal>Co-Work and Digital Twin are not separate capabilities. They are two sides of the same system — creating a shared layer of intelligence that connects users, systems, workflows, and decisions.</p>
+      <ul class="numbered" data-reveal>
+        <li><span class="num">01</span> Decisions with real-time awareness</li>
+        <li><span class="num">02</span> Actions aligned across teams</li>
+        <li><span class="num">03</span> Workflows that adapt dynamically</li>
+        <li><span class="num">04</span> Enterprise-wide coordination</li>
+      </ul>
+    </div>
+
+    <div class="conv-visual" data-reveal>
+      <div class="conv-diagram">
+        <div class="cd-top">
+          <div class="cd-box light">
+            <span class="cd-tag">Layer 01</span>
+            <strong>Co-Work</strong>
+            <small>Employee Intelligence</small>
+          </div>
+          <div class="cd-box dark">
+            <span class="cd-tag">Layer 02</span>
+            <strong>Digital Twin</strong>
+            <small>Enterprise Intelligence</small>
+          </div>
+        </div>
+        <svg class="cd-wires" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M80 6 L160 70" class="wire blue"/>
+          <path d="M240 6 L160 70" class="wire blue"/>
+          <path d="M160 96 L60 118" class="wire gray"/>
+          <path d="M160 96 L120 118" class="wire gray"/>
+          <path d="M160 96 L200 118" class="wire gray"/>
+          <path d="M160 96 L260 118" class="wire gray"/>
+        </svg>
+        <div class="cd-core">
+          <span class="cd-core-tag">Core</span>
+          Shared Intelligence
+        </div>
+        <div class="cd-base">
+          <span>Users</span><span>Systems</span><span>Workflows</span><span>Decisions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ARCHITECTURE ============================ -->
+<section class="section architecture" id="architecture">
+  <div class="container">
+    <div class="eyebrow" data-reveal>The Architecture</div>
+    <h2 class="h2 mb-lg" data-reveal>Two layers. One enterprise system.</h2>
+
+    <div class="layer-grid">
+      <article class="layer-card light" data-reveal>
+        <div class="layer-top">
+          <span class="layer-tag">Layer 01</span>
+          <span class="layer-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 7a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>
+          </span>
+        </div>
+        <h3 class="layer-h">Co-Work</h3>
+        <div class="layer-kicker blue">Employee Intelligence Layer</div>
+        <p>Co-Work brings AI directly into the flow of work. It embeds intelligence inside enterprise applications through <strong>Application Use Agents</strong> — AI coworkers that understand workflows, system state, and ongoing actions.</p>
+        <div class="cap-label">Capabilities</div>
+        <ul class="caps">
+          <li>Understands workflows and system state</li>
+          <li>Assists users with contextual guidance</li>
+          <li>Executes within defined boundaries</li>
+          <li>Learns how the business operates</li>
+        </ul>
+      </article>
+
+      <article class="layer-card dark" data-reveal>
+        <div class="layer-top">
+          <span class="layer-tag">Layer 02</span>
+          <span class="layer-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4"/></svg>
+          </span>
+        </div>
+        <h3 class="layer-h">Digital Twin</h3>
+        <div class="layer-kicker blue">Enterprise Intelligence Layer</div>
+        <p>Digital Twin creates a live, operational model of the enterprise. It captures what is happening now — and what is likely to happen next. Not a dashboard. A model of the enterprise itself.</p>
+        <div class="cap-label">Capabilities</div>
+        <ul class="caps two">
+          <li>Real-time enterprise awareness</li>
+          <li>Predictive insight and simulation</li>
+          <li>Governed decision-making</li>
+          <li>Continuous state synchronization</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ DIFFERENTIATORS ============================ -->
+<section class="section differentiators soft">
+  <div class="container">
+    <div class="eyebrow" data-reveal>Core Differentiators</div>
+    <h2 class="h2 mb-lg" data-reveal>The Onyx Approach</h2>
+
+    <div class="diff-grid">
+      <article class="diff-card light" data-reveal>
+        <span class="diff-tag">Differentiator 01</span>
+        <h3 class="diff-h">Context Engineering</h3>
+        <p>Onyx builds a continuous, multi-layered understanding of the enterprise — knowing what is happening, why it matters, and what actions are possible.</p>
+        <div class="ctx-grid">
+          <div class="ctx"><span class="ctx-n">01</span><strong>Domain</strong><small>Industry rules, standards, constraints</small></div>
+          <div class="ctx"><span class="ctx-n">02</span><strong>Business</strong><small>Goals, KPIs, priorities, outcomes</small></div>
+          <div class="ctx"><span class="ctx-n">03</span><strong>Application</strong><small>Systems, APIs, workflows</small></div>
+          <div class="ctx"><span class="ctx-n">04</span><strong>Data</strong><small>Real-time signals, metrics, events</small></div>
+          <div class="ctx"><span class="ctx-n">05</span><strong>Organization</strong><small>Roles, hierarchy, ownership</small></div>
+          <div class="ctx"><span class="ctx-n">06</span><strong>User</strong><small>Behavior, intent, preferences</small></div>
+          <div class="ctx"><span class="ctx-n">07</span><strong>Policy</strong><small>Governance, compliance, control</small></div>
+          <div class="ctx ctx-dark"><span class="ctx-badge">7 layers of<br/>enterprise context</span></div>
+        </div>
+      </article>
+
+      <article class="diff-card dark" data-reveal>
+        <span class="diff-tag">Differentiator 02</span>
+        <h3 class="diff-h">Policy Engine</h3>
+        <p class="diff-sub">Governed intelligence. Every action is controlled, compliant, and auditable.</p>
+        <ul class="policy-list">
+          <li><span class="dot"></span> Permission-aware</li>
+          <li><span class="dot"></span> Policy-compliant</li>
+          <li><span class="dot"></span> Traceable &amp; auditable</li>
+          <li><span class="dot"></span> Governance-aligned</li>
+        </ul>
+        <div class="policy-foot">Enforced via <span class="hl">Vault</span> + <span class="hl">Ensure</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ACCELERATORS ============================ -->
+<section class="section accelerators" id="accelerators">
+  <div class="container">
+    <div class="eyebrow" data-reveal>System Components</div>
+    <h2 class="h2" data-reveal>The Onyx accelerators</h2>
+    <p class="section-lead" data-reveal>Modular, composable components. Each operates independently — maximum value when connected.</p>
+
+    <div class="acc-grid">
+      <article class="acc-card" data-reveal data-accent="pulse">
+        <div class="acc-spot" aria-hidden="true"></div>
+        <div class="acc-logo">onyx<span>pulse</span></div>
+        <h3>Pulse</h3>
+        <div class="acc-kind">Knowledge Intelligence</div>
+        <p>Transforms enterprise knowledge into a real-time intelligence layer. Makes institutional knowledge accessible in the flow of work.</p>
+      </article>
+
+      <article class="acc-card" data-reveal data-accent="prism">
+        <div class="acc-spot" aria-hidden="true"></div>
+        <div class="acc-logo">onyx<span>prism</span></div>
+        <h3>Prism</h3>
+        <div class="acc-kind">Decision Intelligence</div>
+        <p>Delivers predictive, role-aligned insights beyond traditional dashboards. Surfaces anomalies, trends, and opportunities.</p>
+      </article>
+
+      <article class="acc-card" data-reveal data-accent="flow">
+        <div class="acc-spot" aria-hidden="true"></div>
+        <div class="acc-logo">onyx<span>flow</span></div>
+        <h3>Flow</h3>
+        <div class="acc-kind">Workflow Intelligence</div>
+        <p>Orchestrates actions across systems. Turns intelligence into coordinated movement and execution.</p>
+      </article>
+
+      <article class="acc-card" data-reveal data-accent="ensure">
+        <div class="acc-spot" aria-hidden="true"></div>
+        <div class="acc-logo">onyx<span>ensure</span></div>
+        <h3>Ensure</h3>
+        <div class="acc-kind">Observability &amp; Improvement</div>
+        <p>Monitors health, quality, drift, and value. Continuous feedback loops that make the system smarter over time.</p>
+      </article>
+
+      <article class="acc-card" data-reveal data-accent="vault">
+        <div class="acc-spot" aria-hidden="true"></div>
+        <div class="acc-logo">onyx<span>vault</span></div>
+        <h3>Vault</h3>
+        <div class="acc-kind">Security &amp; Governance</div>
+        <p>Enforces permissions, audit trails, and compliance across the entire intelligence stack.</p>
+      </article>
+
+      <article class="acc-card acc-dark" data-reveal>
+        <span class="acc-tag">Architecture</span>
+        <h3 class="acc-dark-h">Composable by design</h3>
+        <p>Deploy independently or together. LLM-agnostic. Deploy-anywhere. Modular APIs and SDKs.</p>
+        <div class="acc-chips">
+          <span>LLM Agnostic</span><span>Deploy Anywhere</span><span>Modular APIs</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PLATFORM / LIVE ============================ -->
+<section class="section platform soft" id="platform">
+  <div class="container">
+    <div class="eyebrow" data-reveal>The Platform, Live</div>
+    <h2 class="h2" data-reveal>Intelligence you can watch move</h2>
+    <p class="section-lead" data-reveal>Co-Work acts inside the apps your teams already use. Digital Twin keeps a live, connected model of everything in motion — people, systems, workflows, and decisions.</p>
+
+    <div class="platform-grid">
+      <div class="platform-graph" data-reveal>
+        <canvas id="graphCanvas"></canvas>
+        <div class="graph-legend">
+          <span class="lg lg-user">Users</span>
+          <span class="lg lg-sys">Systems</span>
+          <span class="lg lg-flow">Workflows</span>
+          <span class="lg lg-dec">Decisions</span>
+        </div>
+        <div class="graph-cap">Digital Twin — a live operational model</div>
+      </div>
+
+      <div class="platform-side">
+        <div class="pfeat" data-reveal>
+          <div class="pfeat-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M3 12h18" opacity=".0"/><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div>
+          <div>
+            <h4>In the flow of work</h4>
+            <p>Application Use Agents understand the screen, the workflow, and the system state — then assist or act within policy.</p>
+          </div>
+        </div>
+        <div class="pfeat" data-reveal>
+          <div class="pfeat-ico violet"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Z"/><path d="M12 7v5l3 2"/></svg></div>
+          <div>
+            <h4>Real-time &amp; predictive</h4>
+            <p>The twin captures what's happening now and simulates what's likely next — so decisions are made with foresight.</p>
+          </div>
+        </div>
+        <div class="pfeat" data-reveal>
+          <div class="pfeat-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-4Z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <div>
+            <h4>Governed by default</h4>
+            <p>Every action is permission-aware, policy-compliant, and fully traceable — enforced by Vault and observed by Ensure.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- integrations marquee -->
+    <div class="marquee" data-reveal>
+      <div class="marquee-label">Connects the systems you already run</div>
+      <div class="marquee-track" id="marquee">
+        <span>Salesforce</span><span>SAP</span><span>ServiceNow</span><span>Workday</span><span>Snowflake</span><span>NetSuite</span><span>Slack</span><span>Microsoft 365</span><span>Oracle</span><span>HubSpot</span><span>Jira</span><span>Databricks</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ENTERPRISE READY ============================ -->
+<section class="section enterprise" id="enterprise">
+  <div class="container">
+    <div class="eyebrow" data-reveal>Enterprise Ready</div>
+    <h2 class="h2 mb-lg" data-reveal>Built to fit the enterprise you already run</h2>
+
+    <div class="ent-grid">
+      <div class="ent-col" data-reveal>
+        <div class="ent-cap">Deployment</div>
+        <h3>Deploy Anywhere</h3>
+        <p class="ent-sub">No rip-and-replace. No disruption.</p>
+        <ul class="ent-list icon">
+          <li><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 18 18H7Z"/></svg> Public Cloud</li>
+          <li><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg> Private Cloud</li>
+          <li><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.3-2.6h-4l-.3 2.6a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/></svg> On-Premise</li>
+          <li><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><path d="M11 7h4a2 2 0 0 1 2 2v4M13 17H9a2 2 0 0 1-2-2v-4"/></svg> Hybrid</li>
+        </ul>
+      </div>
+
+      <div class="ent-col" data-reveal>
+        <div class="ent-cap">Models</div>
+        <h3>LLM Agnostic</h3>
+        <p class="ent-sub">You control how intelligence is powered.</p>
+        <ul class="ent-list dotcol">
+          <li>Leading LLM providers</li>
+          <li>Open-source models</li>
+          <li>Custom enterprise models</li>
+        </ul>
+      </div>
+
+      <div class="ent-col" data-reveal>
+        <div class="ent-cap">Extensibility</div>
+        <h3>Consume Your Way</h3>
+        <p class="ent-sub">Integrates into existing workflows.</p>
+        <ul class="ent-list dotcol blue">
+          <li>APIs &amp; SDKs</li>
+          <li>MCP Server</li>
+          <li>Embedded apps</li>
+          <li>Full platform</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TEAM (GYTWorkz) ============================ -->
+<section class="section team soft" id="team">
+  <div class="container two-col team-cols">
+    <div class="team-copy">
+      <div class="eyebrow" data-reveal>The Team Behind Onyx</div>
+      <h2 class="h2" data-reveal>Engineered by GYTWorkz</h2>
+      <p data-reveal>An AI and engineering partner focused on operationalizing enterprise intelligence. Our focus is not experimentation. It is execution.</p>
+      <div class="gyt-logo" data-reveal>
+        <span class="gyt-top">GYT<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="6" fill="var(--gyt)"/><path d="M8 16L16 8M16 8h-5M16 8v5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="gyt-bot">WORKZ</span>
+      </div>
+    </div>
+
+    <div class="team-panel" data-reveal>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="advisory" role="tab">AI Advisory</button>
+        <button class="tab" data-tab="engineering" role="tab">AI Engineering</button>
+        <button class="tab" data-tab="accel" role="tab">AI Accelerators</button>
+      </div>
+
+      <div class="tab-panel active" data-panel="advisory">
+        <p>Strategic advisory services that help enterprises define their AI vision, identify high-impact use cases, and build a roadmap from experimentation to operationalized intelligence.</p>
+        <div class="cap-label">Key areas</div>
+        <ul class="tab-caps">
+          <li>AI maturity assessment</li>
+          <li>Use case prioritization</li>
+          <li>Enterprise AI roadmap</li>
+          <li>Change management strategy</li>
+        </ul>
+      </div>
+      <div class="tab-panel" data-panel="engineering">
+        <p>Full-stack AI engineering that takes concepts from design through production. We build the systems, pipelines, and integrations that make enterprise AI real.</p>
+        <div class="cap-label">Key areas</div>
+        <ul class="tab-caps">
+          <li>Platform architecture</li>
+          <li>Model development &amp; fine-tuning</li>
+          <li>System integration</li>
+          <li>Production deployment</li>
+        </ul>
+      </div>
+      <div class="tab-panel" data-panel="accel">
+        <p>Pre-built, modular components that fast-track enterprise AI adoption. Each accelerator solves a specific capability gap and can be deployed independently or as part of the Onyx framework.</p>
+        <div class="cap-label">Key areas</div>
+        <ul class="tab-caps">
+          <li>Pulse, Prism, Flow, Ensure, Vault</li>
+          <li>Enterprise-integrated intelligence</li>
+          <li>Deploy-anywhere architecture</li>
+          <li>LLM-agnostic by design</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- onyxperts -->
+  <div class="container onyxperts">
+    <div class="exp-head">
+      <div>
+        <div class="eyebrow" data-reveal>The Onyxperts</div>
+        <h2 class="h2" data-reveal>Meet the Onyxperts</h2>
+        <p data-reveal>Engineers, architects, and AI specialists designing the next generation of enterprise intelligence.</p>
+      </div>
+      <div class="exp-nav" data-reveal>
+        <button class="exp-arrow" id="expPrev" aria-label="Previous">‹</button>
+        <button class="exp-arrow" id="expNext" aria-label="Next">›</button>
+      </div>
+    </div>
+
+    <div class="exp-track" id="expTrack" data-reveal>
+      <article class="exp-card"><div class="exp-ava">AK</div><h4>Arjun Kapoor</h4><div class="exp-role">Chief AI Architect</div><p>Designs the context-engineering core that powers Onyx's enterprise model.</p></article>
+      <article class="exp-card"><div class="exp-ava">PN</div><h4>Priya Nair</h4><div class="exp-role">Head of Digital Twin</div><p>Builds the live operational model — real-time awareness and simulation.</p></article>
+      <article class="exp-card"><div class="exp-ava">RS</div><h4>Rohan Sharma</h4><div class="exp-role">Lead, Co-Work Agents</div><p>Embeds Application Use Agents into the flow of work, safely and usefully.</p></article>
+      <article class="exp-card"><div class="exp-ava">MI</div><h4>Meera Iyer</h4><div class="exp-role">Governance &amp; Vault</div><p>Owns permissions, audit trails, and policy enforcement across the stack.</p></article>
+      <article class="exp-card"><div class="exp-ava">VR</div><h4>Vikram Rao</h4><div class="exp-role">Platform Engineering</div><p>Ships the deploy-anywhere, LLM-agnostic runtime behind every accelerator.</p></article>
+      <article class="exp-card"><div class="exp-ava">SD</div><h4>Sana Desai</h4><div class="exp-role">Decision Intelligence</div><p>Turns signals into predictive, role-aligned insight through Prism.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CTA ============================ -->
+<section class="cta" id="demo">
+  <div class="cta-glow" aria-hidden="true"></div>
+  <div class="container cta-inner">
+    <div class="eyebrow center light" data-reveal>Start the pathway</div>
+    <h2 class="cta-title" data-reveal>Operationalize enterprise intelligence.</h2>
+    <p class="cta-sub" data-reveal>Move from experimentation to execution — with one intelligent, governed system that connects how your people work and how your business operates.</p>
+    <div class="cta-actions" data-reveal>
+      <a href="#" class="btn btn-white btn-lg">Book a demo <span class="arrow">→</span></a>
+      <a href="#framework" class="btn btn-outline-light btn-lg">Read the framework</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="logo">
+        <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="2" width="28" height="28" rx="9" fill="var(--ink)"/>
+          <path d="M16 7c.7 4.4 3.9 7.6 9 8.3-5.1.7-8.3 3.9-9 9-.7-5.1-3.9-8.3-9-9 5.1-.7 8.3-3.9 9-8.3Z" fill="#fff"/>
+        </svg>
+        <span class="logo-word">onyx</span>
+      </span>
+      <p class="footer-tag">Pathway to the AI-Native Enterprise. Co-Work + Digital Twin, governed end to end.</p>
+      <div class="footer-gyt">Engineered by <strong>GYTWorkz</strong></div>
+    </div>
+
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h5>Framework</h5>
+        <a href="#problem">The Problem</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#accelerators">Accelerators</a>
+        <a href="#enterprise">Enterprise</a>
+      </div>
+      <div class="footer-col">
+        <h5>Accelerators</h5>
+        <a href="#accelerators">Pulse</a>
+        <a href="#accelerators">Prism</a>
+        <a href="#accelerators">Flow</a>
+        <a href="#accelerators">Ensure</a>
+        <a href="#accelerators">Vault</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#team">Team</a>
+        <a href="#demo">Book a demo</a>
+        <a href="#platform">Platform</a>
+        <a href="#top">Top</a>
+      </div>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 Onyx · Meridian — GYTWorkz. All rights reserved.</span>
+    <span class="footer-mini">Built into the workflow — not bolted on top.</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

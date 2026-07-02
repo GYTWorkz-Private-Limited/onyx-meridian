@@ -6,7 +6,7 @@ import { Avatar, Denied, useToast } from './components/ui.jsx';
 import VoiceInput from './components/VoiceInput.jsx';
 import { Logo } from './components/Logo.jsx';
 import { useStore } from './data/StoreContext.jsx';
-import { LayoutDashboard, CheckSquare, MessageSquare, Building2, Building, Globe, Bot, Kanban, ShieldCheck, Rocket, GitBranch, Plug, Network, DollarSign, TrendingUp, Users as UsersIcon, Scale, Settings as SettingsIcon, ChevronDown, Boxes, LogOut, PanelLeftClose, PanelLeftOpen, Activity, Share2, Target, FolderKanban, Cpu, Check } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, MessageSquare, Building2, Building, Globe, Bot, Kanban, ShieldCheck, Rocket, GitBranch, Plug, Network, DollarSign, TrendingUp, Users as UsersIcon, Scale, Settings as SettingsIcon, ChevronDown, Boxes, LogOut, PanelLeftClose, PanelLeftOpen, Activity, Share2, Target, FolderKanban, Cpu, Check, Sun, Moon } from 'lucide-react';
 
 const ICON_MAP = {
   LayoutDashboard, CheckSquare, MessageSquare, Building2, Building, Globe, Bot, Kanban,
@@ -225,10 +225,33 @@ function SignInLoader() {
   );
 }
 
+function ThemeToggle() {
+  const [theme, setTheme] = useState(() => {
+    try { return document.documentElement.getAttribute('data-theme') || 'dark'; } catch { return 'dark'; }
+  });
+  const toggle = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch {}
+  };
+  const isDark = theme === 'dark';
+  return (
+    <button
+      className="theme-toggle"
+      onClick={toggle}
+      title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+    >
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
+  );
+}
+
 export default function App() {
   const [userId, setUserId] = useState(null);
   const [signingIn, setSigningIn] = useState(false);
-  const [route, setRoute] = useState('dashboard');
+  const [route, setRoute] = useState('orgchart');
   const [navParams, setNavParams] = useState(null);
   const [sideCollapsed, setSideCollapsed] = useState(() => {
     try { return localStorage.getItem('sideCollapsed') === '1'; } catch { return false; }
@@ -316,6 +339,7 @@ export default function App() {
             {ROUTES.find(r => r.id === route)?.group} / <span className="text-gray-900">{ROUTES.find(r => r.id === route)?.label}</span>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <CompanySwitcher onManage={() => canAccess(role, 'companies') && setRoute('companies')} />
             <UserMenu currentUser={currentUser} userId={userId} onSwitch={handleSwitchUser} onSignOut={() => setUserId(null)} />
           </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, SectionTitle, Pill, Bar, statusTone, Modal, Note, Field, Select, SecuredBadge, Avatar, AgentAvatar, useSortable, SortHead, SkeletonRows, useFakeLoad } from '../components/ui.jsx';
 import { useStore } from '../data/StoreContext.jsx';
-import { WORKFLOWS, KNOWLEDGE_GRAPH, KG_STATS, DEPARTMENTS, UNITS_OF_WORK, uowById, uowRoi } from '../data/store.js';
+import { WORKFLOWS, KNOWLEDGE_GRAPH, KG_STATS, DEPARTMENTS, UNITS_OF_WORK, uowById, uowRoi, kpisForDept } from '../data/store.js';
 import { KnowledgeGraph } from '../components/KnowledgeGraph.jsx';
 import { BrandIcon } from '../components/BrandIcon.jsx';
-import { Rocket, CheckCircle, RefreshCw, Plus, Boxes, Plug, Info, Calendar, Zap, Building2, Clock, DollarSign, Lock, ShieldCheck, ArrowRight, Loader2, Search, ChevronDown, Gauge, Repeat, TrendingUp, ShieldAlert, Sparkles, FileText, Video, Music, Play, Pause, Upload, Network, FileAudio, FileVideo } from 'lucide-react';
+import { KpiInventoryPanel } from '../components/KpiInventory.jsx';
+import { Rocket, CheckCircle, RefreshCw, Plus, Boxes, Plug, Info, Calendar, Zap, Building2, Clock, DollarSign, Lock, ShieldCheck, ArrowRight, Loader2, Search, ChevronDown, Gauge, Repeat, TrendingUp, ShieldAlert, Sparkles, FileText, Video, Music, Play, Pause, Upload, Network, FileAudio, FileVideo, X } from 'lucide-react';
 
 // group helper: returns [{ dept, items }] in DEPARTMENTS order, only non-empty
 function groupByDept(items) {
@@ -16,15 +17,26 @@ function groupByDept(items) {
 // ============================================================================
 // Department Onboarding — sophisticated multi-step stepper
 // ============================================================================
+// `base` is the nominal duration (ms) for each phase — they differ so the scan
+// feels like real work (crawling/scoring are heavy, auth is quick). Actual time
+// is randomised around `base` at runtime so no two runs feel identical.
 const DISCOVERY_PHASES = [
-  { label: 'Authenticating with connected systems', detail: 'Opening MCP sessions & validating scopes' },
-  { label: 'Crawling API surface & object schemas', detail: 'Reading endpoints, entities and permissions' },
-  { label: 'Extracting candidate Units of Work', detail: 'Clustering operations into atomic capabilities' },
-  { label: 'Scoring confidence & de-duplicating', detail: 'Pruning overlapping and low-signal candidates' },
-  { label: 'Re-ranking by leverage & frequency', detail: 'Prioritising high-impact units', rerank: true },
-  { label: 'Mapping manual time & cost', detail: 'Estimating savings against each unit' },
-  { label: 'Finalizing the Unit-of-Work catalog', detail: 'Securing each capability via the Meridian Proxy' },
+  { label: 'Authenticating with connected systems', detail: 'Opening MCP sessions & validating scopes', base: 1400 },
+  { label: 'Crawling API surface & object schemas', detail: 'Reading endpoints, entities and permissions', base: 5200 },
+  { label: 'Extracting candidate Units of Work', detail: 'Clustering operations into atomic capabilities', base: 3800 },
+  { label: 'Scoring confidence & de-duplicating', detail: 'Pruning overlapping and low-signal candidates', base: 4600 },
+  { label: 'Re-ranking by leverage & frequency', detail: 'Prioritising high-impact units', rerank: true, base: 2100 },
+  { label: 'Mapping manual time & cost', detail: 'Estimating savings against each unit', base: 3400 },
+  { label: 'Finalizing the Unit-of-Work catalog', detail: 'Securing each capability via the Meridian Proxy', base: 2600 },
 ];
+
+// Randomise a duration around a nominal value: ±35% jitter, plus a ~22% chance
+// of a "backend hiccup" that tacks on an extra 0.6–2.0s — mimics a slow call.
+const jitter = (base) => {
+  const spread = base * (0.65 + Math.random() * 0.7); // 65%–135% of base
+  const hiccup = Math.random() < 0.22 ? 600 + Math.random() * 1400 : 0;
+  return Math.round(spread + hiccup);
+};
 
 // Extra synthetic candidates per department so discovery surfaces a rich set.
 const EXTRA_CANDIDATES = {
@@ -73,10 +85,34 @@ export function Onboarding({ toast, go }) {
   const [revealCount, setRevealCount] = useState(0);
   const [reranked, setReranked] = useState(false);
   const [discovered, setDiscovered] = useState(null); // final UoWs
+  const [addOpen, setAddOpen] = useState(false); // manual "Add Unit of Work"
+  const [revPage, setRevPage] = useState(0); // pagination for the review list
+  const REV_PAGE_SIZE = 8;
 
-  // Workflow composition belongs to AI-employee onboarding, not department
-  // onboarding — a department just connects systems and extracts its Units of Work.
-  const steps = ['Department', 'Connect Systems', 'Discover Units of Work', 'Effectiveness Mapping', 'Review & Publish'];
+  // Append a hand-authored Unit of Work to the discovered catalog (confidence 1 —
+  // it's human-declared, not inferred).
+  const addManualUow = (u) => {
+    const id = `uow-manual-${Date.now().toString(36)}`;
+    setDiscovered(d => [{
+      id, name: u.name.trim(), dept, synthetic: false, manual: true, confidence: 1,
+      endpoint: { method: u.method, baseUrl: u.baseUrl.trim() || 'https://api.acme.com', path: u.path.trim() || '/v1/custom' },
+      auth: { mode: u.authMode, secret: u.authMode === 'proxy-delegated' ? null : 'MANUAL_SVC', scopes: ['read', 'write'] },
+      mapping: { manualMinutes: 10, manualCostUsd: 8, automatedMinutes: 1, automatedCostUsd: 0.3, runsPerMonth: 40, manualErrorRate: 8 },
+    }, ...(d || [])]);
+    setRevPage(0); // new item lands at the top — jump back to the first page
+    setAddOpen(false);
+    toast?.('Unit of Work added', 'success');
+  };
+
+  // Department onboarding has two discovery processes: extract the Units of Work
+  // AND inventory the business KPIs (whose source of truth is the connections).
+  const steps = ['Department', 'Connect Systems', 'Discover Units of Work', 'KPI Inventory', 'Effectiveness Mapping', 'Review & Publish'];
+
+  // KPI inventory — identified from the selected connections (see KpiInventoryPanel).
+  const [kpiInv, setKpiInv] = useState(null);
+  const kpiSource = () => connectors.find(c => picked.includes(c.id))?.name || 'Connected systems';
+  // changing department invalidates the KPI inventory
+  useEffect(() => { setKpiInv(null); }, [dept]);
 
   // kick off discovery when arriving at step 2
   useEffect(() => {
@@ -100,7 +136,7 @@ export function Onboarding({ toast, go }) {
         setReranked(true);
       }
       setDiscIdx(i => i + 1);
-    }, 2800);
+    }, jitter(DISCOVERY_PHASES[discIdx].base));
     return () => clearTimeout(t);
   }, [discIdx, candidates, dept]);
 
@@ -108,7 +144,14 @@ export function Onboarding({ toast, go }) {
   useEffect(() => {
     if (candidates === null || discovered) return;
     if (revealCount >= candidates.length) return;
-    const t = setTimeout(() => setRevealCount(n => n + 1), 520);
+    // Hold the stream empty for the first 3–5s — the agent is still authenticating
+    // and crawling, so nothing should surface yet. After that, candidates trickle
+    // in at uneven intervals (usually quick, occasionally a longer "thinking"
+    // pause) so the stream feels live, not scripted.
+    const gap = revealCount === 0
+      ? 3000 + Math.random() * 2000
+      : 260 + Math.random() * 620 + (Math.random() < 0.18 ? 700 + Math.random() * 900 : 0);
+    const t = setTimeout(() => setRevealCount(n => n + 1), gap);
     return () => clearTimeout(t);
   }, [candidates, revealCount, discovered]);
 
@@ -116,7 +159,7 @@ export function Onboarding({ toast, go }) {
   const setMapping = (i, k, v) => setDiscovered(d => d.map((u, j) => j === i ? { ...u, mapping: { ...u.mapping, [k]: Number(v) } } : u));
   const analyzing = step === 2 && discovered === null;
   const canNext = step === 2 ? !analyzing : true;
-  const resetDiscovery = () => { setDiscovered(null); setDiscIdx(-1); setCandidates(null); setRevealCount(0); setReranked(false); };
+  const resetDiscovery = () => { setDiscovered(null); setDiscIdx(-1); setCandidates(null); setRevealCount(0); setReranked(false); setRevPage(0); };
 
   const next = () => setStep(s => Math.min(s + 1, steps.length - 1));
   const back = () => setStep(s => Math.max(s - 1, 0));
@@ -141,7 +184,7 @@ export function Onboarding({ toast, go }) {
             <div className="flex flex-col gap-4">
               <Note icon={Building2}>Start by identifying the department you’re bringing onto the platform.</Note>
               <div className="grid-cols-2" style={{ gap: 16 }}>
-                <Field label="Department"><Select value={dept} onChange={setDept} options={DEPARTMENTS} /></Field>
+                <Field label="Department"><input className="search-input" value={dept} onChange={e => setDept(e.target.value)} placeholder="e.g. Legal, Acquisitions, Finance" /></Field>
                 <Field label="Region / portfolio"><input className="search-input" value={region} onChange={e => setRegion(e.target.value)} /></Field>
               </div>
               <Field label="What does this department do?">
@@ -227,33 +270,61 @@ export function Onboarding({ toast, go }) {
 
           {step === 2 && !analyzing && discovered && (
             <div className="flex flex-col gap-3">
-              <Note icon={Boxes}>Extracted <strong>{discovered.length}</strong> Units of Work from {dept}’s systems, ranked by confidence. Each is secured through the Meridian Proxy.</Note>
-              {discovered.map(u => (
-                <div key={u.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Boxes size={16} className="text-purple-600" />
-                  <div className="flex-1 min-w-0"><div className="font-medium text-sm">{u.name}</div><div className="text-xs text-muted truncate">{u.endpoint.method} {u.endpoint.baseUrl}{u.endpoint.path}</div></div>
-                  <div className="flex items-center gap-2" style={{ width: 90 }}>
-                    <div style={{ flex: 1 }}><Bar value={Math.round(u.confidence * 100)} tone={u.confidence > 0.85 ? 'green' : 'blue'} /></div>
-                    <span className="text-xs font-mono text-muted">{Math.round(u.confidence * 100)}%</span>
-                  </div>
-                  <SecuredBadge>{u.auth.mode}</SecuredBadge>
-                </div>
-              ))}
+              <div className="flex items-start justify-between gap-3">
+                <Note icon={Boxes}>Extracted <strong>{discovered.length}</strong> Units of Work from {dept}’s systems, ranked by confidence. Each is secured through the Meridian Proxy. Missing one? Add it manually.</Note>
+                <button className="btn btn-outline btn-sm" style={{ flexShrink: 0 }} onClick={() => setAddOpen(true)}><Plus size={14} /> Add Unit of Work</button>
+              </div>
+              {(() => {
+                const pageCount = Math.max(1, Math.ceil(discovered.length / REV_PAGE_SIZE));
+                const page = Math.min(revPage, pageCount - 1);
+                const start = page * REV_PAGE_SIZE;
+                const slice = discovered.slice(start, start + REV_PAGE_SIZE);
+                return (
+                  <>
+                    {slice.map(u => (
+                      <div key={u.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <Boxes size={16} className="text-purple-600" />
+                        <div className="flex-1 min-w-0"><div className="font-medium text-sm flex items-center gap-2">{u.name}{u.manual && <Pill label="manual" tone="info" />}</div><div className="text-xs text-muted truncate">{u.endpoint.method} {u.endpoint.baseUrl}{u.endpoint.path}</div></div>
+                        <div className="flex items-center gap-2" style={{ width: 90 }}>
+                          <div style={{ flex: 1 }}><Bar value={Math.round(u.confidence * 100)} tone={u.confidence > 0.85 ? 'green' : 'blue'} /></div>
+                          <span className="text-xs font-mono text-muted">{Math.round(u.confidence * 100)}%</span>
+                        </div>
+                        <SecuredBadge>{u.auth.mode}</SecuredBadge>
+                      </div>
+                    ))}
+                    {pageCount > 1 && (
+                      <div className="flex items-center justify-between gap-3 pt-1">
+                        <div className="text-xs text-muted">Showing <strong>{start + 1}–{Math.min(start + REV_PAGE_SIZE, discovered.length)}</strong> of <strong>{discovered.length}</strong> Units of Work</div>
+                        <div className="flex items-center gap-2">
+                          <button className="btn btn-outline btn-sm" disabled={page === 0} onClick={() => setRevPage(p => Math.max(0, p - 1))}>Prev</button>
+                          <span className="text-xs text-muted">Page {page + 1} / {pageCount}</span>
+                          <button className="btn btn-outline btn-sm" disabled={page >= pageCount - 1} onClick={() => setRevPage(p => Math.min(pageCount - 1, p + 1))}>Next</button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
-          {step === 3 && discovered && (
-            <EffectivenessMapping discovered={discovered} setMapping={setMapping} dept={dept} />
+          {step === 3 && (
+            <KpiInventoryPanel key={dept} dept={dept} sourceLabel={kpiSource()} value={kpiInv} onChange={setKpiInv} toast={toast} />
           )}
 
           {step === 4 && discovered && (
+            <EffectivenessMapping discovered={discovered} setMapping={setMapping} dept={dept} />
+          )}
+
+          {step === 5 && discovered && (
             <div className="flex flex-col gap-3">
-              <div className="grid-cols-3" style={{ gap: 12 }}>
+              <div className="grid-cols-4" style={{ gap: 12 }}>
                 <Mini label="Department" value={dept} />
                 <Mini label="Systems" value={picked.length} />
                 <Mini label="Units of Work" value={discovered.length} />
+                <Mini label="KPIs" value={(kpiInv || []).length} />
               </div>
-              <Note icon={CheckCircle}>Publishing will make {dept}’s connected systems and Units of Work available — you can then onboard AI employees and compose their workflows from these capabilities.</Note>
+              <Note icon={CheckCircle}>Publishing will make {dept}’s connected systems, Units of Work and KPI inventory available — you can then onboard AI employees, compose their workflows and map them to these KPIs.</Note>
             </div>
           )}
         </div>
@@ -265,7 +336,41 @@ export function Onboarding({ toast, go }) {
             : <button className="btn btn-primary" onClick={publish}><Rocket size={16} /> Publish Department</button>}
         </div>
       </Card>
+      {addOpen && <AddUowModal dept={dept} onClose={() => setAddOpen(false)} onAdd={addManualUow} />}
     </div>
+  );
+}
+
+const UOW_METHODS = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
+const UOW_AUTH = [
+  { value: 'proxy-delegated', label: 'Proxy-delegated' },
+  { value: 'vault-credential', label: 'Vault credential' },
+  { value: 'api-key', label: 'API key' },
+];
+
+function AddUowModal({ dept, onClose, onAdd }) {
+  const [u, setU] = useState({ name: '', method: 'GET', baseUrl: 'https://api.acme.com', path: '/v1/', authMode: 'proxy-delegated' });
+  const set = (k, v) => setU(p => ({ ...p, [k]: v }));
+  const valid = u.name.trim().length > 0;
+  return (
+    <Modal open onClose={onClose} title={`Add a Unit of Work · ${dept}`}>
+      <div className="flex flex-col gap-4">
+        <Note icon={Boxes}>Declare a capability the Discovery Agent missed. It joins the catalog at full confidence and is secured through the Meridian Proxy like any other.</Note>
+        <Field label="Name"><input className="search-input" value={u.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Pull Tax Assessment" /></Field>
+        <div className="grid-cols-2" style={{ gap: 12 }}>
+          <Field label="Method"><Select value={u.method} onChange={v => set('method', v)} options={UOW_METHODS} /></Field>
+          <Field label="Auth mode"><Select value={u.authMode} onChange={v => set('authMode', v)} options={UOW_AUTH} /></Field>
+        </div>
+        <div className="grid-cols-2" style={{ gap: 12 }}>
+          <Field label="Base URL"><input className="search-input" value={u.baseUrl} onChange={e => set('baseUrl', e.target.value)} placeholder="https://api.acme.com" /></Field>
+          <Field label="Path"><input className="search-input" value={u.path} onChange={e => set('path', e.target.value)} placeholder="/v1/tax-assessment" /></Field>
+        </div>
+        <div className="flex justify-end gap-2 mt-1">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" disabled={!valid} onClick={() => onAdd(u)}><Plus size={15} /> Add Unit of Work</button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -288,8 +393,15 @@ const EFF_INPUTS = [
   { key: 'manualErrorRate', label: 'Manual error / rework rate', icon: ShieldAlert, suffix: '%', accent: 'var(--orange-500)' },
 ];
 
+const EFF_PAGE_SIZE = 6;
+
 function EffectivenessMapping({ discovered, setMapping, dept }) {
   const rois = discovered.map(u => uowRoi(u.mapping));
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(discovered.length / EFF_PAGE_SIZE));
+  const cur = Math.min(page, pageCount - 1);
+  const start = cur * EFF_PAGE_SIZE;
+  const slice = discovered.slice(start, start + EFF_PAGE_SIZE);
   const roll = rois.reduce((a, r) => ({
     hours: a.hours + r.monthlyHoursSaved,
     cost: a.cost + r.monthlyCostSaved,
@@ -316,7 +428,8 @@ function EffectivenessMapping({ discovered, setMapping, dept }) {
         </div>
       </div>
 
-      {discovered.map((u, i) => {
+      {slice.map((u, j) => {
+        const i = start + j;
         const r = rois[i];
         return (
           <div key={u.id} className="eff-card">
@@ -348,6 +461,17 @@ function EffectivenessMapping({ discovered, setMapping, dept }) {
           </div>
         );
       })}
+
+      {pageCount > 1 && (
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted">Showing {start + 1}–{Math.min(start + EFF_PAGE_SIZE, discovered.length)} of {discovered.length} Units of Work</span>
+          <div className="flex items-center gap-2">
+            <button className="btn btn-outline btn-sm" disabled={cur === 0} onClick={() => setPage(cur - 1)}>Prev</button>
+            <span className="text-muted">Page {cur + 1} / {pageCount}</span>
+            <button className="btn btn-outline btn-sm" disabled={cur >= pageCount - 1} onClick={() => setPage(cur + 1)}>Next</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -936,7 +1060,7 @@ export function Knowledge({ toast }) {
           </select>
         </div>
       </div>
-      <div className="text-sm bg-blue-50 text-blue-800 p-3 rounded-md font-medium border border-blue-200">
+      <div className="text-sm bg-blue-50 text-blue-400 p-3 rounded-md font-medium border border-blue-200">
         {view === 'graph'
           ? <>Showing {filteredNodes.length} nodes · {KG_STATS.edges.toLocaleString()} typed edges · {KG_STATS.categories} categories — click any node to inspect its description, properties & linked knowledge sources.</>
           : <>{artifactCount} knowledge artifacts — documents, video & audio that ground the graph. Select one to preview it, or add a new source.</>}
