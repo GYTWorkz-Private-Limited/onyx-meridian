@@ -1,0 +1,513 @@
+## COMMAND CENTER ENHANCEMENT — AGENT LIFECYCLE MANAGEMENT
+
+The current **Command Center** only displays operational metrics. Extend it into an **Enterprise Workforce Management Console**, allowing enterprise administrators to manage the complete lifecycle of every AI employee.
+
+Do **not** redesign the existing page. Extend it while maintaining the current visual style.
+
+Everything remains **frontend-only** using predefined static demo data.
+
+---
+
+# New Section
+
+## Workforce Management
+
+Place this section directly below the existing KPI cards.
+
+Display every agent as an expandable workforce card.
+
+Each card should show:
+
+* Agent Name
+* Agent ID
+* Current Role
+* Department
+* ABU
+* Current Rank / Tier
+* Status
+* Current Model
+* Performance Score
+* Trust Score
+* Health
+* Experience Level
+* Last Evaluation
+* Current Supervisor
+* Total Missions Completed
+
+---
+
+# Lifecycle Actions
+
+Every agent card should contain a dedicated **Lifecycle Actions** panel.
+
+Buttons:
+
+* Promote
+* Demote
+* Rollback
+* Suspend
+* Resume
+* Fire Agent
+* Clone Agent
+* Transfer Department
+* Transfer ABU
+* Reset Learning
+* Queue Retraining
+
+Each action opens a professional modal instead of executing immediately.
+
+---
+
+# Promote
+
+Opens:
+
+### Promotion Review
+
+Displays:
+
+Current Role
+
+↓
+
+Promoted Role
+
+Responsibilities gained
+
+Authority level increase
+
+New accessible tools
+
+Additional MCP servers
+
+Additional Knowledge Collections
+
+Additional Policies
+
+Additional Memory Access
+
+Additional Budget
+
+Estimated Business Impact
+
+Estimated Productivity Gain
+
+Promotion Confidence
+
+Effective Date
+
+Manager Approval
+
+Business Justification
+
+Promotion Notes
+
+Approve Promotion
+
+Cancel
+
+---
+
+# Demote
+
+Opens:
+
+### Performance Review
+
+Shows:
+
+Reason
+
+Recent Performance
+
+Missed KPIs
+
+Trust degradation
+
+Policy violations
+
+Business impact
+
+Temporary or Permanent
+
+Recovery Plan
+
+Suggested Training
+
+Manager Comments
+
+Approve Demotion
+
+Cancel
+
+---
+
+# Rollback
+
+Enterprise AI should evolve safely.
+
+Rollback returns the agent to a previous certified version.
+
+Modal displays:
+
+Current Version
+
+Rollback Target
+
+Change Log
+
+Model Differences
+
+Prompt Differences
+
+Knowledge Differences
+
+Skill Differences
+
+Policy Differences
+
+Memory Snapshot
+
+Expected Behaviour
+
+Rollback Risk
+
+Rollback Timeline
+
+Confirm Rollback
+
+---
+
+# Suspend Agent
+
+Temporary disable.
+
+Show:
+
+Reason
+
+Expected Duration
+
+Tasks to Reassign
+
+Assigned Replacement Agent
+
+Escalation Required
+
+Resume Date
+
+---
+
+# Fire Agent
+
+This is **Enterprise Workforce Retirement**, not deletion.
+
+Never permanently remove.
+
+Instead:
+
+Status becomes
+
+RETIRED
+
+The modal includes:
+
+Termination Reason
+
+Business Justification
+
+Policy Violations
+
+Failed Evaluations
+
+Business Cost
+
+Risk Analysis
+
+Replacement Agent
+
+Knowledge Migration
+
+Memory Archive
+
+Skill Archive
+
+Deployment Archive
+
+Audit Reference
+
+Retirement Summary
+
+Confirm Retirement
+
+---
+
+# Clone Agent
+
+Creates
+
+Production Planner v2
+
+Shows:
+
+Clone Name
+
+Target Department
+
+Target ABU
+
+Knowledge Copy
+
+Memory Copy
+
+Skill Copy
+
+Prompt Copy
+
+Tool Access
+
+Deploy after clone
+
+---
+
+# Transfer
+
+Move an agent between:
+
+Departments
+
+ABUs
+
+Managers
+
+Workspaces
+
+Reason
+
+Approval
+
+Migration Summary
+
+---
+
+# Queue Retraining
+
+Shows:
+
+Weak Skills
+
+Failed Evaluations
+
+Prompt Drift
+
+Knowledge Gap
+
+Recommended Dataset
+
+Recommended Policies
+
+Recommended Skills
+
+Expected Improvement
+
+---
+
+# Explain Decision
+
+Every lifecycle action must include a
+
+Reason
+
+button.
+
+Clicking opens
+
+Enterprise Decision Report
+
+Sections:
+
+Business Justification
+
+Performance Summary
+
+Evaluation Timeline
+
+Recommendation Engine
+
+Policy References
+
+Governance Decision
+
+Affected KPIs
+
+Risk Assessment
+
+Financial Impact
+
+Expected ROI
+
+Alternative Options Considered
+
+Approval Chain
+
+Executive Notes
+
+This creates a believable story explaining **why the enterprise made the decision**, making the demo feel like a genuine enterprise AI governance platform.
+
+---
+
+# Workforce Evolution Timeline
+
+Below the Lifecycle section create an enterprise timeline.
+
+Examples:
+
+09:42
+
+Production Planner promoted to Senior Production Planner
+
+────────────────────────
+
+08:15
+
+Inventory Optimizer retraining queued after prediction accuracy fell to 81%
+
+────────────────────────
+
+Yesterday
+
+Supplier Risk Agent rolled back to Version 3.1 after unstable deployment
+
+────────────────────────
+
+Yesterday
+
+Finance Analyst granted Financial Forecasting Skill Pack
+
+────────────────────────
+
+2 Days Ago
+
+Maintenance AI transferred to Manufacturing ABU
+
+────────────────────────
+
+3 Days Ago
+
+Customer Support Agent retired after replacement by Gen-4 Support Agent
+
+---
+
+# Enterprise Evolution Analytics
+
+Add four new charts.
+
+### Promotion & Demotion Timeline
+
+(Line Chart)
+
+Shows workforce evolution over time.
+
+---
+
+### Workforce Distribution
+
+(Stacked Bar Chart)
+
+Tiers:
+
+Junior
+
+Standard
+
+Senior
+
+Lead
+
+Executive
+
+---
+
+### Agent Lifecycle Events
+
+(Donut Chart)
+
+Promotion
+
+Demotion
+
+Rollback
+
+Retraining
+
+Transfer
+
+Retirement
+
+Suspension
+
+---
+
+### Workforce Growth
+
+(Area Chart)
+
+Active Agents
+
+Retired Agents
+
+Training Agents
+
+Experimental Agents
+
+---
+
+# Governance Badges
+
+Each agent displays small badges.
+
+Examples:
+
+⭐ High Performer
+
+🧠 Fast Learner
+
+🛡 Policy Compliant
+
+⚠ Under Observation
+
+📈 Promotion Candidate
+
+🔄 Retraining
+
+🚫 Suspended
+
+🏆 Enterprise Certified
+
+---
+
+# Cross Navigation
+
+Every modal should contain quick links to:
+
+→ Agent Overview
+
+→ Agent Harness
+
+→ Evaluation History
+
+→ Agent Logs
+
+→ Security Profile
+
+→ Policy References
+
+→ Knowledge Access
+
+→ Skill Configuration
+
+These simply navigate to existing pages.
+
+---
+
+The goal is to make the Command Center feel like the **HR + Governance + Career Management system for an enterprise AI workforce**, where AI employees continuously evolve, are promoted, retrained, transferred, rolled back, or retired based on measurable enterprise performance. Everything remains interactive but powered entirely by predefined static demo data.

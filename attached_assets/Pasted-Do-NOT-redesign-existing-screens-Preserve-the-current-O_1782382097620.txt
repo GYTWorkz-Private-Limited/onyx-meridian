@@ -1,0 +1,378 @@
+Do NOT redesign existing screens. Preserve the current Onyx Enterprise OS theme, layout, colors, typography and interactions.
+
+Goal:
+Implement the remaining missing functionality so Onyx feels like a complete Enterprise Cognitive Operating System rather than an AI dashboard.
+
+=========================
+1. DIGITAL EMPLOYEE WORKSPACE
+=========================
+
+Replace the existing Agent Profile with a Digital Employee Workspace.
+
+Group navigation into:
+
+PROFILE
+- Overview
+- Identity
+- Mission
+- Business Context
+- Business Impact
+- Enterprise Cognitive Graph
+
+BUILD
+- Skills
+- Knowledge
+- Memory
+- Tools
+- MCP
+- Prompt Studio
+- Model
+- Resources
+
+OPERATE
+- Runtime
+- Current Workflow
+- Task Queue
+- Execution Timeline
+- Reasoning Replay
+- Collaboration
+- Active Missions
+
+OBSERVE
+- Observability
+- Logs
+- Traces
+- Metrics
+- Token Usage
+- Cost Analytics
+- Failure Analysis
+
+GOVERN
+- SOPs
+- Policies
+- Human Approvals
+- Security
+- Audit
+- Compliance
+- Guardrails
+
+IMPROVE
+- Evaluations
+- Reliability
+- Learning
+- Evolution
+- Versions
+- Deployments
+- Recommendations
+
+Do NOT create duplicate pages.
+
+=========================
+2. AGENT STUDIO
+=========================
+
+Replace Agent Factory with Agent Studio.
+
+Include:
+
+- Agent Templates
+- Create Digital Employee Wizard
+- Marketplace
+- Skills
+- Prompt Studio
+- Knowledge
+- Tools
+- Deployments
+- Versions
+
+Wizard Flow:
+
+Identity
+Mission
+Business Unit
+KPIs
+Skills
+Knowledge
+Memory
+Tools
+Policies
+Evaluations
+Deploy
+
+=========================
+3. STUDIO WORKSPACES
+=========================
+
+Inside BUILD create dedicated studios:
+
+Agent Studio
+
+Workflow Studio
+
+Knowledge Studio
+
+Policy Studio
+
+Evaluation Studio
+
+Connector Hub
+
+Marketplace
+
+Each studio owns creation of its resources.
+
+No global "+ New" buttons.
+
+=========================
+4. COMMAND PALETTE
+=========================
+
+Add Ctrl/Cmd + K
+
+Search everything:
+
+Agents
+Policies
+SOPs
+Workflows
+Knowledge
+Tools
+Business Units
+Tasks
+Evaluations
+
+Allow quick actions:
+
+Open
+Create
+Deploy
+Run Evaluation
+Replace Agent
+Start Workflow
+
+=========================
+5. ENTERPRISE COGNITIVE GRAPH
+=========================
+
+Create a reusable graph component.
+
+Relationships:
+
+Enterprise
+→ Plants
+→ Business Units
+→ SOPs
+→ Workflows
+→ AI Employees
+→ Humans
+→ Systems
+→ Policies
+→ Knowledge
+→ Tasks
+→ KPIs
+→ Costs
+→ Outcomes
+
+Every entity should open from graph nodes.
+
+Reuse graph across pages.
+
+=========================
+6. SOP FRAMEWORK
+=========================
+
+Implement executable SOPs.
+
+Each SOP includes:
+
+Owner
+Version
+Workflow
+Policies
+Required Agents
+Required Humans
+KPIs
+Risk
+Automation %
+Linked Documents
+
+Display workflow visually.
+
+=========================
+7. KPI FRAMEWORK
+=========================
+
+KPIs become first-class entities.
+
+Each KPI links to:
+
+Business Unit
+Workflow
+Agent
+Policy
+Task
+EEI
+
+Show projected KPI impact on recommendations.
+
+=========================
+8. DIGITAL TWIN IMPROVEMENTS
+=========================
+
+Each Business Unit node displays:
+
+Health
+EEI
+Top KPIs
+Cost
+Risk
+Agent Count
+Open Tasks
+
+Selecting a node updates the entire application context.
+
+=========================
+9. BUSINESS IMPACT
+=========================
+
+Every Digital Employee displays:
+
+Hours Saved
+
+Revenue Protected
+
+Downtime Prevented
+
+Cost Saved
+
+Automation %
+
+ROI (1.0–2.5x only)
+
+EEI Contribution
+
+KPIs Improved
+
+=========================
+10. MANUFACTURING CONTEXT
+=========================
+
+Use manufacturing everywhere.
+
+Business Units:
+
+Manufacturing
+Maintenance
+Quality
+Supply Chain
+Procurement
+Finance
+Engineering
+Sales
+Logistics
+
+Agents:
+
+Production Planner
+Predictive Maintenance
+Quality Inspector
+Supplier Risk
+Inventory Optimizer
+Finance Analyst
+Production Scheduler
+
+Systems:
+
+ERP
+MES
+CMMS
+SCADA
+PLM
+WMS
+IoT
+
+KPIs:
+
+OEE
+Downtime
+Yield
+Scrap Rate
+Throughput
+Inventory Turns
+Forecast Accuracy
+Cost per Unit
+EEI
+
+=========================
+11. SIDEBAR CLEANUP
+=========================
+
+Use only:
+
+ENTERPRISE
+- Digital Twin
+- Executive Command
+- Business Units
+- Business Impact
+
+OPERATE
+- AI Workforce
+- Task Registry
+- Recommendations
+- Mission Control
+
+CONTROL
+- Governance
+- Policies
+- Approvals
+- Observability
+- Evaluations
+- Reliability
+
+BUILD
+- Agent Studio
+- Workflow Studio
+- Knowledge Studio
+- Policy Studio
+- Evaluation Studio
+- Connector Hub
+- Marketplace
+
+OPTIMIZE
+- Learning
+- Evolution
+- Simulation
+- Opportunity Discovery
+- ROI
+
+=========================
+12. UX IMPROVEMENTS
+=========================
+
+No empty cards.
+
+Every metric has realistic values.
+
+ROI 1.0–2.5x.
+
+Latency 0.5–3s.
+
+Health 85–99%.
+
+Reasonable token counts.
+
+Realistic costs.
+
+Every chart has believable data.
+
+Every button performs a UI action.
+
+Every table supports search, filter, sort and drill-down.
+
+Every card expands.
+
+Every graph supports hover.
+
+Every page has breadcrumbs.
+
+Maintain the existing Onyx visual language and do not redesign working pages.

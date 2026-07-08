@@ -1,0 +1,1 @@
+{"version":3,"file":"systemHealth.d.ts","sourceRoot":"","sources":["../../../src/generated/types/systemHealth.ts"],"names":[],"mappings":"AAAA;;;;;;GAMG;AACH,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,sBAAsB,CAAC;AAE/D,MAAM,WAAW,YAAY;IAC3B,EAAE,EAAE,MAAM,CAAC;IACX,IAAI,EAAE,MAAM,CAAC;IACb,MAAM,EAAE,kBAAkB,CAAC;IAC3B,MAAM,EAAE,MAAM,CAAC;IACf,QAAQ,EAAE,MAAM,CAAC;CAClB"}

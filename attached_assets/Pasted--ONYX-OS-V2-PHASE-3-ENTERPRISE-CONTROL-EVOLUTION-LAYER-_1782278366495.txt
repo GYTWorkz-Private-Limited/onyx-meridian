@@ -1,0 +1,474 @@
+# ONYX OS V2 — PHASE 3 ENTERPRISE CONTROL & EVOLUTION LAYER
+
+IMPORTANT
+
+Do not redesign existing screens.
+
+Do not change navigation.
+
+Do not change Onyx styling.
+
+Do not modify existing layouts.
+
+Only extend the platform with the following capabilities.
+
+The goal is to demonstrate:
+
+Governed Autonomy
++
+Human Oversight
++
+Enterprise Intelligence
++
+Self-Evolving AI Workforce
+
+---
+
+# AI CONTROL CENTER
+
+Add a global KPI strip across Executive Command Center.
+
+Display:
+
+* Cloud Spend Today
+* Active Agents
+* Quarantined Agents
+* Critical Alerts
+* Pending Approvals
+* Learning Jobs Running
+* Failed Evaluations
+* Agents Requiring Retraining
+* Policy Violations
+* Human Escalations
+
+This becomes the operational heartbeat of the platform.
+
+---
+
+# AGENT RELIABILITY CENTER
+
+New Executive Card.
+
+Metrics:
+
+* Healthy Agents
+* Warning Agents
+* Critical Agents
+* Failing Agents
+* Replacement Candidates
+* Recovery Candidates
+
+Mini Chart:
+
+Agent Health Trend
+
+Drilldown:
+
+Agent Reliability Dashboard
+
+Display:
+
+* Agent Health Score
+* Agent Stability Score
+* Failure Trend
+* Regression Trend
+* Escalation Frequency
+
+Failure Categories:
+
+* Context Failure
+* Tool Failure
+* Reasoning Failure
+* Memory Failure
+* Policy Failure
+* Unknown Failure
+
+Click Agent
+→ Failure Analysis
+
+Failure Analysis
+
+Display:
+
+* Root Cause Distribution
+* Failed Evaluations
+* Impacted Workflows
+* Impacted KPIs
+* Business Impact
+
+Recommended Actions:
+
+* Retrain Agent
+* Upgrade Model
+* Adjust Policies
+* Expand Context Window
+* Replace Agent
+
+---
+
+# EVALUATION CENTER
+
+New Executive Card.
+
+Metrics:
+
+* Total Evaluations
+* Passing Evaluations
+* Failing Evaluations
+* Pending Evaluations
+* Evaluation Coverage
+
+Mini Chart:
+
+Evaluation Trends
+
+Drilldown:
+
+Evaluation Management
+
+Evaluation Library:
+
+* Sales Quality
+* Compliance
+* Finance
+* Procurement
+* Research
+* Customer Support
+* Custom Evaluations
+
+Metrics:
+
+* Accuracy
+* Consistency
+* Compliance
+* Hallucination Rate
+* Task Completion
+* Reasoning Quality
+* Faithfulness
+* Groundedness
+
+Actions:
+
+* Run Evaluation
+* Schedule Evaluation
+* Clone Evaluation
+* Archive Evaluation
+
+Support custom evaluation creation.
+
+---
+
+# OBSERVABILITY CENTER
+
+New Executive Card.
+
+Metrics:
+
+* Agent Runs
+* Execution Logs
+* Errors
+* Warnings
+* Token Consumption
+* Latency
+
+Drilldown:
+
+Observability Dashboard
+
+Execution Timeline
+
+Agent Start
+→ Retrieval
+→ Context Loading
+→ Reasoning
+→ Tool Usage
+→ Action
+→ Completion
+
+Metrics:
+
+* Execution Time
+* Latency
+* Token Usage
+* Memory Usage
+* API Calls
+
+Include:
+
+* Agent Logs
+* System Logs
+* Observation Feed
+* Learning Feed
+* Policy Events
+* Error Feed
+
+---
+
+# POLICY ENGINE
+
+Extend Governance & Trust.
+
+Metrics:
+
+* Active Policies
+* Draft Policies
+* Policy Violations
+* Human Approval Rules
+* Blocked Actions
+
+Drilldown:
+
+Policy Management
+
+Policy Builder
+
+Support natural-language policy creation.
+
+Examples:
+
+IF Spend > $5000
+THEN Human Approval Required
+
+IF Agent Confidence < 75%
+THEN Escalate To Human
+
+IF Sensitive Data Access
+THEN Create Audit Record
+
+IF External System Access
+THEN Notify Security Team
+
+Policy Types:
+
+* Financial Policies
+* Security Policies
+* Compliance Policies
+* Operational Policies
+* Agent Governance Policies
+
+---
+
+# HUMAN APPROVAL CENTER
+
+New Governance Module.
+
+Metrics:
+
+* Pending Approvals
+* Blocked Decisions
+* Escalated Decisions
+* Approved Decisions
+* Rejected Decisions
+
+Approval Queue:
+
+* Purchase Approval
+* Contract Approval
+* Budget Approval
+* Data Access Approval
+* Discount Approval
+* Procurement Approval
+
+Mandatory Rule:
+
+All spending, contracts, procurement, payments, discounts, and budget allocations require human approval.
+
+Display:
+
+* Requested Action
+* Agent
+* Risk Level
+* Cost Impact
+* Business Impact
+* Approval Status
+
+---
+
+# AGENT EVOLUTION CENTER
+
+Metrics:
+
+* Agents Improving
+* Agents Regressing
+* Retraining Jobs
+* Upgrade Candidates
+* Replacement Candidates
+
+Drilldown:
+
+Evolution Dashboard
+
+Track:
+
+* Accuracy Growth
+* Knowledge Growth
+* Reasoning Growth
+* Skill Growth
+
+Actions:
+
+* Retrain Agent
+* Promote Version
+* Rollback Version
+* Replace Agent
+
+Replacement Recommendations:
+
+Current Agent Score
+Suggested Replacement
+Expected Improvement
+
+---
+
+# AGENT LIFECYCLE MANAGEMENT
+
+Lifecycle Dashboard
+
+Lifecycle:
+
+Design
+→ Testing
+→ Evaluation
+→ Approval
+→ Production
+→ Monitoring
+→ Evolution
+→ Retirement
+
+Track:
+
+* Version History
+* Deployment History
+* Evaluation History
+* Testing Duration
+* Production Duration
+
+---
+
+# AGENT FACTORY
+
+New Capability.
+
+Purpose:
+
+Create and manage AI Employees.
+
+Display:
+
+* Draft Agents
+* Active Agents
+* Testing Agents
+* Retired Agents
+
+Actions:
+
+* Create Agent
+* Clone Agent
+* Configure Agent
+* Test Agent
+* Deploy Agent
+* Promote Agent
+* Retire Agent
+
+Agent Definition:
+
+* Name
+* Role
+* Business Unit
+* Goals
+* Skills
+* Tools
+* Memory
+* Policies
+* Permissions
+* Budget
+* Autonomy Level
+
+---
+
+# AGENT MARKETPLACE
+
+New Capability.
+
+Purpose:
+
+Reusable enterprise AI workforce catalog.
+
+Display:
+
+Available Agents:
+
+* Revenue Scout
+* Forecast Agent
+* Finance Analyst
+* Procurement Agent
+* Contract Agent
+* Compliance Agent
+* Customer Retention Agent
+* Research Agent
+
+Actions:
+
+* Deploy To Business Unit
+* Clone
+* Customize
+* Upgrade
+* Retire
+
+Display:
+
+* Performance Score
+* Reliability Score
+* Cost Efficiency
+* Evaluation Score
+* Adoption Count
+
+---
+
+# SELF-EVOLVING AGENTS
+
+Every AI Employee should have:
+
+* Reliability Score
+* Stability Score
+* Evaluation Pass Rate
+* Drift Score
+* Cost Efficiency
+* Business Impact Score
+
+Self-Evolution Status:
+
+* Learning
+* Stable
+* Improving
+* Degrading
+* Replacement Recommended
+
+When agents repeatedly fail:
+
+* Flag Agent
+* Recommend Retraining
+* Recommend Replacement
+* Escalate To Governance
+
+---
+
+# EXECUTIVE STORY
+
+The complete operating model should demonstrate:
+
+Observe
+→ Evaluate
+→ Govern
+→ Approve
+→ Execute
+→ Learn
+→ Improve
+→ Evolve
+→ Replace
+
+The platform should clearly communicate:
+
+This is not an Agent Platform.
+
+This is an AI-Native Enterprise Operating System where AI Employees operate under governance, human oversight, observability, evaluation, and continuous evolution.

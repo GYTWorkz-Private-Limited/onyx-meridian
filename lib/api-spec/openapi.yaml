@@ -1,0 +1,1200 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Onyx Meridian Enterprise OS API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: enterprise
+  - name: business-units
+  - name: agents
+  - name: tasks
+  - name: intelligence
+  - name: governance
+  - name: outcomes
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /enterprise/summary:
+    get:
+      operationId: getEnterpriseSummary
+      tags: [enterprise]
+      summary: Get enterprise-wide summary metrics
+      responses:
+        "200":
+          description: Enterprise summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnterpriseSummary"
+
+  /enterprise/risks:
+    get:
+      operationId: getEnterpriseRisks
+      tags: [enterprise]
+      summary: Get top enterprise risks
+      responses:
+        "200":
+          description: List of risks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Risk"
+
+  /enterprise/opportunities:
+    get:
+      operationId: getEnterpriseOpportunities
+      tags: [enterprise]
+      summary: Get top enterprise opportunities
+      responses:
+        "200":
+          description: List of opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Opportunity"
+
+  /enterprise/intelligence-feed:
+    get:
+      operationId: getIntelligenceFeed
+      tags: [enterprise]
+      summary: Get enterprise intelligence feed events
+      responses:
+        "200":
+          description: Intelligence feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IntelligenceEvent"
+
+  /enterprise/digital-twin:
+    get:
+      operationId: getDigitalTwin
+      tags: [enterprise]
+      summary: Get enterprise digital twin state
+      responses:
+        "200":
+          description: Digital twin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DigitalTwin"
+
+  /business-units:
+    get:
+      operationId: getBusinessUnits
+      tags: [business-units]
+      summary: List all autonomous business units
+      responses:
+        "200":
+          description: List of business units
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BusinessUnit"
+
+  /business-units/{id}:
+    get:
+      operationId: getBusinessUnit
+      tags: [business-units]
+      summary: Get a single business unit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Business unit detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessUnitDetail"
+        "404":
+          description: Not found
+
+  /business-units/{id}/kpis:
+    get:
+      operationId: getBusinessUnitKpis
+      tags: [business-units]
+      summary: Get KPIs for a business unit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: KPI list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Kpi"
+
+  /business-units/{id}/workflows:
+    get:
+      operationId: getBusinessUnitWorkflows
+      tags: [business-units]
+      summary: Get workflows for a business unit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workflow list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
+
+  /agents:
+    get:
+      operationId: getAgents
+      tags: [agents]
+      summary: List all AI employees
+      responses:
+        "200":
+          description: Agent list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Agent"
+
+  /agents/summary:
+    get:
+      operationId: getAgentsSummary
+      tags: [agents]
+      summary: Get aggregated agent health and cost summary
+      responses:
+        "200":
+          description: Agent summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentsSummary"
+
+  /agents/{id}:
+    get:
+      operationId: getAgent
+      tags: [agents]
+      summary: Get a single agent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Agent detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAgent
+      tags: [agents]
+      summary: Update agent status or config
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AgentUpdate"
+      responses:
+        "200":
+          description: Updated agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Agent"
+
+  /tasks:
+    get:
+      operationId: getTasks
+      tags: [tasks]
+      summary: List all tasks
+      responses:
+        "200":
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /intelligence/insights:
+    get:
+      operationId: getInsights
+      tags: [intelligence]
+      summary: Get AI intelligence insights and recommendations
+      responses:
+        "200":
+          description: Insight list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Insight"
+
+  /intelligence/documents:
+    get:
+      operationId: getDocuments
+      tags: [intelligence]
+      summary: Get enterprise knowledge documents (Pulse)
+      responses:
+        "200":
+          description: Document list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+  /intelligence/workflows:
+    get:
+      operationId: getExecutionWorkflows
+      tags: [intelligence]
+      summary: Get execution workflow status (Flow)
+      responses:
+        "200":
+          description: Execution workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
+
+  /governance/audit-logs:
+    get:
+      operationId: getAuditLogs
+      tags: [governance]
+      summary: Get governance audit trail
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+
+  /governance/policies:
+    get:
+      operationId: getPolicies
+      tags: [governance]
+      summary: Get governance policies
+      responses:
+        "200":
+          description: Policy list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Policy"
+
+  /governance/approvals:
+    get:
+      operationId: getApprovals
+      tags: [governance]
+      summary: Get pending approval requests
+      responses:
+        "200":
+          description: Approval list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
+
+  /governance/risk-scores:
+    get:
+      operationId: getGovernanceRiskScores
+      tags: [governance]
+      summary: Get agent risk scores and violations
+      responses:
+        "200":
+          description: Risk scores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentRiskScore"
+
+  /outcomes/metrics:
+    get:
+      operationId: getOutcomesMetrics
+      tags: [outcomes]
+      summary: Get EEI trend and efficiency metrics
+      responses:
+        "200":
+          description: Outcome metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OutcomesMetrics"
+
+  /outcomes/business-results:
+    get:
+      operationId: getBusinessResults
+      tags: [outcomes]
+      summary: Get business outcome results (productivity, cost, SLA, ROI)
+      responses:
+        "200":
+          description: Business results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BusinessResult"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    EnterpriseSummary:
+      type: object
+      required: [eeiScore, businessHealth, governanceHealth, aiWorkforceHealth, revenueImpact, costSavings, riskExposure, activeEscalations, forecastAccuracy, productivityImprovement, activeBusinessUnits, totalAgents, activeWorkflows]
+      properties:
+        eeiScore:
+          type: number
+        eeiTrend:
+          type: number
+        businessHealth:
+          type: number
+        governanceHealth:
+          type: number
+        aiWorkforceHealth:
+          type: number
+        revenueImpact:
+          type: number
+        costSavings:
+          type: number
+        riskExposure:
+          type: number
+        activeEscalations:
+          type: integer
+        forecastAccuracy:
+          type: number
+        productivityImprovement:
+          type: number
+        activeBusinessUnits:
+          type: integer
+        totalAgents:
+          type: integer
+        activeWorkflows:
+          type: integer
+
+    Risk:
+      type: object
+      required: [id, title, severity, businessUnit, impact, probability, status]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        businessUnit:
+          type: string
+        impact:
+          type: string
+        probability:
+          type: number
+        status:
+          type: string
+          enum: [active, mitigating, resolved]
+        detectedAt:
+          type: string
+
+    Opportunity:
+      type: object
+      required: [id, title, businessUnit, estimatedValue, confidence, status]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        businessUnit:
+          type: string
+        estimatedValue:
+          type: number
+        confidence:
+          type: number
+        status:
+          type: string
+          enum: [identified, analyzing, actioning, captured]
+        detectedAt:
+          type: string
+
+    IntelligenceEvent:
+      type: object
+      required: [id, type, title, description, businessUnit, timestamp, priority]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [insight, risk, recommendation, alert, outcome]
+        title:
+          type: string
+        description:
+          type: string
+        businessUnit:
+          type: string
+        timestamp:
+          type: string
+        priority:
+          type: string
+          enum: [p1, p2, p3]
+        confidence:
+          type: number
+
+    DigitalTwin:
+      type: object
+      required: [eeiScore, businessUnits, systemsHealth, totalDecisions, humanWorkforce, aiWorkforce]
+      properties:
+        eeiScore:
+          type: number
+        businessUnits:
+          type: array
+          items:
+            $ref: "#/components/schemas/DigitalTwinNode"
+        systemsHealth:
+          type: array
+          items:
+            $ref: "#/components/schemas/SystemHealth"
+        totalDecisions:
+          type: integer
+        humanWorkforce:
+          type: integer
+        aiWorkforce:
+          type: integer
+        scenarioMode:
+          type: boolean
+
+    DigitalTwinNode:
+      type: object
+      required: [id, name, eeiScore, health, agentCount, activeWorkflows, risk]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        eeiScore:
+          type: number
+        health:
+          type: number
+        agentCount:
+          type: integer
+        activeWorkflows:
+          type: integer
+        risk:
+          type: string
+          enum: [low, medium, high, critical]
+        kpiCount:
+          type: integer
+
+    SystemHealth:
+      type: object
+      required: [id, name, status, uptime, lastSync]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [healthy, degraded, offline]
+        uptime:
+          type: number
+        lastSync:
+          type: string
+
+    BusinessUnit:
+      type: object
+      required: [id, name, domain, eeiScore, healthScore, activeKpis, activeAgents, activeWorkflows, status, risks, opportunities]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        domain:
+          type: string
+        eeiScore:
+          type: number
+        eeiTrend:
+          type: number
+        healthScore:
+          type: number
+        activeKpis:
+          type: integer
+        activeAgents:
+          type: integer
+        activeWorkflows:
+          type: integer
+        status:
+          type: string
+          enum: [healthy, at-risk, critical, optimizing]
+        risks:
+          type: integer
+        opportunities:
+          type: integer
+        cost:
+          type: number
+        roi:
+          type: number
+        forecastAccuracy:
+          type: number
+
+    BusinessUnitDetail:
+      type: object
+      required: [id, name, domain, eeiScore, healthScore, activeKpis, activeAgents, activeWorkflows, status, risks, opportunities, cost, roi, forecastAccuracy, recentInsights]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        domain:
+          type: string
+        eeiScore:
+          type: number
+        eeiTrend:
+          type: number
+        healthScore:
+          type: number
+        activeKpis:
+          type: integer
+        activeAgents:
+          type: integer
+        activeWorkflows:
+          type: integer
+        status:
+          type: string
+          enum: [healthy, at-risk, critical, optimizing]
+        risks:
+          type: integer
+        opportunities:
+          type: integer
+        cost:
+          type: number
+        roi:
+          type: number
+        forecastAccuracy:
+          type: number
+        recentInsights:
+          type: array
+          items:
+            $ref: "#/components/schemas/Insight"
+        eeiHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+
+    Kpi:
+      type: object
+      required: [id, name, value, unit, target, status, trend, businessUnitId]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        target:
+          type: number
+        status:
+          type: string
+          enum: [on-track, watch, critical, surplus]
+        trend:
+          type: number
+        businessUnitId:
+          type: string
+        owner:
+          type: string
+        linkedGoal:
+          type: string
+        description:
+          type: string
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+
+    TrendPoint:
+      type: object
+      required: [date, value]
+      properties:
+        date:
+          type: string
+        value:
+          type: number
+
+    Workflow:
+      type: object
+      required: [id, name, status, businessUnitId, startedAt, stepCount, completedSteps, priority]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [running, paused, blocked, completed, failed]
+        businessUnitId:
+          type: string
+        startedAt:
+          type: string
+        stepCount:
+          type: integer
+        completedSteps:
+          type: integer
+        priority:
+          type: string
+          enum: [p1, p2, p3]
+        assignedAgent:
+          type: ["string", "null"]
+        blockers:
+          type: ["string", "null"]
+        estimatedCompletion:
+          type: ["string", "null"]
+
+    Agent:
+      type: object
+      required: [id, name, role, department, status, autonomyLevel, utilizationPct, slaPerformance, costPerDay, taskCount]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        employeeId:
+          type: string
+        role:
+          type: string
+        department:
+          type: string
+        manager:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [deployed, draft, configured, suspended, retired]
+        autonomyLevel:
+          type: string
+          enum: [full, supervised, assisted]
+        utilizationPct:
+          type: number
+        slaPerformance:
+          type: number
+        costPerDay:
+          type: number
+        taskCount:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        businessUnitId:
+          type: string
+
+    AgentDetail:
+      type: object
+      required: [id, name, role, department, status, autonomyLevel, utilizationPct, slaPerformance, costPerDay, taskCount, skills, tools, permissions, budget, reasoning, memoryUsage, tokenUsage, latency, accuracy, hallucination, policyCompliance]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        employeeId:
+          type: string
+        role:
+          type: string
+        department:
+          type: string
+        manager:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [deployed, draft, configured, suspended, retired]
+        autonomyLevel:
+          type: string
+          enum: [full, supervised, assisted]
+        utilizationPct:
+          type: number
+        slaPerformance:
+          type: number
+        costPerDay:
+          type: number
+        taskCount:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        tools:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        budget:
+          type: number
+        reasoning:
+          type: string
+        memoryUsage:
+          type: number
+        tokenUsage:
+          type: integer
+        latency:
+          type: number
+        accuracy:
+          type: number
+        hallucination:
+          type: number
+        policyCompliance:
+          type: number
+        businessUnitId:
+          type: string
+        recentTasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+
+    AgentUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [deployed, draft, configured, suspended, retired]
+        autonomyLevel:
+          type: string
+          enum: [full, supervised, assisted]
+
+    AgentsSummary:
+      type: object
+      required: [totalAgents, deployedAgents, avgUtilization, avgSla, totalDailyCost, byStatus, byDepartment]
+      properties:
+        totalAgents:
+          type: integer
+        deployedAgents:
+          type: integer
+        avgUtilization:
+          type: number
+        avgSla:
+          type: number
+        totalDailyCost:
+          type: number
+        byStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountByLabel"
+        byDepartment:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountByLabel"
+
+    CountByLabel:
+      type: object
+      required: [label, count]
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+        value:
+          type: ["number", "null"]
+
+    Task:
+      type: object
+      required: [id, title, status, priority, owner, linkedKpi, dueDate, progress, businessUnitId]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in-progress, done, blocked]
+        priority:
+          type: string
+          enum: [p1, p2, p3]
+        owner:
+          type: string
+        linkedKpi:
+          type: string
+        dueDate:
+          type: string
+        progress:
+          type: integer
+        businessUnitId:
+          type: string
+        aiGenerated:
+          type: boolean
+        department:
+          type: ["string", "null"]
+
+    TaskInput:
+      type: object
+      required: [title, priority, owner, linkedKpi, dueDate, businessUnitId]
+      properties:
+        title:
+          type: string
+        priority:
+          type: string
+          enum: [p1, p2, p3]
+        owner:
+          type: string
+        linkedKpi:
+          type: string
+        dueDate:
+          type: string
+        businessUnitId:
+          type: string
+        department:
+          type: string
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in-progress, done, blocked]
+        priority:
+          type: string
+          enum: [p1, p2, p3]
+        progress:
+          type: integer
+        owner:
+          type: string
+
+    Insight:
+      type: object
+      required: [id, type, title, description, confidence, businessUnitId, priority, impact]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [prediction, recommendation, risk, opportunity, anomaly]
+        title:
+          type: string
+        description:
+          type: string
+        confidence:
+          type: number
+        businessUnitId:
+          type: string
+        priority:
+          type: string
+          enum: [p1, p2, p3]
+        impact:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: string
+        projectedTrajectory:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+        linkedKpi:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    Document:
+      type: object
+      required: [id, title, type, department, lastUpdated, usageCount, relevanceScore]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum: [sop, policy, decision, knowledge, historical]
+        department:
+          type: string
+        lastUpdated:
+          type: string
+        usageCount:
+          type: integer
+        relevanceScore:
+          type: number
+        summary:
+          type: ["string", "null"]
+
+    AuditLog:
+      type: object
+      required: [id, action, actor, actorType, timestamp, businessUnit, outcome, riskLevel]
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        actor:
+          type: string
+        actorType:
+          type: string
+          enum: [agent, human, system]
+        timestamp:
+          type: string
+        businessUnit:
+          type: string
+        outcome:
+          type: string
+          enum: [approved, rejected, escalated, auto-approved]
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        details:
+          type: ["string", "null"]
+
+    Policy:
+      type: object
+      required: [id, name, type, scope, status, enforcementLevel, violationCount]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [rbac, compliance, budget, behavior, data]
+        scope:
+          type: string
+        status:
+          type: string
+          enum: [active, draft, deprecated]
+        enforcementLevel:
+          type: string
+          enum: [block, warn, log]
+        violationCount:
+          type: integer
+        lastUpdated:
+          type: string
+
+    Approval:
+      type: object
+      required: [id, title, requestedBy, requestedAt, type, priority, status, businessUnit]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        requestedBy:
+          type: string
+        requestedAt:
+          type: string
+        type:
+          type: string
+          enum: [agent-action, budget, workflow, policy-exception]
+        priority:
+          type: string
+          enum: [urgent, normal, low]
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        businessUnit:
+          type: string
+        estimatedImpact:
+          type: ["string", "null"]
+
+    AgentRiskScore:
+      type: object
+      required: [agentId, agentName, riskScore, driftScore, hallucinationRisk, policyViolations, status]
+      properties:
+        agentId:
+          type: string
+        agentName:
+          type: string
+        riskScore:
+          type: number
+        driftScore:
+          type: number
+        hallucinationRisk:
+          type: number
+        policyViolations:
+          type: integer
+        unauthorizedActions:
+          type: integer
+        status:
+          type: string
+          enum: [safe, watch, quarantined]
+
+    OutcomesMetrics:
+      type: object
+      required: [eeiTrend, businessUnitTrends, agentEfficiencyTrend, workflowEfficiencyTrend, learningMetrics]
+      properties:
+        eeiTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+        businessUnitTrends:
+          type: array
+          items:
+            $ref: "#/components/schemas/BuTrendSeries"
+        agentEfficiencyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+        workflowEfficiencyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+        learningMetrics:
+          $ref: "#/components/schemas/LearningMetrics"
+
+    BuTrendSeries:
+      type: object
+      required: [businessUnit, trend]
+      properties:
+        businessUnit:
+          type: string
+        trend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+
+    LearningMetrics:
+      type: object
+      required: [accuracy, reliability, costEfficiency, goalCompletion, driftDetection, qualityScore]
+      properties:
+        accuracy:
+          type: number
+        reliability:
+          type: number
+        costEfficiency:
+          type: number
+        goalCompletion:
+          type: number
+        driftDetection:
+          type: number
+        qualityScore:
+          type: number
+
+    BusinessResult:
+      type: object
+      required: [id, metric, value, unit, change, period, businessUnit]
+      properties:
+        id:
+          type: string
+        metric:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        change:
+          type: number
+        period:
+          type: string
+        businessUnit:
+          type: string
+        category:
+          type: string
+          enum: [productivity, cost, sla, revenue, risk, roi]

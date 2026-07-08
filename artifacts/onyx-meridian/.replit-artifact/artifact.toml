@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Onyx Meridian Enterprise OS"
+version = "1.0.0"
+id = "artifacts/onyx-meridian"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22268
+
+[services.development]
+run = "pnpm --filter @workspace/onyx-meridian run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/onyx-meridian", "run", "build" ]
+publicDir = "artifacts/onyx-meridian/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22268"
+BASE_PATH = "/"

@@ -1,0 +1,297 @@
+# PHASE 2 ENTERPRISE CAPABILITIES
+
+Do not redesign existing screens.
+
+Do not change layouts.
+
+Maintain Onyx visual language.
+
+Extend existing functionality with the following enterprise capabilities.
+
+---
+
+## SELF-EVOLVING AI WORKFORCE
+
+Extend Workforce Registry and AgentOps.
+
+Every AI Employee should have:
+
+* Accuracy Score
+* Reliability Score
+* Eval Pass Rate
+* Drift Score
+* Cost Efficiency
+* Business Impact Score
+
+Agent Lifecycle:
+
+Draft
+→ Deploy
+→ Observe
+→ Evaluate
+→ Improve
+→ Redeploy
+
+If evaluation scores decline:
+
+* Flag agent
+* Trigger retraining recommendation
+* Suggest replacement agent
+* Escalate to governance if required
+
+Add:
+
+"Self-Evolution Status"
+
+Values:
+
+* Learning
+* Stable
+* Improving
+* Degrading
+* Replacement Recommended
+
+---
+
+## AGENT REPLACEMENT ENGINE
+
+Extend Governance & Trust.
+
+If an agent repeatedly fails evaluations:
+
+Display:
+
+Current Agent
+Risk Score
+Failed Evaluations
+Root Cause
+Replacement Recommendation
+
+Actions:
+
+* Retrain
+* Suspend
+* Rollback
+* Replace
+
+Example:
+
+Revenue Scout AI
+
+Accuracy:
+72%
+
+Failed:
+4 consecutive evaluations
+
+Recommendation:
+
+Replace with Revenue Scout v4.2
+
+Expected Improvement:
++14% Accuracy
+
+---
+
+## HUMAN APPROVAL FRAMEWORK
+
+Add approval requirements throughout the platform.
+
+Define approval policies:
+
+Low Risk
+→ Auto Approve
+
+Medium Risk
+→ Manager Approval
+
+High Risk
+→ Director Approval
+
+Critical Risk
+→ Executive Approval
+
+Mandatory Rule:
+
+Any workflow involving money, spending, contracts, procurement, payments, discounts, or budget allocation must require human approval.
+
+Display:
+
+Approval Required
+Approver
+Approval Status
+Approval History
+
+---
+
+## AGENT OBSERVABILITY CENTER
+
+Create a new section inside AgentOps.
+
+Tabs:
+
+Overview
+Logs
+Evaluations
+Observations
+
+Display:
+
+* Agent Logs
+* Tool Calls
+* Reasoning Trace
+* Decisions Made
+* Actions Taken
+* Failures
+* Exceptions
+* Cost Usage
+* Latency
+
+Show chronological activity timeline.
+
+---
+
+## EVALUATION MANAGEMENT
+
+Add Evaluation Studio.
+
+Users can create custom evaluations.
+
+Examples:
+
+* Accuracy
+* Faithfulness
+* Groundedness
+* Policy Compliance
+* Hallucination Detection
+* SLA Compliance
+* Cost Efficiency
+* Business Outcome Success
+
+Each evaluation should have:
+
+Name
+Description
+Metric
+Threshold
+Pass Criteria
+
+Allow:
+
+Create Evaluation
+Edit Evaluation
+Assign Evaluation
+Schedule Evaluation
+
+---
+
+## ROOT CAUSE ANALYSIS
+
+When an agent performs poorly:
+
+Display:
+
+What failed?
+Why did it fail?
+What evidence supports this?
+What policy was violated?
+What tool caused failure?
+What workflow was impacted?
+
+Provide recommendations.
+
+---
+
+## POLICY STUDIO
+
+Extend Governance & Trust.
+
+Create a simple policy drafting interface.
+
+Users should be able to create policies using natural language.
+
+Example:
+
+"Any procurement above $10,000 requires manager approval."
+
+Automatically convert into structured policy.
+
+Display:
+
+Policy Name
+Scope
+Conditions
+Approvers
+Actions
+Exceptions
+
+Example policies:
+
+* Spending Approval Policy
+* Contract Approval Policy
+* Customer Escalation Policy
+* Data Access Policy
+* Agent Autonomy Policy
+
+---
+
+## AGENT AUTONOMY CONTROLS
+
+For every AI Employee display:
+
+Autonomy Level:
+
+* Assisted
+* Supervised
+* Semi-Autonomous
+* Fully Autonomous
+
+Define what actions can be taken without approval.
+
+---
+
+## DECISION EXPLAINABILITY
+
+Every recommendation should display:
+
+Evidence Used
+Knowledge Sources
+Policies Applied
+Confidence Score
+Evaluation Score
+Past Similar Cases
+
+Show why the recommendation exists.
+
+---
+
+## LEARNING & IMPROVEMENT DASHBOARD
+
+Extend Learning & Outcomes.
+
+Display:
+
+Agents Improved
+Agents Replaced
+Agents Retrained
+Policy Violations Prevented
+Human Overrides
+Business Value Generated
+
+Show continuous improvement over time.
+
+---
+
+## EXECUTIVE VISIBILITY
+
+Executives should be able to answer:
+
+* Which agents are underperforming?
+* Which agents are improving?
+* Which agents require replacement?
+* Which workflows require approval?
+* Why was a decision made?
+* What business impact was created?
+* What risks were prevented?
+
+The platform should clearly demonstrate governed autonomy, human oversight, self-improving agents, policy enforcement, observability, and enterprise trust.

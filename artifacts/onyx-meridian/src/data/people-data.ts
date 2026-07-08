@@ -1,0 +1,48 @@
+// Human employee directory — distinct from MFG_AGENTS (the AI workforce).
+// Names reuse the human role-holders already referenced elsewhere in the app
+// (SOP_CATALOG.humans, Unit of Work RACI, APPROVAL_QUEUE.approver) so the
+// People directory feels connected to the rest of the app rather than
+// introducing a disconnected cast of names.
+
+export interface Person {
+  id: string;
+  name: string;
+  email: string;
+  title: string;
+  buId: string | null; // null = enterprise-wide (CEO office, Legal)
+  roleTier: "member" | "abu_head" | "ceo";
+  status: "active" | "invited" | "paused";
+}
+
+export const PEOPLE: Person[] = [
+  // Leadership (mirrors the seeded RBAC personas in lib/rbac.ts)
+  { id: "per-ceo",      name: "Elena Sokolov",   email: "elena.sokolov@meridian-mfg.com",   title: "Chief Executive Officer",         buId: null,             roleTier: "ceo",      status: "active" },
+  { id: "per-head-mfg", name: "Marcus Chen",     email: "marcus.chen@meridian-mfg.com",     title: "VP, Manufacturing Intelligence",  buId: "manufacturing",  roleTier: "abu_head", status: "active" },
+  { id: "per-head-sc",  name: "Amara Osei",      email: "amara.osei@meridian-mfg.com",      title: "VP, Supply Chain Intelligence",   buId: "supply-chain",   roleTier: "abu_head", status: "active" },
+  { id: "per-head-proc",name: "David Nakamura",  email: "david.nakamura@meridian-mfg.com",  title: "VP, Procurement Intelligence",    buId: "procurement",    roleTier: "abu_head", status: "active" },
+  { id: "per-head-fin", name: "Priya Raman",     email: "priya.raman@meridian-mfg.com",     title: "VP, Finance Intelligence",        buId: "finance",        roleTier: "abu_head", status: "active" },
+  { id: "per-head-rev", name: "Jordan Blake",    email: "jordan.blake@meridian-mfg.com",    title: "VP, Revenue Intelligence",        buId: "revenue",        roleTier: "abu_head", status: "active" },
+
+  // Manufacturing
+  { id: "per-1", name: "Plant Manager",          email: "plant.manager@meridian-mfg.com",       title: "Plant Manager",           buId: "manufacturing", roleTier: "member", status: "active" },
+  { id: "per-2", name: "Maintenance Supervisor",  email: "maintenance.supervisor@meridian-mfg.com", title: "Maintenance Supervisor", buId: "manufacturing", roleTier: "member", status: "active" },
+  { id: "per-3", name: "Quality Manager",         email: "quality.manager@meridian-mfg.com",     title: "Quality Manager",          buId: "manufacturing", roleTier: "member", status: "active" },
+  { id: "per-4", name: "Line Supervisor",         email: "line.supervisor@meridian-mfg.com",     title: "Line Supervisor",          buId: "manufacturing", roleTier: "member", status: "active" },
+  { id: "per-5", name: "Operations Coordinator",  email: "operations.coordinator@meridian-mfg.com", title: "Operations Coordinator", buId: "procurement",   roleTier: "member", status: "active" },
+
+  // Supply Chain
+  { id: "per-6", name: "Warehouse Manager",       email: "warehouse.manager@meridian-mfg.com",   title: "Warehouse Manager",        buId: "supply-chain",  roleTier: "member", status: "active" },
+
+  // Procurement
+  { id: "per-7", name: "Procurement Manager",     email: "procurement.manager@meridian-mfg.com", title: "Procurement Manager",      buId: "procurement",   roleTier: "member", status: "active" },
+  { id: "per-8", name: "Procurement Director",    email: "procurement.director@meridian-mfg.com",title: "Procurement Director",     buId: "procurement",   roleTier: "member", status: "active" },
+  { id: "per-9", name: "Legal Counsel",           email: "legal.counsel@meridian-mfg.com",       title: "Legal Counsel",            buId: "procurement",   roleTier: "member", status: "active" },
+
+  // Finance
+  { id: "per-10", name: "Finance Director",       email: "finance.director@meridian-mfg.com",    title: "Finance Director",         buId: "finance",       roleTier: "member", status: "active" },
+  { id: "per-11", name: "CFO",                    email: "cfo@meridian-mfg.com",                 title: "Chief Financial Officer",  buId: "finance",       roleTier: "member", status: "active" },
+
+  // Revenue
+  { id: "per-12", name: "Revenue Manager",        email: "revenue.manager@meridian-mfg.com",     title: "Revenue Manager",          buId: "revenue",       roleTier: "member", status: "active" },
+  { id: "per-13", name: "VP Sales",               email: "vp.sales@meridian-mfg.com",            title: "VP Sales",                 buId: "revenue",       roleTier: "member", status: "active" },
+];

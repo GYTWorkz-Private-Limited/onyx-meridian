@@ -1,0 +1,96 @@
+Redesign the existing **Agent Harness** into a production-grade AI Engineering Console while preserving the current Onyx UI, navigation and page structure.
+
+Do not rename Agent Harness.
+
+Replace every simplistic list/grid with rich engineering views. Every card, metric, chart, table and resource must be interactive and open detailed drill-down pages.
+
+### Roster
+
+Replace the current list with rich agent cards showing identity, department, ABU, role, assigned mission/workflow, model, version, health, trust score, autonomy level, status, queue, active tasks, response time, success rate, token usage, cost, memory usage, knowledge hit rate, tool calls, context usage and last activity.
+
+Provide quick actions:
+Open, Edit, Duplicate, Assign Mission, Assign Workflow, Change Model, Increase Tokens, Suspend, Resume, Promote, Demote, View Logs, View Memory, View Tool Calls and Delete.
+
+Opening an agent launches a complete engineering workspace.
+
+### Templates
+
+Convert templates into deployable blueprints showing business purpose, supported departments, required models, MCP tools, knowledge, memory profile, autonomy level, estimated cost, latency, deployment complexity and expected business value.
+
+Allow Preview, Clone, Customize and Deploy.
+
+### Deployments
+
+Show production deployment management with environment, health, traffic %, version, scaling, latency, availability, errors, rollout history, rollback, regions and resource utilization.
+
+### Versions
+
+Show version history with prompt/config/model/tool/knowledge differences, performance comparison, rollback, restore, fork and export.
+
+### Skills
+
+Replace simple skill cards with capability profiles containing confidence, dependencies, learning progress, usage frequency, runtime, business impact, related skills and enable/disable/retrain actions.
+
+### Knowledge
+
+Transform into a Knowledge Engineering console.
+
+Display connected knowledge bases, SOPs, policies, playbooks, vector stores, documents, chunks, embeddings, retrieval strategy, reranking, freshness, confidence and health.
+
+Opening any source shows document tree, metadata, chunk preview, relationships, connected agents, usage statistics and update history.
+
+### Tools
+
+Transform into an MCP/Integration dashboard.
+
+Display APIs, databases, MCP servers and enterprise systems with status, health, latency, success rate, calls, retries, authentication, permissions, endpoint, version, rate limits and connected agents.
+
+Support Test Connection, Reconnect, Disable and Request/Response inspection.
+
+### Agent Detail
+
+Opening any agent should include dedicated engineering sections for:
+
+• Identity
+• Goals
+• System Prompt
+• Guardrails
+• Reasoning Settings
+• Planning Strategy
+• Execution Strategy
+• Memory (working, short-term, long-term, episodic, semantic, shared, context usage, compression)
+• Knowledge
+• Tools & MCP
+• Workflows
+• Missions
+• Task Queue
+• Observability
+• Live Logs
+• Token Timeline
+• Latency Timeline
+• Cost Timeline
+• Memory Timeline
+• Tool Timeline
+• Error Timeline
+• Prompt Playground
+• Scenario Testing
+• Benchmarking
+• Evaluation
+• Governance
+• Deployment
+
+### Interactions
+
+Every metric opens analytics.
+
+Every chart supports hover tooltips, legends, filtering, zoom and drill-down.
+
+Every table supports search, sorting, filtering, pagination and clickable rows.
+
+### Data
+
+Populate every page with realistic enterprise manufacturing data consistent with Enterprise → ABUs → Departments → Agents.
+
+Avoid placeholder cards, empty states and basic CRUD layouts.
+
+The overall experience should feel like an enterprise AI engineering platform comparable to LangSmith, Azure AI Foundry, AWS Bedrock Agent Console and Datadog, while maintaining the existing minimalist Onyx design language.

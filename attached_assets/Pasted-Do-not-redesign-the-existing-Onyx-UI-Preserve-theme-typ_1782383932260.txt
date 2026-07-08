@@ -1,0 +1,105 @@
+Do not redesign the existing Onyx UI. Preserve theme, typography, spacing and layout.
+
+Implement the following improvements:
+
+1. BUSINESS UNIT NAVIGATION
+- Every ABU card is clickable.
+- Use one reusable Business Unit template for Manufacturing, Supply Chain, Procurement, Finance and Revenue.
+- Tabs:
+  Overview | Intelligence | Workforce | Workflows | Knowledge | Observability | Governance
+- Populate every section with realistic manufacturing data.
+- No empty placeholders.
+
+2. DIGITAL TWIN
+- Convert to a connected enterprise graph.
+- Enterprise Core → ABUs → Agents → Skills/Workflows/KPIs.
+- Animate relationship lines.
+- Hover highlights dependencies.
+- Clicking any node opens its detailed page.
+- Selecting a node updates the intelligence panel.
+- Graph supports zoom, pan and fit.
+
+3. INTERACTIVITY
+- Remove all dead UI.
+- Every button, tab, KPI, graph, badge, card and metric performs an action.
+- Cards drill down.
+- KPIs open KPI details.
+- Charts open analytics.
+- Agent counts open Workforce.
+- Workflow counts open Workflows.
+- Recommendation cards open Decision Analysis.
+
+4. GOVERNANCE CLEANUP
+Remove duplicate tabs:
+- Policy Vault
+- Policy Studio
+- Policy Engine
+
+Keep only:
+- Risk Center
+- Approval Matrix
+- Audit Trail
+
+Policy creation/editing exists only inside the global Policy Studio under BUILD.
+
+5. CROSS-LINK EVERYTHING
+Recommendation → Workflow → SOP → Agent → KPI → Policy → Approval → Outcome
+Agent → ABU → Knowledge → Tools → Memory → Evaluations → Logs
+Workflow → SOP → Policies → Agents → KPIs
+
+Every entity should be navigable.
+
+6. PROMPT PLAYGROUND
+Add a complete Prompt Playground similar to OpenAI Playground + LangSmith.
+
+Features:
+- Chat, Completion and Agent modes
+- System/User/Assistant prompt editor
+- Prompt templates
+- Prompt version history
+- Compare prompt versions
+- Model selector
+- Temperature, Top-P, Max Tokens, Seed
+- Streaming toggle
+- JSON mode
+- Tool calling toggle
+- MCP toggle
+- Context selector
+- Attach Knowledge Sources
+- Attach Skills
+- Attach Tools
+- Attach Memory
+- Upload documents
+- Variable placeholders
+- Prompt testing with sample inputs
+- Side-by-side prompt comparison
+- Output comparison
+- Token usage
+- Latency
+- Cost
+- Evaluation scores
+- Prompt history
+- Save Draft
+- Publish
+- Rollback
+- Clone
+- Export
+- Import
+
+7. MANUFACTURING
+Use only manufacturing examples:
+Manufacturing, Maintenance, Quality, Supply Chain, Procurement, Engineering, Finance, Revenue.
+
+Systems:
+ERP, MES, SCADA, CMMS, WMS, PLM, IoT.
+
+KPIs:
+EEI, OEE, Throughput, Downtime, Yield, Scrap Rate, Inventory Turns, Forecast Accuracy, Cost per Unit.
+
+8. UX
+No duplicate functionality.
+No empty cards.
+No placeholder pages.
+All metrics realistic.
+All navigation connected.
+Everything should behave as one integrated Enterprise AI Operating System.

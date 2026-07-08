@@ -1,0 +1,82 @@
+Add a new **Execution Board** tab inside Mission Execution Intelligence.
+
+Do not modify or remove the existing Mission Timeline, Execution Details or Business Impact views.
+
+Create a Jira-style Kanban board using the existing Onyx design language (not Jira styling).
+
+Columns:
+• Backlog
+• Planned
+• In Progress
+• Waiting for Tool
+• Waiting for Human Approval
+• Completed
+• Blocked
+• Failed
+
+Populate the board with realistic tasks from the existing procurement mission (A36 Structural Steel Procurement), including:
+• Parse Procurement Request
+• Validate Material Specification
+• Retrieve Historical Purchases
+• Search Approved Suppliers
+• Retrieve ERP Pricing
+• Request Supplier Quotations
+• Compare Vendors
+• Supplier Risk Assessment
+• Compliance Validation
+• Budget Validation
+• Human Approval
+• Generate Purchase Order
+• Submit ERP Order
+• Notify Stakeholders
+• Archive Execution Logs
+
+Each task card should display:
+• Task ID
+• Task Name
+• Assigned Agent
+• Status
+• Priority
+• Confidence
+• Start Time
+• Duration
+• Token Usage
+• AI Cost
+• Tool/API Used
+
+Cards must be clickable.
+
+Clicking a card opens a right-side Task Detail drawer containing:
+• Task objective
+• Assigned agent
+• Parent mission
+• Execution timeline
+• Reasoning summary
+• Knowledge retrieved
+• Memory accessed
+• Tool/API calls
+• Documents consulted
+• Decision taken
+• Output generated
+• Validation results
+• Token breakdown
+• Cost
+• Latency
+• Business impact
+• Execution logs
+
+Add board interactions:
+• Search
+• Status filter
+• Agent filter
+• Priority filter
+• Department filter
+• Sorting
+• Collapsible columns
+• Visual drag-and-drop (UI only, no backend persistence)
+
+Selecting a task should synchronize with the existing Mission Timeline and Execution Replay by highlighting the corresponding execution step.
+
+Use realistic manufacturing procurement data that is internally consistent with the rest of the mission.
+
+Implement using existing mock/static data only. Do not introduce backend dependencies or new APIs. Match the current Onyx UI and keep the implementation lightweight.

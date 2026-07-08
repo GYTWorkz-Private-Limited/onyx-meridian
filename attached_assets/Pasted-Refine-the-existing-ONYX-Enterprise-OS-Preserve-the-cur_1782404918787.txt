@@ -1,0 +1,165 @@
+Refine the existing ONYX Enterprise OS. Preserve the current Onyx theme, layout, routing, animations and design system. Improve and merge the existing implementation; do not redesign completed screens.
+
+## Enterprise
+Replace Enterprise Overview with the reference version.
+Share Enterprise metrics across all ABUs.
+Business Impact:
+ROI, Revenue Protected, Cost Saved, Hours Saved, Downtime Prevented, EEI Contribution, Automation %, Productivity Improvement.
+Remove the old ROI panel.
+
+## Digital Twin
+Use the reference layout.
+Enterprise Core → Manufacturing → Supply Chain → Procurement → Finance → Revenue.
+Connect all ABUs with relationship lines.
+Maintain zoom, pan, fit-view and animations.
+Every node supports drill-down.
+Selecting an ABU updates the intelligence panel.
+
+## Business Units
+Create reusable dashboards for:
+Manufacturing, Supply Chain, Procurement, Finance, Revenue.
+
+Each contains:
+Overview, Business Impact, KPIs, Agents, Tasks, Workflows, Knowledge, Recommendations, Risks, Timeline, Documents, Human Approvals.
+
+Enterprise metrics propagate into every ABU.
+
+## AI Workforce
+Use the reference UI.
+Keep:
+Collaboration, Hire Agent, Inventory, Agent Command Center.
+
+Remove:
+Evolution Studio, Evolution tab, Self-Evolving Scores.
+
+Navigation:
+Inventory → Agent Overview → Agent Command Center → Harness → Prompt Playground.
+
+Agent Overview:
+Editable profile, history, logs, suggestions, skill/tool requests, approval requests, Open Harness, Open Playground.
+
+## Mission Control
+Replace with Teams-style workspace.
+
+Left:
+Mission List, Collaborations.
+
+Center:
+Mission Conversation, Agent Collaboration.
+
+Right:
+Timeline, Logs, Tokens, Latency, Cost, Status.
+
+Support mission creation, collaboration creation and execution animations:
+Thinking, Planning, Retrieval, Tool Calls, Completion.
+
+## Knowledge
+Replace with the reference Knowledge Graph.
+Every node supports drill-down.
+Include mock enterprise data, search, predefined chatbot responses and node details.
+
+## Human Approval
+Replace UI while preserving workflows.
+
+## Governance
+Replace Governance/Policy with the reference implementation.
+Remove duplicate policy implementations.
+
+## Remove
+Standalone:
+Observability
+Reliability
+Evaluation
+Connector Hub
+Marketplace
+
+## Prompt Playground
+Merge both versions.
+
+Support:
+Chat
+Completion
+Agent Mode
+Templates
+Variables
+Prompt Versions
+Compare
+Sessions
+Knowledge
+Memory
+Skills
+Tools
+MCP
+Documents
+Temperature
+Top-P
+Max Tokens
+Output Comparison
+Token Usage
+Latency
+Cost
+Evaluations
+
+Actions:
+Save Draft
+Publish
+Clone
+Rollback
+
+## Simulation
+Manufacturing scenarios:
+Machine Failure
+Supplier Delay
+Production Surge
+Inventory Shortage
+Quality Failure
+
+Update:
+KPIs
+EEI
+Business Impact
+Recommendations
+
+## Analysis
+Use the reference implementation.
+
+## Connectivity
+Cross-link everything.
+
+ABU → Agents → Tasks → Workflows → Knowledge → Documents → KPIs
+
+Agent → Harness → Playground → History → Logs → Requests
+
+Workflow → SOP → Tasks → Agents
+
+Recommendation → Workflow → Agent → Business Impact
+
+Every entity supports drill-down navigation.
+
+## UX
+Every button, card, tab, graph, KPI, table row, badge, chip, breadcrumb and menu performs a meaningful action.
+
+No dead links.
+No placeholder pages.
+No empty cards.
+No duplicate functionality.
+
+Charts support hover.
+Tables support search, sort and filter.
+KPIs open detailed views.
+Graphs open analytics.
+Cards open drawers/modals/detail pages.
+
+## Data
+Use manufacturing consistently.
+
+Business Units:
+Manufacturing
+Supply Chain
+Procurement
+Finance
+Revenue
+
+Populate all pages with realistic, internally consistent enterprise data.
+
+Before finishing, perform a full application QA pass. Navigate every route, verify every interaction, modal, drawer, graph and table works correctly, fix broken navigation, remove dead UI and ensure the platform behaves as one cohesive Enterprise Operating System.
