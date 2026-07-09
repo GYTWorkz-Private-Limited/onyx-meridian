@@ -7,3 +7,24 @@ node_modules
 .env.development
 .env.test
 .local
+
+# build output
+dist
+build
+*.tsbuildinfo
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor junk
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# caches
+.vite
+.turbo
+.cache
