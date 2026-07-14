@@ -12,7 +12,7 @@ import { useAppContext } from "@/context/AppContext";
 import { PERSONAS, ROLE_LABEL, landingRouteFor, type Role } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 
-const ROLE_ORDER: Role[] = ["ceo", "abu_head", "employee"];
+const ROLE_ORDER: Role[] = ["ceo", "abu_head", "dept_manager", "employee"];
 
 export function PersonaSwitcher() {
   const { persona, setActivePersonaId } = useAppContext();

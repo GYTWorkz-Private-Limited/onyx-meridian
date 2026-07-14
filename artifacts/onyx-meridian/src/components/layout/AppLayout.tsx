@@ -40,7 +40,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Enterprise",
     items: [
-      { icon: Activity,        path: "/",                label: "Digital Twin",       roles: ["abu_head", "ceo"] },
+      { icon: Activity,        path: "/digital-twin",    label: "Digital Twin",       roles: ["dept_manager", "abu_head", "ceo"] },
       { icon: LayoutDashboard, path: "/dashboard",       label: "Executive Command", roles: ["abu_head", "ceo"] },
       { icon: Briefcase,       path: "/business-units",  label: "Business Units",    roles: ["abu_head", "ceo"] },
       { icon: TrendingUp,      path: "/business-impact", label: "Business Impact",   roles: ["abu_head", "ceo"] },
@@ -70,8 +70,8 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
   {
     label: "Strategy",
     items: [
-      { icon: Target,      path: "/goals",         label: "Goals",         roles: ["abu_head", "ceo"] },
-      { icon: FolderKanban,path: "/projects",      label: "Projects",      roles: ["abu_head", "ceo"] },
+      { icon: Target,      path: "/goals",         label: "Goals",         roles: ["dept_manager", "abu_head", "ceo"] },
+      { icon: FolderKanban,path: "/projects",      label: "Projects",      roles: ["dept_manager", "abu_head", "ceo"] },
       { icon: Gauge,       path: "/cost-control",  label: "Cost Control",  roles: ["abu_head", "ceo"] },
     ],
   },

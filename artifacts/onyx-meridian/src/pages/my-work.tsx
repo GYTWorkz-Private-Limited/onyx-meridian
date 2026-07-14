@@ -3,6 +3,7 @@ import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppContext } from "@/context/AppContext";
+import { isDeptScoped } from "@/lib/rbac";
 import { BU_LIST } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
 import { Bot, User, Users } from "lucide-react";
@@ -35,7 +36,7 @@ export default function MyWork() {
   const scoped = (Array.isArray(apiTasks) ? apiTasks : []).filter((t: any) => {
     if ((t.companyId ?? "company-a") !== currentCompanyId) return false;
     if (role === "employee") return t.owner === persona.name;
-    if (role === "abu_head") return t.businessUnitId === persona.buId;
+    if (isDeptScoped(role)) return t.businessUnitId === persona.buId;
     return true; // ceo landing here directly (edge case) sees everything
   });
 
@@ -47,7 +48,7 @@ export default function MyWork() {
       <HeaderBar
         moduleName="MY WORK"
         metrics={[
-          { label: role === "abu_head" ? "TEAM TASKS" : "MY TASKS", value: scoped.length },
+          { label: isDeptScoped(role) ? "TEAM TASKS" : "MY TASKS", value: scoped.length },
           { label: "DONE", value: doneCount },
           { label: "BLOCKED", value: blockedCount },
         ]}
@@ -55,7 +56,7 @@ export default function MyWork() {
 
       <div className="p-6 max-w-[1600px] mx-auto w-full space-y-5">
         <div className="text-sm text-muted-foreground">
-          {role === "abu_head"
+          {isDeptScoped(role)
             ? <>Showing the shared task board for <span className="font-semibold text-foreground">{buName}</span>.</>
             : <>Personal task queue for <span className="font-semibold text-foreground">{persona.name}</span>.</>}
         </div>

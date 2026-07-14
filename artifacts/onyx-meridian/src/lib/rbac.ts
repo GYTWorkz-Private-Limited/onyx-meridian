@@ -1,7 +1,13 @@
-// RBAC model for Onyx Meridian: three roles at increasing altitude.
+// RBAC model for Onyx Meridian: four roles at increasing altitude.
 // Mocked persona switcher — no real auth/session, just a stored "who's logged in".
+//
+// Maps to the Bharadwaj role hierarchy from the meeting notes:
+//   ceo = CXO/Org, abu_head = Dept Head, dept_manager = Dept Manager, employee = Dept Employee.
+// dept_manager sits between employee and abu_head: department-scoped like a
+// head (has a buId) but lower altitude — sets objectives, breaks them into
+// tasks, manages department documents.
 
-export type Role = "employee" | "abu_head" | "ceo";
+export type Role = "employee" | "dept_manager" | "abu_head" | "ceo";
 
 export interface Persona {
   id: string;
@@ -9,15 +15,26 @@ export interface Persona {
   title: string;
   role: Role;
   buId: string | null; // null = enterprise-wide (CEO)
+  // For department-scoped roles: which department's digital twin they own.
+  // Format matches deptTwinId() in enterprise-data: `${buId}:${slug(name)}`.
+  deptId?: string;
 }
 
-export const ROLE_RANK: Record<Role, number> = { employee: 0, abu_head: 1, ceo: 2 };
+export const ROLE_RANK: Record<Role, number> = { employee: 0, dept_manager: 1, abu_head: 2, ceo: 3 };
 
 export const ROLE_LABEL: Record<Role, string> = {
   employee: "Employee",
+  dept_manager: "Dept Manager",
   abu_head: "ABU Head",
   ceo: "CEO / Admin",
 };
+
+// A role that belongs to (and is scoped to) a single department/BU. Both
+// department heads and department managers see only their own BU's data;
+// this is the single source of truth for that "one department" filtering.
+export function isDeptScoped(role: Role): boolean {
+  return role === "abu_head" || role === "dept_manager";
+}
 
 // Any approval at or above this dollar amount requires CEO sign-off,
 // regardless of what a lower-level approver already authorized.
@@ -34,7 +51,9 @@ export const PERSONAS: Persona[] = [
   { id: "p-head-proc",name: "David Nakamura",      title: "VP, Procurement Intelligence",   role: "abu_head", buId: "procurement" },
   { id: "p-head-fin", name: "Priya Raman",         title: "VP, Finance Intelligence",       role: "abu_head", buId: "finance" },
   { id: "p-head-rev", name: "Jordan Blake",        title: "VP, Revenue Intelligence",       role: "abu_head", buId: "revenue" },
-  { id: "p-emp",      name: "Operations Coordinator", title: "Operations Coordinator",     role: "employee",  buId: "procurement" },
+  { id: "p-mgr-proc", name: "Ravi Menon",          title: "Procurement Operations Manager", role: "dept_manager", buId: "procurement",   deptId: "procurement:supplier-risk" },
+  { id: "p-mgr-mfg",  name: "Lena Fischer",        title: "Manufacturing Line Manager",     role: "dept_manager", buId: "manufacturing", deptId: "manufacturing:line-monitor" },
+  { id: "p-emp",      name: "Operations Coordinator", title: "Operations Coordinator",     role: "employee",  buId: "procurement",   deptId: "procurement:contract-bot" },
 ];
 
 export const DEFAULT_PERSONA_ID = "p-ceo";
@@ -55,7 +74,10 @@ export function landingRouteFor(role: Role): string {
 // from nav. Everything else stays reachable by direct link (e.g. an
 // Employee can still open /tasks via a link from My Work).
 const CEO_ONLY_PATHS = ["/companies", "/abu-onboarding"];
-const ABU_HEAD_PLUS_PATHS = ["/goals", "/projects", "/cost-control", "/people", "/workforce-intelligence"];
+const ABU_HEAD_PLUS_PATHS = ["/cost-control", "/people", "/workforce-intelligence"];
+// Managers and above: strategy pages where a dept manager sets objectives and
+// breaks them into tasks.
+const DEPT_MANAGER_PLUS_PATHS = ["/goals", "/projects"];
 
 function matches(path: string, prefixes: string[]) {
   return prefixes.some((p) => path === p || path.startsWith(p + "/"));
@@ -64,5 +86,6 @@ function matches(path: string, prefixes: string[]) {
 export function canAccess(role: Role, path: string): boolean {
   if (matches(path, CEO_ONLY_PATHS)) return role === "ceo";
   if (matches(path, ABU_HEAD_PLUS_PATHS)) return hasMinRole(role, "abu_head");
+  if (matches(path, DEPT_MANAGER_PLUS_PATHS)) return hasMinRole(role, "dept_manager");
   return true;
 }

@@ -596,3 +596,193 @@ export const BU_INTELLIGENCE: Record<string, {
     ],
   },
 };
+
+// ─── Department Twins ─────────────────────────────────────────
+// Each ABU department (an entry in BU_LIST[].employees) can be opened as its
+// own small digital twin: the department at the center, ringed by the AI
+// agents, workflows, integrations and KPIs it operates. The model is derived
+// deterministically from the department so every persona gets a populated
+// twin without hand-authoring all 19 of them.
+
+export type DeptNodeKind = "agent" | "workflow" | "integration" | "kpi";
+export type DeptNodeStatus = "active" | "watch" | "critical";
+
+export interface DeptChildNode {
+  id: string;
+  label: string;
+  sub: string;
+  kind: DeptNodeKind;
+  status: DeptNodeStatus;
+  metric: string;
+}
+
+export interface DeptTwinModel {
+  id: string;
+  buId: string;
+  buName: string;
+  name: string;
+  role: string;
+  status: string;
+  health: number;
+  automation: number;
+  agents: number;
+  workflows: number;
+  openTasks: number;
+  nodes: DeptChildNode[];
+}
+
+export function deptSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+export function deptTwinId(buId: string, name: string): string {
+  return `${buId}:${deptSlug(name)}`;
+}
+
+function fnv1a(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function seeded(seed: number) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const between = (r: () => number, lo: number, hi: number) => Math.round(lo + r() * (hi - lo));
+
+const INTEGRATIONS_BY_BU: Record<string, string[]> = {
+  manufacturing: ["MES / SCADA", "SAP PP", "Historian DB", "IoT Gateway"],
+  "supply-chain": ["SAP EWM", "TMS", "Demand Cloud", "EDI Hub"],
+  procurement: ["SAP Ariba", "Coupa", "D&B Risk", "Contract Vault"],
+  finance: ["SAP FICO", "Anaplan", "BlackLine", "Data Warehouse"],
+  revenue: ["Salesforce", "Gong", "Clari", "Marketo"],
+};
+const WORKFLOW_POOL = [
+  "Auto-triage queue",
+  "Anomaly escalation",
+  "Nightly reconcile",
+  "Forecast refresh",
+  "Approval routing",
+  "SLA monitor",
+  "Exception handling",
+];
+
+function prettyKpi(k: string): string {
+  return k
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim();
+}
+
+export function buildDeptTwin(
+  buId: string,
+  dept: { name: string; role: string; status: string }
+): DeptTwinModel {
+  const bu = BU_LIST.find((b) => b.id === buId);
+  const id = deptTwinId(buId, dept.name);
+  const r = seeded(fnv1a(id));
+  const status = dept.status;
+  const health =
+    status === "critical" ? between(r, 58, 70) : status === "watch" ? between(r, 70, 82) : between(r, 84, 96);
+  const automation = status === "watch" ? between(r, 55, 72) : between(r, 74, 93);
+  const agents = between(r, 2, 4);
+  const workflows = between(r, 3, 7);
+  const openTasks = status === "watch" ? between(r, 12, 30) : between(r, 2, 12);
+
+  const integrations = INTEGRATIONS_BY_BU[buId] ?? ["ERP", "Data Lake"];
+  const kpiEntries = bu ? Object.entries(bu.kpis) : [];
+  const first = dept.name.split(" ")[0];
+
+  const nodes: DeptChildNode[] = [];
+  const agentNames = [`${first} Copilot`, `${dept.role} Engine`, "Anomaly Sentinel", "Ops Assistant"];
+  for (let i = 0; i < agents; i++) {
+    const st: DeptNodeStatus = i === 0 && status !== "active" ? (status as DeptNodeStatus) : r() > 0.85 ? "watch" : "active";
+    nodes.push({
+      id: `${id}:agent:${i}`,
+      label: agentNames[i] ?? `Agent ${i + 1}`,
+      sub: "AI Agent",
+      kind: "agent",
+      status: st,
+      metric: `${between(r, 82, 99)}% conf`,
+    });
+  }
+  const wfCount = Math.min(3, Math.max(2, Math.round(workflows / 2)));
+  const wfShuffle = [...WORKFLOW_POOL].sort(() => r() - 0.5);
+  for (let i = 0; i < wfCount; i++) {
+    nodes.push({
+      id: `${id}:wf:${i}`,
+      label: wfShuffle[i],
+      sub: "Workflow",
+      kind: "workflow",
+      status: r() > 0.8 ? "watch" : "active",
+      metric: `${between(r, 40, 320)} runs/wk`,
+    });
+  }
+  for (let i = 0; i < 2; i++) {
+    nodes.push({
+      id: `${id}:int:${i}`,
+      label: integrations[i] ?? "System",
+      sub: "Integration",
+      kind: "integration",
+      status: r() > 0.9 ? "watch" : "active",
+      metric: r() > 0.5 ? "synced" : "live",
+    });
+  }
+  const kpiCount = Math.min(3, kpiEntries.length || 2);
+  for (let i = 0; i < kpiCount; i++) {
+    const entry = kpiEntries[i] ?? [`kpi${i + 1}`, "—"];
+    nodes.push({
+      id: `${id}:kpi:${i}`,
+      label: prettyKpi(entry[0]),
+      sub: "KPI",
+      kind: "kpi",
+      status: "active",
+      metric: String(entry[1]),
+    });
+  }
+
+  return {
+    id,
+    buId,
+    buName: bu?.name ?? buId,
+    name: dept.name,
+    role: dept.role,
+    status,
+    health,
+    automation,
+    agents,
+    workflows,
+    openTasks,
+    nodes,
+  };
+}
+
+// All departments of a BU, with their stable twin ids attached.
+export function departmentsForBu(buId: string) {
+  const bu = BU_LIST.find((b) => b.id === buId);
+  if (!bu) return [];
+  return bu.employees.map((e) => ({ ...e, id: deptTwinId(buId, e.name) }));
+}
+
+// Resolve a department twin from a persona's deptId (or fall back to the
+// first department of the given BU) so every scoped role has something to show.
+export function resolveDeptTwin(deptId: string | null | undefined, fallbackBuId: string | null): DeptTwinModel | null {
+  for (const bu of BU_LIST) {
+    for (const emp of bu.employees) {
+      if (deptTwinId(bu.id, emp.name) === deptId) return buildDeptTwin(bu.id, emp);
+    }
+  }
+  if (fallbackBuId) {
+    const bu = BU_LIST.find((b) => b.id === fallbackBuId);
+    if (bu && bu.employees[0]) return buildDeptTwin(bu.id, bu.employees[0]);
+  }
+  return null;
+}

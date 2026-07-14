@@ -1,10 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { BlurGate } from "@/components/shared/BlurGate";
 import { useAppContext } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
 import { BU_LIST, ANOMALIES } from "@/data/enterprise-data";
+import { deptStatus, DepartmentStack } from "@/components/twin/twin-canvas";
+import AbuTwin from "@/pages/twins/abu-twin";
+import DeptTwin from "@/pages/twins/dept-twin";
 import {
   ChevronRight,
   ChevronDown,
@@ -12,11 +15,12 @@ import {
   Network,
   ZoomIn,
   ZoomOut,
-  Maximize2,
-  Bot,
   Radio,
-  TrendingDown,
-  TrendingUp,
+  Move,
+  RotateCcw,
+  Crosshair,
+  Hand,
+  Layers,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -220,6 +224,28 @@ function OrgNavigator({
 
 // ─── Center Topology ──────────────────────────────────────────
 
+const CW = 1180;
+const CH = 640;
+const CX = CW / 2;
+const CY = 150;
+const WORLD_H = CH + 260;
+const BU_SPACING = 214;
+
+type Pos = { x: number; y: number };
+
+// Default radial-ish layout: core at top-center, BUs fanned out below.
+function buildDefaultPositions(): Record<string, Pos> {
+  const pos: Record<string, Pos> = { __core__: { x: CX, y: CY } };
+  const totalWidth = (BU_LIST.length - 1) * BU_SPACING;
+  BU_LIST.forEach((bu, i) => {
+    pos[bu.id] = { x: CX - totalWidth / 2 + i * BU_SPACING, y: CY + 190 };
+  });
+  return pos;
+}
+
+const ZOOM_MIN = 0.4;
+const ZOOM_MAX = 2;
+
 function TopologyMap({
   eeiScore,
   selectedBu,
@@ -233,20 +259,109 @@ function TopologyMap({
 }) {
   const [, navigate] = useLocation();
   const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState<Pos>({ x: 0, y: 0 });
+  const [positions, setPositions] = useState<Record<string, Pos>>(buildDefaultPositions);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [hoveredDept, setHoveredDept] = useState<string | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
+  const [expandAll, setExpandAll] = useState(false);
+  const [pulse, setPulse] = useState(true);
+
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
 
-  const CW = 1100;
-  const CH = 580;
-  const CX = CW / 2;
-  const CY = 170;
+  // Mutable drag context shared with window listeners.
+  const drag = useRef<
+    | { id: string | "__canvas__"; startX: number; startY: number; origX: number; origY: number; moved: boolean }
+    | null
+  >(null);
+  const movedRef = useRef(false);
 
-  const buPositions = BU_LIST.map((bu, i) => {
-    const spacing = 200;
-    const totalWidth = (BU_LIST.length - 1) * spacing;
-    const x = CX - totalWidth / 2 + i * spacing;
-    const y = CY + 200;
-    return { ...bu, x, y };
-  });
+  const core = positions.__core__;
+
+  // ── Global pointer move / up so drags survive leaving the node ──
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const d = drag.current;
+      if (!d) return;
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (!d.moved && Math.abs(dx) + Math.abs(dy) > 4) d.moved = true;
+      if (d.id === "__canvas__") {
+        setPan({ x: d.origX + dx, y: d.origY + dy });
+      } else {
+        const z = zoomRef.current;
+        setPositions((prev) => ({
+          ...prev,
+          [d.id]: { x: d.origX + dx / z, y: d.origY + dy / z },
+        }));
+      }
+    };
+    const onUp = () => {
+      if (!drag.current) return;
+      movedRef.current = drag.current.moved;
+      const wasCanvas = drag.current.id === "__canvas__";
+      drag.current = null;
+      if (wasCanvas) setIsPanning(false);
+      setDragId(null);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  // ── Scroll to zoom (non-passive so we can preventDefault) ──
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((z) => {
+        const next = z - e.deltaY * 0.0015 * z;
+        return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next));
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  const startNodeDrag = useCallback(
+    (id: string, e: React.PointerEvent) => {
+      e.stopPropagation();
+      const p = positions[id];
+      if (!p) return;
+      drag.current = { id, startX: e.clientX, startY: e.clientY, origX: p.x, origY: p.y, moved: false };
+      movedRef.current = false;
+      setDragId(id);
+    },
+    [positions]
+  );
+
+  const startPan = useCallback(
+    (e: React.PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-node]") || target.closest("[data-control]")) return;
+      drag.current = { id: "__canvas__", startX: e.clientX, startY: e.clientY, origX: pan.x, origY: pan.y, moved: false };
+      setIsPanning(true);
+    },
+    [pan]
+  );
+
+  const resetView = useCallback(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
+
+  const resetLayout = useCallback(() => {
+    setPositions(buildDefaultPositions());
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
 
   const getRiskBorder = (risk: string, selected: boolean) => {
     if (selected) return "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20";
@@ -255,52 +370,80 @@ function TopologyMap({
     return "border-border bg-white";
   };
 
+  const ctrlBtn =
+    "w-7 h-7 bg-white border border-border rounded-sm shadow-sm flex items-center justify-center hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-colors";
+
   return (
-    <div className="flex-1 relative bg-white border border-border rounded-sm shadow-sm overflow-hidden flex flex-col">
+    <div className="flex-1 relative bg-white border border-border rounded-sm shadow-sm overflow-hidden flex flex-col select-none">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808010_1px,transparent_1px),linear-gradient(to_bottom,#80808010_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
-      {/* Zoom controls */}
-      <div className="absolute top-3 right-3 z-30 flex flex-col gap-1">
-        <button
-          onClick={() => setZoom((z) => Math.min(1.5, z + 0.1))}
-          className="w-7 h-7 bg-white border border-border rounded-sm shadow-sm flex items-center justify-center hover:bg-muted/60 transition-colors"
-        >
+      {/* Controls */}
+      <div data-control className="absolute top-3 right-3 z-30 flex flex-col gap-1">
+        <button title="Zoom in" onClick={() => setZoom((z) => Math.min(ZOOM_MAX, z + 0.15))} className={ctrlBtn}>
           <ZoomIn size={12} />
         </button>
-        <button
-          onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}
-          className="w-7 h-7 bg-white border border-border rounded-sm shadow-sm flex items-center justify-center hover:bg-muted/60 transition-colors"
-        >
+        <button title="Zoom out" onClick={() => setZoom((z) => Math.max(ZOOM_MIN, z - 0.15))} className={ctrlBtn}>
           <ZoomOut size={12} />
         </button>
+        <button title="Reset view" onClick={resetView} className={ctrlBtn}>
+          <Crosshair size={12} />
+        </button>
+        <button title="Reset layout" onClick={resetLayout} className={ctrlBtn}>
+          <RotateCcw size={12} />
+        </button>
+        <div className="h-px bg-border my-0.5" />
         <button
-          onClick={() => setZoom(1)}
-          className="w-7 h-7 bg-white border border-border rounded-sm shadow-sm flex items-center justify-center hover:bg-muted/60 transition-colors"
+          title="Toggle connection pulse"
+          onClick={() => setPulse((p) => !p)}
+          className={cn(ctrlBtn, pulse && "bg-primary/10 border-primary/40 text-primary")}
         >
-          <Maximize2 size={11} />
+          <Radio size={12} />
+        </button>
+        <button
+          title={expandAll ? "Collapse departments" : "Expand all departments"}
+          onClick={() => setExpandAll((s) => !s)}
+          className={cn(ctrlBtn, expandAll && "bg-primary/10 border-primary/40 text-primary")}
+        >
+          <Layers size={12} />
         </button>
       </div>
 
-      <div ref={containerRef} className="flex-1 overflow-auto flex items-center justify-center">
+      {/* Zoom readout */}
+      <div data-control className="absolute top-3 left-3 z-30 flex items-center gap-2">
+        <div className="px-2 py-1 bg-white/90 border border-border rounded-sm shadow-sm text-[9px] font-mono font-bold text-muted-foreground">
+          {Math.round(zoom * 100)}%
+        </div>
+      </div>
+
+      <div
+        ref={containerRef}
+        onPointerDown={startPan}
+        className={cn(
+          "flex-1 overflow-hidden flex items-center justify-center touch-none",
+          isPanning ? "cursor-grabbing" : "cursor-grab"
+        )}
+      >
         <div
           style={{
-            transform: `scale(${zoom})`,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
             transformOrigin: "center top",
             width: CW,
-            height: CH + 160,
+            height: WORLD_H,
             position: "relative",
-            transition: "transform 0.2s ease",
+            transition: drag.current ? "none" : "transform 0.12s ease-out",
           }}
         >
           {/* SVG connections */}
-          <svg
-            width={CW}
-            height={CH + 160}
-            className="absolute inset-0 pointer-events-none"
-            style={{ zIndex: 1 }}
-          >
-            {buPositions.map((bu) => {
+          <svg width={CW} height={WORLD_H} className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+            <defs>
+              <marker id="dt-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                <circle cx="3" cy="3" r="2" fill="hsl(228 71% 54%)" />
+              </marker>
+            </defs>
+            {BU_LIST.map((bu) => {
+              const p = positions[bu.id];
               const isSelected = selectedBu === bu.id;
+              const isHot = hovered === bu.id;
               const color = isSelected
                 ? "hsl(228 71% 54%)"
                 : bu.risk === "high"
@@ -309,33 +452,25 @@ function TopologyMap({
               return (
                 <g key={bu.id}>
                   <line
-                    x1={CX}
-                    y1={CY + 60}
-                    x2={bu.x}
-                    y2={bu.y - 4}
+                    x1={core.x}
+                    y1={core.y + 60}
+                    x2={p.x}
+                    y2={p.y - 4}
                     stroke={color}
-                    strokeWidth={isSelected ? 2 : 1}
-                    strokeOpacity={isSelected ? 0.7 : 0.3}
-                    strokeDasharray={isSelected ? "none" : "4 4"}
-                  />
-                  {bu.employees.map((_, ei) => {
-                    const ew = 58;
-                    const etotal = (bu.employees.length - 1) * (ew + 8);
-                    const ex = bu.x - etotal / 2 + ei * (ew + 8);
-                    const ey = bu.y + 68;
-                    return (
-                      <line
-                        key={ei}
-                        x1={bu.x}
-                        y1={bu.y + 64}
-                        x2={ex + ew / 2}
-                        y2={ey}
-                        stroke="#94a3b8"
-                        strokeWidth={0.8}
-                        strokeOpacity={0.3}
+                    strokeWidth={isSelected || isHot ? 2 : 1}
+                    strokeOpacity={isSelected || isHot ? 0.75 : 0.3}
+                    strokeDasharray={isSelected ? "none" : "5 5"}
+                  >
+                    {pulse && (
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        from="20"
+                        to="0"
+                        dur={isSelected ? "0.8s" : "1.6s"}
+                        repeatCount="indefinite"
                       />
-                    );
-                  })}
+                    )}
+                  </line>
                 </g>
               );
             })}
@@ -343,18 +478,27 @@ function TopologyMap({
 
           {/* Enterprise Core Node */}
           <div
+            data-node
+            onPointerDown={(e) => startNodeDrag("__core__", e)}
             style={{
               position: "absolute",
-              left: CX,
-              top: CY,
+              left: core.x,
+              top: core.y,
               transform: "translate(-50%, -50%)",
-              zIndex: 10,
+              zIndex: dragId === "__core__" ? 40 : 20,
             }}
+            className={cn("cursor-grab active:cursor-grabbing", dragId === "__core__" && "cursor-grabbing")}
           >
-            <div className="w-[200px] bg-primary/10 border-2 border-primary rounded-sm shadow-lg overflow-hidden">
+            <div
+              className={cn(
+                "w-[200px] bg-primary/10 border-2 border-primary rounded-sm overflow-hidden transition-shadow",
+                dragId === "__core__" ? "shadow-2xl ring-2 ring-primary/30" : "shadow-lg"
+              )}
+            >
               <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-primary/20 bg-primary/5">
-                <Network size={12} className="text-primary opacity-70" />
-                <span className="text-[9px] uppercase tracking-widest text-primary font-bold">Enterprise Core</span>
+                <Move size={11} className="text-primary/50 shrink-0" />
+                <span className="text-[9px] uppercase tracking-widest text-primary font-bold flex-1">Enterprise Core</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               </div>
               <div className="grid grid-cols-2 divide-x divide-primary/20">
                 <div className="flex flex-col items-center justify-center py-2 px-2">
@@ -380,127 +524,253 @@ function TopologyMap({
           </div>
 
           {/* BU Nodes */}
-          {buPositions.map((bu) => {
+          {BU_LIST.map((bu) => {
+            const p = positions[bu.id];
             const isSelected = selectedBu === bu.id;
+            const isHot = hovered === bu.id;
             const blurred = scopedBuId !== null && bu.id !== scopedBuId;
+            const dragging = dragId === bu.id;
+            const expanded = isSelected || expandAll;
             return (
               <div
                 key={bu.id}
+                data-node
+                onPointerDown={(e) => startNodeDrag(bu.id, e)}
+                onMouseEnter={() => setHovered(bu.id)}
+                onMouseLeave={() => setHovered((h) => (h === bu.id ? null : h))}
                 style={{
                   position: "absolute",
-                  left: bu.x,
-                  top: bu.y,
+                  left: p.x,
+                  top: p.y,
                   transform: "translate(-50%, 0)",
-                  zIndex: 10,
+                  zIndex: dragging ? 40 : isHot ? 30 : 20,
                 }}
+                className={cn(dragging && "cursor-grabbing")}
               >
-              <BlurGate active={blurred}>
-                <div
-                  className={cn(
-                    "w-[140px] border rounded-sm shadow-sm cursor-pointer transition-all",
-                    getRiskBorder(bu.risk, isSelected)
-                  )}
-                  onClick={() => { onSelectBu(bu.id); }}
-                  onDoubleClick={() => navigate(`/business-units/${bu.id}`)}
-                >
-                  <div className="px-2.5 pt-2 pb-1.5">
-                    <div className="text-[9px] uppercase tracking-widest font-bold text-foreground/70 truncate mb-1">
-                      {bu.name.replace(" Intelligence", "")}
+                <BlurGate active={blurred}>
+                  {/* Hover tooltip */}
+                  {isHot && !dragging && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full w-[168px] bg-foreground text-white rounded-sm shadow-xl px-2.5 py-2 z-50 pointer-events-none">
+                      <div className="text-[10px] font-bold mb-1">{bu.name}</div>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[9px]">
+                        <span className="text-white/60">EEI Contrib</span>
+                        <span className="font-mono font-bold text-emerald-300 text-right">{bu.eeiContrib}</span>
+                        <span className="text-white/60">ROI</span>
+                        <span className="font-mono text-right">{bu.roi}</span>
+                        <span className="text-white/60">Cost</span>
+                        <span className="font-mono text-right">{bu.cost}</span>
+                        <span className="text-white/60">Open Tasks</span>
+                        <span className="font-mono text-right">{bu.openTasks}</span>
+                        <span className="text-white/60">Automation</span>
+                        <span className="font-mono text-right">{bu.automationPct}%</span>
+                      </div>
+                      <div className="mt-1.5 pt-1.5 border-t border-white/15 text-[8px] uppercase tracking-widest text-white/40 flex items-center gap-1">
+                        <Move size={8} /> drag · dbl-click to open
+                      </div>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-foreground" />
                     </div>
-                    <div className="flex items-baseline justify-between">
-                      <span className={cn("text-xl font-bold tracking-tighter", isSelected ? "text-primary" : "text-foreground")}>
-                        {bu.eei}
+                  )}
+
+                  <div
+                    className={cn(
+                      "w-[140px] border rounded-sm cursor-grab active:cursor-grabbing transition-all",
+                      dragging ? "shadow-2xl scale-[1.03]" : isHot ? "shadow-lg" : "shadow-sm",
+                      getRiskBorder(bu.risk, isSelected)
+                    )}
+                    onClick={() => {
+                      if (movedRef.current) return;
+                      onSelectBu(isSelected ? null : bu.id);
+                    }}
+                    onDoubleClick={() => navigate(`/business-units/${bu.id}`)}
+                  >
+                    <div className="px-2.5 pt-2 pb-1.5">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Move size={9} className="text-muted-foreground/40 shrink-0" />
+                        <div className="text-[9px] uppercase tracking-widest font-bold text-foreground/70 truncate flex-1">
+                          {bu.name.replace(" Intelligence", "")}
+                        </div>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className={cn("text-xl font-bold tracking-tighter", isSelected ? "text-primary" : "text-foreground")}>
+                          {bu.eei}
+                        </span>
+                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground">EEI</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-0 border-t border-border/60 divide-x divide-border/60">
+                      <div className="px-2 py-1">
+                        <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Health</div>
+                        <div className={cn(
+                          "text-[10px] font-mono font-bold",
+                          bu.health >= 85 ? "text-emerald-600" : bu.health >= 70 ? "text-amber-600" : "text-red-600"
+                        )}>
+                          {bu.health}%
+                        </div>
+                      </div>
+                      <div className="px-2 py-1">
+                        <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Agents</div>
+                        <div className="text-[10px] font-mono font-bold text-foreground">{bu.agents}</div>
+                      </div>
+                      <div className="px-2 py-1 border-t border-border/60">
+                        <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Flows</div>
+                        <div className="text-[10px] font-mono font-bold text-foreground">{bu.workflows}</div>
+                      </div>
+                      <div className="px-2 py-1 border-t border-border/60">
+                        <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Risk</div>
+                        <div className={cn("text-[10px] font-mono font-bold uppercase", {
+                          "text-red-600": bu.risk === "critical",
+                          "text-amber-600": bu.risk === "high",
+                          "text-emerald-600": bu.risk === "low",
+                          "text-blue-600": bu.risk === "medium",
+                        })}>
+                          {bu.risk}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Department summary strip */}
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 border-t border-border/60 bg-muted/20">
+                      <Layers size={9} className="text-muted-foreground/60 shrink-0" />
+                      <div className="flex gap-0.5 flex-1">
+                        {bu.employees.map((emp) => (
+                          <span
+                            key={emp.name}
+                            className={cn("w-1.5 h-1.5 rounded-full", deptStatus(emp.status).dot)}
+                            title={`${emp.name} · ${deptStatus(emp.status).label}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[8px] uppercase tracking-widest text-muted-foreground shrink-0">
+                        {bu.employees.length} depts
                       </span>
-                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">EEI</span>
+                      {expanded ? (
+                        <ChevronDown size={10} className="text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronRight size={10} className="text-muted-foreground shrink-0" />
+                      )}
                     </div>
+
+                    {isSelected && (
+                      <button
+                        data-control
+                        onClick={(e) => { e.stopPropagation(); navigate(`/business-units/${bu.id}`); }}
+                        className="w-full text-[8px] uppercase tracking-widest font-bold text-primary bg-primary/5 border-t border-primary/20 py-1 hover:bg-primary/10 transition-colors flex items-center justify-center gap-1"
+                      >
+                        Open Detail →
+                      </button>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-0 border-t border-border/60 divide-x divide-border/60">
-                    <div className="px-2 py-1">
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Health</div>
-                      <div className={cn(
-                        "text-[10px] font-mono font-bold",
-                        bu.health >= 85 ? "text-emerald-600" : bu.health >= 70 ? "text-amber-600" : "text-red-600"
-                      )}>
-                        {bu.health}%
-                      </div>
-                    </div>
-                    <div className="px-2 py-1">
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Agents</div>
-                      <div className="text-[10px] font-mono font-bold text-foreground">{bu.agents}</div>
-                    </div>
-                    <div className="px-2 py-1 border-t border-border/60">
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Flows</div>
-                      <div className="text-[10px] font-mono font-bold text-foreground">{bu.workflows}</div>
-                    </div>
-                    <div className="px-2 py-1 border-t border-border/60">
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground">Risk</div>
-                      <div className={cn("text-[10px] font-mono font-bold uppercase", {
-                        "text-red-600": bu.risk === "critical",
-                        "text-amber-600": bu.risk === "high",
-                        "text-emerald-600": bu.risk === "low",
-                        "text-blue-600": bu.risk === "medium",
-                      })}>
-                        {bu.risk}
-                      </div>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/business-units/${bu.id}`); }}
-                      className="w-full text-[8px] uppercase tracking-widest font-bold text-primary bg-primary/5 border-t border-primary/20 py-1 hover:bg-primary/10 transition-colors flex items-center justify-center gap-1"
-                    >
-                      Open Detail →
-                    </button>
+                  {/* Departments — clean vertical chain, revealed on focus */}
+                  {expanded && (
+                    <DepartmentStack
+                      employees={bu.employees}
+                      hovered={hoveredDept}
+                      onHover={setHoveredDept}
+                    />
                   )}
-                </div>
-
-                {/* AI Employees */}
-                <div className="flex gap-1.5 mt-2 justify-center">
-                  {bu.employees.map((emp) => (
-                    <div key={emp.name} className="w-[58px] bg-white border border-border rounded-sm px-1.5 py-1 shadow-sm">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <span className={cn("w-1 h-1 rounded-full shrink-0", {
-                          "bg-emerald-500": emp.status === "active",
-                          "bg-amber-500": emp.status === "watch",
-                        })} />
-                        <Bot size={8} className="text-muted-foreground" />
-                      </div>
-                      <div className="text-[8px] font-semibold text-foreground leading-tight truncate">{emp.name}</div>
-                    </div>
-                  ))}
-                </div>
-              </BlurGate>
+                </BlurGate>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Minimap */}
-      <div className="absolute bottom-3 right-3 z-20 w-[100px] h-[60px] bg-white/90 border border-border rounded-sm shadow-sm overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:8px_8px]" />
-        <div className="absolute inset-0 flex items-center justify-center flex-col gap-0.5">
-          <div className="w-4 h-4 rounded-full border border-primary/40 bg-primary/10 flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-          </div>
-          <div className="flex gap-1">
-            {BU_LIST.map((bu) => (
-              <div
-                key={bu.id}
-                className={cn(
-                  "w-2.5 h-2 rounded-sm border",
-                  bu.risk === "high" ? "border-amber-400 bg-amber-100"
-                    : selectedBu === bu.id ? "border-primary bg-primary/20"
-                    : "border-border bg-muted"
-                )}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="absolute bottom-1 left-1 text-[7px] uppercase tracking-widest text-muted-foreground">
-          minimap
-        </div>
+      {/* Interaction hint */}
+      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-3 px-2.5 py-1.5 bg-white/90 border border-border rounded-sm shadow-sm text-[9px] text-muted-foreground">
+        <span className="flex items-center gap-1"><Move size={10} /> Drag nodes</span>
+        <span className="flex items-center gap-1"><Hand size={10} /> Pan canvas</span>
+        <span className="flex items-center gap-1"><ZoomIn size={10} /> Scroll to zoom</span>
+      </div>
+
+      {/* Live Minimap — reflects real node positions + viewport */}
+      <Minimap positions={positions} selectedBu={selectedBu} pan={pan} zoom={zoom} containerRef={containerRef} />
+    </div>
+  );
+}
+
+// ─── Minimap ──────────────────────────────────────────────────
+
+function Minimap({
+  positions,
+  selectedBu,
+  pan,
+  zoom,
+  containerRef,
+}: {
+  positions: Record<string, Pos>;
+  selectedBu: string | null;
+  pan: Pos;
+  zoom: number;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const MW = 120;
+  const MH = 72;
+  const sx = MW / CW;
+  const sy = MH / WORLD_H;
+
+  // Viewport rectangle in world coords → minimap coords.
+  const el = containerRef.current;
+  const vw = el ? el.clientWidth : CW;
+  const vh = el ? el.clientHeight : WORLD_H;
+  // World point at container center = (CW/2, 0) origin with translate(pan)+scale.
+  // Visible world region top-left:
+  const worldLeft = CX - vw / 2 / zoom - pan.x / zoom;
+  const worldTop = -pan.y / zoom;
+  const rectX = worldLeft * sx;
+  const rectY = worldTop * sy;
+  const rectW = (vw / zoom) * sx;
+  const rectH = (vh / zoom) * sy;
+
+  return (
+    <div
+      data-control
+      className="absolute bottom-3 right-3 z-20 bg-white/95 border border-border rounded-sm shadow-sm overflow-hidden"
+      style={{ width: MW, height: MH }}
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:8px_8px]" />
+      <svg width={MW} height={MH} className="absolute inset-0">
+        {/* connections */}
+        {BU_LIST.map((bu) => {
+          const p = positions[bu.id];
+          const c = positions.__core__;
+          return (
+            <line
+              key={bu.id}
+              x1={c.x * sx}
+              y1={c.y * sy}
+              x2={p.x * sx}
+              y2={p.y * sy}
+              stroke="#cbd5e1"
+              strokeWidth={0.75}
+            />
+          );
+        })}
+        {/* core */}
+        <circle cx={positions.__core__.x * sx} cy={positions.__core__.y * sy} r={3} className="fill-primary" />
+        {/* BUs */}
+        {BU_LIST.map((bu) => {
+          const p = positions[bu.id];
+          const fill =
+            selectedBu === bu.id ? "hsl(228 71% 54%)" : bu.risk === "high" ? "#f59e0b" : "#94a3b8";
+          return <rect key={bu.id} x={p.x * sx - 3} y={p.y * sy - 2} width={6} height={4} rx={1} fill={fill} />;
+        })}
+        {/* viewport */}
+        <rect
+          x={Math.max(0, rectX)}
+          y={Math.max(0, rectY)}
+          width={Math.min(MW, rectW)}
+          height={Math.min(MH, rectH)}
+          fill="hsl(228 71% 54%)"
+          fillOpacity={0.08}
+          stroke="hsl(228 71% 54%)"
+          strokeOpacity={0.6}
+          strokeWidth={1}
+        />
+      </svg>
+      <div className="absolute bottom-0.5 left-1 text-[7px] uppercase tracking-widest text-muted-foreground pointer-events-none">
+        minimap
       </div>
     </div>
   );
@@ -635,15 +905,25 @@ const TWIN_DATA = {
   eeiScore: 84,
 };
 
+// Role-aware entry: each persona sees the twin at their own altitude.
+//   ceo          → whole-enterprise topology (this file)
+//   abu_head     → their single ABU + its departments  (AbuTwin)
+//   dept_manager → their single department + operating nodes (DeptTwin)
+//   employee     → their department twin, read-only feel (DeptTwin)
 export default function DigitalTwin() {
+  const { role } = useAppContext();
+  if (role === "abu_head") return <AbuTwin />;
+  if (role === "dept_manager" || role === "employee") return <DeptTwin />;
+  return <EnterpriseTwin />;
+}
+
+function EnterpriseTwin() {
   const [selectedBu, setSelectedBu] = useState<string | null>(null);
-  const { role, currentBuId } = useAppContext();
-  const scopedBuId = role === "abu_head" ? currentBuId : null;
 
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] overflow-hidden">
       <HeaderBar
-        moduleName="DIGITAL TWIN"
+        moduleName="ENTERPRISE DIGITAL TWIN"
         metrics={[
           { label: "AI Workforce", value: TWIN_DATA.aiWorkforce },
           { label: "Human Workforce", value: TWIN_DATA.humanWorkforce },
@@ -677,14 +957,14 @@ export default function DigitalTwin() {
 
       {/* Three-panel layout */}
       <div className="flex flex-1 overflow-hidden">
-        <OrgNavigator selectedBu={selectedBu} onSelect={setSelectedBu} scopedBuId={scopedBuId} />
+        <OrgNavigator selectedBu={selectedBu} onSelect={setSelectedBu} scopedBuId={null} />
 
         <div className="flex-1 flex flex-col overflow-hidden p-3">
           <TopologyMap
             eeiScore={TWIN_DATA.eeiScore}
             selectedBu={selectedBu}
             onSelectBu={setSelectedBu}
-            scopedBuId={scopedBuId}
+            scopedBuId={null}
           />
         </div>
 
