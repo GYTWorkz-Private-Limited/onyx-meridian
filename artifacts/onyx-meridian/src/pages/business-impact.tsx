@@ -104,7 +104,7 @@ export default function BusinessImpact() {
               {SUMMARY_METRICS.map((m) => {
                 const Icon = m.icon;
                 return (
-                  <div key={m.label} className="bg-white border border-border rounded-sm px-4 py-3 hover:border-primary/30 transition-colors cursor-pointer" onClick={() => navigate("/kpis")}>
+                  <div key={m.label} className="bg-white border border-border rounded-sm px-4 py-3 hover:border-primary/30 transition-colors cursor-pointer" onClick={() => navigate("/kpi-studio")}>
                     <div className="flex items-center gap-1.5 mb-1">
                       <Icon size={11} className="text-muted-foreground" />
                       <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{m.label}</span>

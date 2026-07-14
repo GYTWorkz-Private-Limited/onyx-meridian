@@ -852,7 +852,7 @@ export default function BusinessUnitDetail() {
                   <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{bu.name} Contribution</div>
                   <div className="text-sm font-bold font-mono text-emerald-600">{bu.eeiContrib}</div>
                 </div>
-                <button onClick={() => navigate("/kpis")}
+                <button onClick={() => navigate("/kpi-studio")}
                   className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors flex items-center gap-1">
                   <BarChart3 size={8} />Full KPI Dashboard
                 </button>
@@ -1756,7 +1756,7 @@ export default function BusinessUnitDetail() {
                 className="flex-1 text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
                 <DollarSign size={9} />Full Business Impact Dashboard
               </button>
-              <button onClick={() => navigate("/kpis")}
+              <button onClick={() => navigate("/kpi-studio")}
                 className="flex-1 text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
                 <BarChart3 size={9} />Full KPI Dashboard
               </button>

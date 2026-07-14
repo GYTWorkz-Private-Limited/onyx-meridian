@@ -28,7 +28,8 @@ import DigitalEmployee from "@/pages/digital-employee";
 import WorkflowStudio from "@/pages/workflow-studio";
 import KnowledgeStudio from "@/pages/knowledge-studio";
 import SopPage from "@/pages/sop";
-import KpisPage from "@/pages/kpis";
+import KpiStudio from "@/pages/kpi-studio";
+import Documents from "@/pages/documents";
 import PromptPlayground from "@/pages/prompt-playground";
 
 import AgentLogsPage from "@/pages/agent-logs";
@@ -85,7 +86,8 @@ function Router() {
         <Route path="/workflow-studio" component={WorkflowStudio} />
         <Route path="/knowledge-studio" component={KnowledgeStudio} />
         <Route path="/sop" component={SopPage} />
-        <Route path="/kpis" component={KpisPage} />
+        <Route path="/kpi-studio" component={KpiStudio} />
+        <Route path="/documents" component={Documents} />
         <Route path="/prompt-playground" component={PromptPlayground} />
         {/* Sub-pages */}
         <Route path="/policy-studio" component={PolicyStudio} />

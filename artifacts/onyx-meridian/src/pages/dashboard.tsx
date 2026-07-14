@@ -252,7 +252,7 @@ export default function Dashboard() {
                 value={kpi.value}
                 trend={kpi.trend}
                 trendColor={kpi.tc}
-                onClick={() => navigate("/kpis")}
+                onClick={() => navigate("/kpi-studio")}
               />
             ))}
           </div>

@@ -6,7 +6,8 @@ import {
   ThumbsUp,
   Bot, GitBranch, BookOpen, ScrollText,
   Target, Layers, TerminalSquare, Radio, FileText, FlaskConical,
-  ListChecks, History, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3,
+  ListChecks, History, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3, Crosshair,
+  Files, ClipboardList,
 } from "lucide-react";
 import onyxStar from "@assets/image_1782459540221.png";
 import { cn } from "@/lib/utils";
@@ -38,13 +39,22 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
+    label: "Knowledge",
+    items: [
+      { icon: Files,          path: "/documents",        label: "Documents" },
+      { icon: BookOpen,       path: "/knowledge-studio", label: "Knowledge" },
+      { icon: ClipboardList,  path: "/sop",               label: "SOP Library", roles: ["dept_manager", "abu_head", "ceo"] },
+    ],
+  },
+  {
     label: "Enterprise",
     items: [
       { icon: Activity,        path: "/digital-twin",    label: "Digital Twin",       roles: ["dept_manager", "abu_head", "ceo"] },
+      { icon: Crosshair,       path: "/kpi-studio",      label: "KPI Studio",        roles: ["dept_manager", "abu_head", "ceo"] },
       { icon: LayoutDashboard, path: "/dashboard",       label: "Executive Command", roles: ["abu_head", "ceo"] },
       { icon: Briefcase,       path: "/business-units",  label: "Business Units",    roles: ["abu_head", "ceo"] },
       { icon: TrendingUp,      path: "/business-impact", label: "Business Impact",   roles: ["abu_head", "ceo"] },
-      { icon: Rocket,          path: "/abu-onboarding",  label: "ABU Onboarding",    roles: ["ceo"] },
+      { icon: BrainCircuit,    path: "/intelligence",    label: "Recommendations",   roles: ["abu_head", "ceo"] },
     ],
   },
   {
@@ -56,7 +66,6 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { icon: Radio,       path: "/agentops",       label: "Mission Control" },
       { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["abu_head", "ceo"] },
       { icon: FileText,    path: "/agent-logs",     label: "Agent Logs" },
-      { icon: BrainCircuit,path: "/intelligence",   label: "Recommendations", roles: ["abu_head", "ceo"] },
     ],
   },
   {
@@ -79,12 +88,12 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { icon: Bot,            path: "/agent-studio",      label: "Agent Harness" },
       { icon: GitBranch,      path: "/workflow-studio",   label: "Mission Creator", roles: ["abu_head", "ceo"] },
-      { icon: BookOpen,       path: "/knowledge-studio",  label: "Knowledge" },
       { icon: ScrollText,     path: "/policy-studio",     label: "Policy Studio",     roles: ["abu_head", "ceo"] },
       { icon: TerminalSquare, path: "/prompt-playground", label: "Prompt Playground" },
       { icon: Boxes,          path: "/unit-of-work",      label: "Unit of Work", roles: ["dept_manager", "abu_head", "ceo"] },
       { icon: Plug,           path: "/adapters",          label: "Adapters",     roles: ["abu_head", "ceo"] },
       { icon: Cable,          path: "/connectors",        label: "Connectors",   roles: ["abu_head", "ceo"] },
+      { icon: Rocket,         path: "/abu-onboarding",    label: "ABU Onboarding", roles: ["ceo"] },
     ],
   },
   {

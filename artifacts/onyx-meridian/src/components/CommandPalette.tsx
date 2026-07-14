@@ -21,9 +21,9 @@ const COMMANDS = [
   { type: "bu", label: "Manufacturing", sub: "Business Unit · EEI 88 · 18 agents", path: "/business-units/manufacturing", icon: Briefcase },
   { type: "bu", label: "Maintenance", sub: "Business Unit · EEI 82 · 12 agents", path: "/business-units/maintenance", icon: Briefcase },
   { type: "bu", label: "Quality", sub: "Business Unit · EEI 85 · 10 agents", path: "/business-units/quality", icon: Briefcase },
-  { type: "kpi", label: "OEE", sub: "Manufacturing KPI · 87.4% → target 90%", path: "/kpis", icon: Target },
-  { type: "kpi", label: "Downtime Hours", sub: "Maintenance KPI · 4.2 hrs → target <3 hrs", path: "/kpis", icon: Target },
-  { type: "kpi", label: "Yield", sub: "Quality KPI · 98.4% → target 99%", path: "/kpis", icon: Target },
+  { type: "kpi", label: "OEE", sub: "Manufacturing KPI · 87.4% → target 90%", path: "/kpi-studio?kpi=k1", icon: Target },
+  { type: "kpi", label: "Downtime Hours", sub: "Maintenance KPI · 4.2 hrs → target <3 hrs", path: "/kpi-studio?kpi=k-downtime", icon: Target },
+  { type: "kpi", label: "Yield", sub: "Quality KPI · 98.4% → target 99%", path: "/kpi-studio?kpi=k-fpy", icon: Target },
   { type: "task", label: "MX-0441 Bearing Replacement", sub: "Task · Manufacturing · Critical · Open", path: "/tasks", icon: CheckSquare },
   { type: "task", label: "Supplier Alternative Review", sub: "Task · Procurement · Warning · Open", path: "/tasks", icon: CheckSquare },
 ];

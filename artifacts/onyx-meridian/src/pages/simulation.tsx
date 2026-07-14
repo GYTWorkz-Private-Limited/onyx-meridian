@@ -25,7 +25,7 @@ function HealthBar({ value, max = 100 }: { value: number; max?: number }) {
 
 // ─── Preset Scenarios ──────────────────────────────────────────
 
-const PRESET_SCENARIOS: Array<{
+export const PRESET_SCENARIOS: Array<{
   id: string;
   name: string;
   icon: React.ElementType;

@@ -130,3 +130,22 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Document print isolation — used by the Document Viewer's Print button.
+   Hides the whole app and shows only the element with id="doc-print-area". */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #doc-print-area,
+  #doc-print-area * {
+    visibility: visible;
+  }
+  #doc-print-area {
+    position: fixed;
+    inset: 0;
+    padding: 32px;
+    max-height: none;
+    overflow: visible;
+  }
+}
