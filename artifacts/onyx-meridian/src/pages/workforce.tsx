@@ -228,11 +228,21 @@ export default function Workforce() {
   const agent = MFG_AGENTS.find(a => a.id === selectedAgent) || MFG_AGENTS[0];
   const [editForm, setEditForm] = useState({ name: agent.name, role: agent.role, autonomy: agent.autonomy, model: agent.model, description: `${agent.role} for ${agent.department}` });
 
-  const { currentCompanyId } = useAppContext();
-  const filteredAgents = MFG_AGENTS.filter(a => {
+  const { currentCompanyId, role, persona } = useAppContext();
+
+  // Dept managers are locked to their own department's agent catalog. Most
+  // departments only have 1-2 hand-authored MFG_AGENTS entries, so fall back
+  // to the full BU roster (with a banner) rather than showing an empty page.
+  const deptCatalog = role === "dept_manager" ? MFG_AGENTS.filter(a => (a as any).deptId === persona.deptId) : null;
+  const deptFallback = role === "dept_manager" && (deptCatalog?.length ?? 0) === 0;
+  const scopedAgents = role === "dept_manager"
+    ? (deptFallback ? MFG_AGENTS.filter(a => a.bu === persona.buId) : deptCatalog!)
+    : MFG_AGENTS;
+
+  const filteredAgents = scopedAgents.filter(a => {
     const matchCompany = ((a as any).companyId ?? "company-a") === currentCompanyId;
     const matchSearch = search === "" || a.name.toLowerCase().includes(search.toLowerCase()) || a.role.toLowerCase().includes(search.toLowerCase());
-    const matchBU = buFilter === "all" || a.bu === buFilter;
+    const matchBU = role === "dept_manager" ? true : (buFilter === "all" || a.bu === buFilter);
     return matchCompany && matchSearch && matchBU;
   });
 
@@ -265,8 +275,8 @@ export default function Workforce() {
   const requests = AGENT_REQUESTS[selectedAgent] || AGENT_REQUESTS.ag1;
   const suggestions = AGENT_SUGGESTIONS[selectedAgent] || AGENT_SUGGESTIONS.ag1;
 
-  const activeCount = MFG_AGENTS.filter(a => a.status === "active").length;
-  const watchCount = MFG_AGENTS.filter(a => a.status === "watch").length;
+  const activeCount = scopedAgents.filter(a => a.status === "active").length;
+  const watchCount = scopedAgents.filter(a => a.status === "watch").length;
 
   const tabs: Array<{ id: WorkforceTab; label: string; icon: React.ElementType }> = [
     { id: "inventory", label: "Inventory", icon: Layers },
@@ -281,7 +291,7 @@ export default function Workforce() {
       <HeaderBar
         moduleName="AI WORKFORCE"
         metrics={[
-          { label: "TOTAL AGENTS", value: MFG_AGENTS.length },
+          { label: "TOTAL AGENTS", value: scopedAgents.length },
           { label: "ACTIVE", value: activeCount },
           { label: "UNDER REVIEW", value: watchCount },
         ]}
@@ -323,6 +333,19 @@ export default function Workforce() {
         {/* ── INVENTORY ─────────────────────────────────── */}
         {activeTab === "inventory" && (
           <div className="p-6 space-y-4">
+            {/* Dept manager scope banner */}
+            {role === "dept_manager" && (
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-sm border text-[10px]",
+                deptFallback ? "border-amber-200 bg-amber-50 text-amber-700" : "border-primary/20 bg-primary/5 text-primary"
+              )}>
+                <Layers size={12} className="shrink-0" />
+                {deptFallback
+                  ? <span>No dedicated agent catalog for this department yet — showing the full <span className="font-bold uppercase">{persona.buId}</span> business unit roster.</span>
+                  : <span>Scoped to your department — <span className="font-bold">{scopedAgents.length}</span> agent{scopedAgents.length === 1 ? "" : "s"}.</span>}
+              </div>
+            )}
+
             {/* Filters */}
             <div className="flex items-center gap-3">
               <div className="relative flex-1 max-w-sm">
@@ -333,16 +356,18 @@ export default function Workforce() {
                   className="w-full pl-8 pr-4 py-1.5 text-[11px] border border-border rounded-sm bg-white focus:outline-none focus:border-primary"
                 />
               </div>
-              <div className="flex items-center gap-1">
-                <Filter size={11} className="text-muted-foreground" />
-                {["all", "manufacturing", "supply-chain", "procurement", "finance", "revenue"].map(f => (
-                  <button key={f} onClick={() => setBuFilter(f)}
-                    className={cn("px-2.5 py-1 text-[9px] uppercase tracking-widest font-semibold rounded-sm border transition-colors",
-                      buFilter === f ? "bg-primary/5 border-primary/30 text-primary" : "border-border text-muted-foreground hover:text-foreground bg-white")}>
-                    {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1).replace("-", " ")}
-                  </button>
-                ))}
-              </div>
+              {role !== "dept_manager" && (
+                <div className="flex items-center gap-1">
+                  <Filter size={11} className="text-muted-foreground" />
+                  {["all", "manufacturing", "supply-chain", "procurement", "finance", "revenue"].map(f => (
+                    <button key={f} onClick={() => setBuFilter(f)}
+                      className={cn("px-2.5 py-1 text-[9px] uppercase tracking-widest font-semibold rounded-sm border transition-colors",
+                        buFilter === f ? "bg-primary/5 border-primary/30 text-primary" : "border-border text-muted-foreground hover:text-foreground bg-white")}>
+                      {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1).replace("-", " ")}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Agent table */}
@@ -709,8 +734,8 @@ export default function Workforce() {
             {/* Stats row */}
             <div className="grid grid-cols-4 gap-3">
               {[
-                { label: "Active Agents", value: activeCount, sub: "of " + MFG_AGENTS.length + " total", color: "text-emerald-600" },
-                { label: "Tasks Today", value: MFG_AGENTS.reduce((s, a) => s + a.tasks, 0).toLocaleString(), sub: "across all BUs", color: "text-foreground" },
+                { label: "Active Agents", value: activeCount, sub: "of " + scopedAgents.length + " total", color: "text-emerald-600" },
+                { label: "Tasks Today", value: scopedAgents.reduce((s, a) => s + a.tasks, 0).toLocaleString(), sub: role === "dept_manager" ? "your department" : "across all BUs", color: "text-foreground" },
                 { label: "Decisions Made", value: "2,184", sub: "14 human escalated", color: "text-primary" },
                 { label: "Pending Approvals", value: "47", sub: "4 high priority", color: "text-amber-600" },
               ].map(m => (
@@ -723,9 +748,11 @@ export default function Workforce() {
             </div>
 
             {/* BU Orchestrator cards */}
-            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Business Unit Orchestrators</div>
-            <div className="grid grid-cols-5 gap-3">
-              {BU_LIST.map(bu => (
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">
+              {role === "dept_manager" ? "Your Business Unit" : "Business Unit Orchestrators"}
+            </div>
+            <div className={cn("grid gap-3", role === "dept_manager" ? "grid-cols-1 max-w-xs" : "grid-cols-5")}>
+              {(role === "dept_manager" ? BU_LIST.filter(bu => bu.id === persona.buId) : BU_LIST).map(bu => (
                 <button key={bu.id} onClick={() => navigate(`/business-units/${bu.id}`)}
                   className="bg-white border border-border rounded-sm p-3 shadow-sm text-left hover:border-primary/40 transition-colors">
                   <div className="flex items-center justify-between mb-2">
@@ -745,7 +772,7 @@ export default function Workforce() {
             <div>
               <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-2">Live Agent Activity</div>
               <div className="bg-white border border-border rounded-sm shadow-sm overflow-hidden">
-                {COMMAND_CENTER_FEEDS.map((feed, i) => (
+                {(role === "dept_manager" ? COMMAND_CENTER_FEEDS.filter(f => f.bu.toLowerCase().replace(" ", "-") === persona.buId) : COMMAND_CENTER_FEEDS).map((feed, i) => (
                   <div key={i} className={cn("flex items-start gap-3 px-4 py-3 border-b border-border/40 last:border-b-0 hover:bg-muted/20 transition-colors", {
                     "bg-red-50/30": feed.severity === "critical",
                     "bg-amber-50/20": feed.severity === "warning",

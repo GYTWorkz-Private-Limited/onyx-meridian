@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAppContext } from "@/context/AppContext";
 import { PEOPLE, type Person } from "@/data/people-data";
-import { BU_LIST } from "@/data/enterprise-data";
+import { BU_LIST, resolveDeptTwin } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
-import { Users, Plus, X, Trash2 } from "lucide-react";
+import { Users, Plus, X, Trash2, Layers } from "lucide-react";
 
 const STATUS_CLS: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -23,15 +23,23 @@ const ROLE_TIER_CLS: Record<string, string> = {
 const initials = (name: string) => name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
 
 export default function People() {
-  const { role, currentBuId } = useAppContext();
+  const { role, currentBuId, persona } = useAppContext();
   const [people, setPeople] = useState<Person[]>(PEOPLE);
   const [buFilter, setBuFilter] = useState<string>("all");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", title: "", buId: currentBuId ?? BU_LIST[0].id });
   const { toast } = useToast();
 
-  // ABU Head sees only their own ABU's roster; CEO sees everyone (optionally filtered).
+  const deptTwin = role === "dept_manager" ? resolveDeptTwin(persona.deptId, persona.buId) : null;
+
+  // Dept Manager sees only their own department's roster (falls back to the
+  // full BU if nobody is tagged to that specific department yet); ABU Head
+  // sees their whole ABU; CEO sees everyone (optionally filtered).
+  const deptRoster = role === "dept_manager" ? people.filter((p) => p.deptId === persona.deptId) : null;
+  const deptFallback = role === "dept_manager" && (deptRoster?.length ?? 0) === 0;
+
   const scoped = people.filter((p) => {
+    if (role === "dept_manager") return deptFallback ? p.buId === persona.buId : p.deptId === persona.deptId;
     if (role === "abu_head") return p.buId === currentBuId;
     if (buFilter === "all") return true;
     return p.buId === buFilter;
@@ -44,7 +52,9 @@ export default function People() {
     }
     const person: Person = {
       id: `per-${Date.now()}`, name: form.name, email: form.email, title: form.title || "Team Member",
-      buId: role === "abu_head" ? currentBuId : form.buId, roleTier: "member", status: "invited",
+      buId: role === "abu_head" || role === "dept_manager" ? currentBuId : form.buId,
+      deptId: role === "dept_manager" ? persona.deptId : undefined,
+      roleTier: "member", status: "invited",
     };
     setPeople((prev) => [person, ...prev]);
     setShowModal(false);
@@ -63,9 +73,22 @@ export default function People() {
       <HeaderBar moduleName="PEOPLE" metrics={[{ label: "TOTAL", value: scoped.length }, { label: "ACTIVE", value: scoped.filter(p => p.status === "active").length }]} />
 
       <div className="p-6 max-w-[1200px] mx-auto w-full space-y-4">
+        {role === "dept_manager" && (
+          <div className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-sm border text-[10px]",
+            deptFallback ? "border-amber-200 bg-amber-50 text-amber-700" : "border-primary/20 bg-primary/5 text-primary"
+          )}>
+            <Layers size={12} className="shrink-0" />
+            {deptFallback
+              ? <span>No one is tagged to <span className="font-bold">{deptTwin?.name ?? "your department"}</span> yet — showing the full business unit roster.</span>
+              : <span>Scoped to <span className="font-bold">{deptTwin?.name ?? "your department"}</span> — {scoped.length} people.</span>}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            {role === "abu_head"
+            {role === "dept_manager"
+              ? "Human operators in your department — view profiles, hire, and manage onboarding."
+              : role === "abu_head"
               ? "Human operators in your business unit — view profiles, hire, and manage onboarding."
               : "Human operators across the enterprise."}
           </p>

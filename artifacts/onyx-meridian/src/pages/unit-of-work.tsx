@@ -2,9 +2,10 @@ import { useState } from "react";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
-import { BU_LIST } from "@/data/enterprise-data";
+import { useAppContext } from "@/context/AppContext";
+import { BU_LIST, resolveDeptTwin } from "@/data/enterprise-data";
 import { UNIT_OF_WORK_CATALOG, effectivenessFor, type UnitOfWork } from "@/data/unit-of-work-data";
-import { Boxes, X, Lock, ShieldCheck, Workflow, Users } from "lucide-react";
+import { Boxes, X, Lock, ShieldCheck, Workflow, Users, Layers } from "lucide-react";
 
 const METHOD_CLS: Record<string, string> = {
   GET: "bg-blue-50 text-blue-700 border-blue-200",
@@ -95,20 +96,49 @@ function DetailModal({ uow, onClose }: { uow: UnitOfWork; onClose: () => void })
 
 export default function UnitOfWork() {
   const [detail, setDetail] = useState<UnitOfWork | null>(null);
+  const { role, currentBuId, persona } = useAppContext();
+
+  const deptTwin = role === "dept_manager" ? resolveDeptTwin(persona.deptId, persona.buId) : null;
+
+  // Dept Manager: only units their department is RACI-responsible for
+  // (falls back to the whole BU if none are tagged yet). ABU Head: their
+  // whole BU. CEO/others: everything, grouped by BU as before.
+  const deptItems = role === "dept_manager" ? UNIT_OF_WORK_CATALOG.filter((u) => u.deptId === persona.deptId) : null;
+  const deptFallback = role === "dept_manager" && (deptItems?.length ?? 0) === 0;
+  const scopedBus = role === "dept_manager" || role === "abu_head"
+    ? BU_LIST.filter((b: any) => b.id === (role === "dept_manager" ? persona.buId : currentBuId))
+    : BU_LIST;
+  const catalogForBu = (buId: string) => {
+    if (role === "dept_manager" && !deptFallback) return (deptItems ?? []).filter((u) => u.buId === buId);
+    return UNIT_OF_WORK_CATALOG.filter((u) => u.buId === buId);
+  };
+  const totalScoped = scopedBus.reduce((s: number, bu: any) => s + catalogForBu(bu.id).length, 0);
 
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] overflow-auto">
-      <HeaderBar moduleName="UNIT OF WORK" metrics={[{ label: "CATALOGED", value: UNIT_OF_WORK_CATALOG.length }]} />
+      <HeaderBar moduleName="UNIT OF WORK" metrics={[{ label: "CATALOGED", value: totalScoped }]} />
 
       <div className="p-6 max-w-[1400px] mx-auto w-full space-y-4">
         <div className="bg-blue-50 border border-blue-100 rounded-sm px-4 py-2.5 text-xs text-blue-800">
           Every Unit of Work runs through the Meridian Proxy. The endpoint stores only a reference to a secret in the Governance vault — no raw credential ever reaches the browser.
         </div>
 
+        {role === "dept_manager" && (
+          <div className={cn(
+            "flex items-center gap-2 px-3 py-2 rounded-sm border text-[10px]",
+            deptFallback ? "border-amber-200 bg-amber-50 text-amber-700" : "border-primary/20 bg-primary/5 text-primary"
+          )}>
+            <Layers size={12} className="shrink-0" />
+            {deptFallback
+              ? <span>No units are RACI-owned by <span className="font-bold">{deptTwin?.name ?? "your department"}</span> yet — showing the full business unit catalog.</span>
+              : <span>Scoped to <span className="font-bold">{deptTwin?.name ?? "your department"}</span> — {totalScoped} unit{totalScoped === 1 ? "" : "s"}.</span>}
+          </div>
+        )}
+
         <div className="bg-white border border-border rounded-sm shadow-sm">
-          <Accordion type="multiple" defaultValue={BU_LIST.map((b: any) => b.id)} className="px-4">
-            {BU_LIST.map((bu: any) => {
-              const items = UNIT_OF_WORK_CATALOG.filter((u) => u.buId === bu.id);
+          <Accordion type="multiple" defaultValue={scopedBus.map((b: any) => b.id)} className="px-4">
+            {scopedBus.map((bu: any) => {
+              const items = catalogForBu(bu.id);
               if (items.length === 0) return null;
               return (
                 <AccordionItem key={bu.id} value={bu.id}>

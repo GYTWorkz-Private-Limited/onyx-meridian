@@ -44,7 +44,6 @@ import IncidentDetail from "@/pages/incident-detail";
 import MyWork from "@/pages/my-work";
 import EmployeeMetrics from "@/pages/employee-metrics";
 import MyActivity from "@/pages/my-activity";
-import Companies from "@/pages/companies";
 import UnitOfWork from "@/pages/unit-of-work";
 import Adapters from "@/pages/adapters";
 import Connectors from "@/pages/connectors";
@@ -100,7 +99,6 @@ function Router() {
         <Route path="/my-work" component={MyWork} />
         <Route path="/employee-metrics" component={EmployeeMetrics} />
         <Route path="/my-activity" component={MyActivity} />
-        <ProtectedRoute path="/companies" component={Companies} />
         <Route path="/unit-of-work" component={UnitOfWork} />
         <Route path="/adapters" component={Adapters} />
         <Route path="/connectors" component={Connectors} />

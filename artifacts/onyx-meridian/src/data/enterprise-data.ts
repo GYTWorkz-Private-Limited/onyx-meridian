@@ -283,7 +283,7 @@ export const IMPACT_MAP: Record<string, {
 export const MFG_AGENTS = [
   {
     id: "ag1", companyId: "company-a", name: "Production Planner", employeeId: "AIE-0101", role: "Production Scheduling Agent",
-    department: "Manufacturing", bu: "manufacturing", status: "active", autonomy: "full",
+    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Production Planner"), status: "active", autonomy: "full",
     utilization: 94, sla: 97.8, costPerDay: 182, tasks: 412,
     skills: ["MES Integration", "Scheduling Optimization", "Capacity Planning", "ERP Sync"],
     systems: ["ERP", "MES", "SCADA"],
@@ -296,7 +296,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag2", companyId: "company-a", name: "OEE Optimizer", employeeId: "AIE-0102", role: "Equipment Efficiency Agent",
-    department: "Manufacturing", bu: "manufacturing", status: "active", autonomy: "supervised",
+    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "OEE Optimizer"), status: "active", autonomy: "supervised",
     utilization: 88, sla: 95.4, costPerDay: 148, tasks: 284,
     skills: ["OEE Monitoring", "Root Cause Analysis", "Shift Optimization", "SCADA Integration"],
     systems: ["SCADA", "MES", "IoT"],
@@ -309,7 +309,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag3", companyId: "company-a", name: "Predictive Maintenance", employeeId: "AIE-0201", role: "Failure Prediction Agent",
-    department: "Manufacturing", bu: "manufacturing", status: "active", autonomy: "full",
+    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Predictive Maintenance"), status: "active", autonomy: "full",
     utilization: 97, sla: 98.2, costPerDay: 162, tasks: 543,
     skills: ["Acoustic Analysis", "Vibration Monitoring", "Failure Prediction", "CMMS Integration"],
     systems: ["CMMS", "IoT", "SCADA"],
@@ -322,7 +322,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag4", companyId: "company-a", name: "Quality Inspector", employeeId: "AIE-0301", role: "Defect Detection Agent",
-    department: "Manufacturing", bu: "manufacturing", status: "active", autonomy: "supervised",
+    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Quality Inspector"), status: "active", autonomy: "supervised",
     utilization: 91, sla: 96.8, costPerDay: 138, tasks: 389,
     skills: ["Vision AI", "Defect Classification", "Statistical Process Control", "MES Integration"],
     systems: ["MES", "IoT", "ERP"],
@@ -335,7 +335,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag5", companyId: "company-a", name: "Inventory Optimizer", employeeId: "AIE-0401", role: "Stock Intelligence Agent",
-    department: "Supply Chain", bu: "supply-chain", status: "watch", autonomy: "supervised",
+    department: "Supply Chain", bu: "supply-chain", deptId: deptTwinId("supply-chain", "Inventory Optimizer"), status: "watch", autonomy: "supervised",
     utilization: 76, sla: 88.4, costPerDay: 124, tasks: 241,
     skills: ["Demand Sensing", "Replenishment Optimization", "WMS Integration", "Stockout Prediction"],
     systems: ["WMS", "ERP", "IoT"],
@@ -348,7 +348,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag6", companyId: "company-a", name: "Supplier Risk Agent", employeeId: "AIE-0501", role: "Supplier Intelligence Agent",
-    department: "Procurement", bu: "procurement", status: "watch", autonomy: "assisted",
+    department: "Procurement", bu: "procurement", deptId: deptTwinId("procurement", "Supplier Risk"), status: "watch", autonomy: "assisted",
     utilization: 71, sla: 84.2, costPerDay: 108, tasks: 187,
     skills: ["Supplier Risk Scoring", "Market Intelligence", "Contract Analysis", "ERP Integration"],
     systems: ["ERP", "PLM"],
@@ -361,7 +361,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag7", companyId: "company-a", name: "Finance Analyst", employeeId: "AIE-0601", role: "Cost Analytics Agent",
-    department: "Finance", bu: "finance", status: "active", autonomy: "full",
+    department: "Finance", bu: "finance", deptId: deptTwinId("finance", "Finance Analyst"), status: "active", autonomy: "full",
     utilization: 86, sla: 97.4, costPerDay: 142, tasks: 318,
     skills: ["Cost Analysis", "Variance Reporting", "ERP Integration", "Budget Intelligence"],
     systems: ["ERP", "MES"],
@@ -374,7 +374,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag8", companyId: "company-a", name: "Revenue Scout", employeeId: "AIE-0701", role: "Pipeline Intelligence Agent",
-    department: "Revenue", bu: "revenue", status: "active", autonomy: "supervised",
+    department: "Revenue", bu: "revenue", deptId: deptTwinId("revenue", "Revenue Scout"), status: "active", autonomy: "supervised",
     utilization: 89, sla: 94.8, costPerDay: 158, tasks: 342,
     skills: ["Pipeline Analysis", "Opportunity Scoring", "CRM Integration", "Forecast Modeling"],
     systems: ["CRM", "ERP"],
@@ -387,7 +387,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag9", companyId: "company-a", name: "Deal Closer AI", employeeId: "AIE-0702", role: "Sales Acceleration Agent",
-    department: "Revenue", bu: "revenue", status: "active", autonomy: "supervised",
+    department: "Revenue", bu: "revenue", deptId: deptTwinId("revenue", "Deal Closer AI"), status: "active", autonomy: "supervised",
     utilization: 83, sla: 91.2, costPerDay: 134, tasks: 218,
     skills: ["Deal Qualification", "Proposal Generation", "Objection Handling", "CRM Sync"],
     systems: ["CRM", "ERP"],
@@ -400,7 +400,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag10", companyId: "company-a", name: "Energy Intelligence", employeeId: "AIE-0801", role: "EEI Optimization Agent",
-    department: "Facilities & Sustainability", bu: "manufacturing", status: "active", autonomy: "full",
+    department: "Facilities & Sustainability", bu: "manufacturing", deptId: deptTwinId("manufacturing", "OEE Optimizer"), status: "active", autonomy: "full",
     utilization: 88, sla: 97.4, costPerDay: 91, tasks: 312,
     skills: ["Energy Monitoring", "Load Balancing", "SCADA Integration", "Anomaly Detection"],
     systems: ["SCADA", "BMS", "IoT"],
@@ -413,7 +413,7 @@ export const MFG_AGENTS = [
   },
   {
     id: "ag11", companyId: "company-a", name: "Scrap Rate Reducer", employeeId: "AIE-0901", role: "Waste Reduction Agent",
-    department: "Manufacturing Ops", bu: "manufacturing", status: "watch", autonomy: "assisted",
+    department: "Manufacturing Ops", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Quality Inspector"), status: "watch", autonomy: "assisted",
     utilization: 0, sla: 0, costPerDay: 0, tasks: 0,
     skills: ["Defect Analysis", "Root Cause Analysis", "SPC Integration"],
     systems: ["MES", "ERP"],

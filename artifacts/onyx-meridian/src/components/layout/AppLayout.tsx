@@ -6,7 +6,7 @@ import {
   ThumbsUp,
   Bot, GitBranch, BookOpen, ScrollText,
   Target, Layers, TerminalSquare, Radio, FileText, FlaskConical,
-  ListChecks, History, Building2, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3,
+  ListChecks, History, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3,
 } from "lucide-react";
 import onyxStar from "@assets/image_1782459540221.png";
 import { cn } from "@/lib/utils";
@@ -44,16 +44,15 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { icon: LayoutDashboard, path: "/dashboard",       label: "Executive Command", roles: ["abu_head", "ceo"] },
       { icon: Briefcase,       path: "/business-units",  label: "Business Units",    roles: ["abu_head", "ceo"] },
       { icon: TrendingUp,      path: "/business-impact", label: "Business Impact",   roles: ["abu_head", "ceo"] },
-      { icon: Building2,       path: "/companies",       label: "Companies",         roles: ["ceo"] },
       { icon: Rocket,          path: "/abu-onboarding",  label: "ABU Onboarding",    roles: ["ceo"] },
     ],
   },
   {
     label: "Operate",
     items: [
-      { icon: Cpu,         path: "/workforce",      label: "AI Workforce",    roles: ["abu_head", "ceo"] },
-      { icon: Users,       path: "/people",         label: "People",          roles: ["abu_head", "ceo"] },
-      { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["abu_head", "ceo"] },
+      { icon: Cpu,         path: "/workforce",      label: "AI Workforce",    roles: ["dept_manager", "abu_head", "ceo"] },
+      { icon: Users,       path: "/people",         label: "People",          roles: ["dept_manager", "abu_head", "ceo"] },
+      { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["dept_manager", "abu_head", "ceo"] },
       { icon: Radio,       path: "/agentops",       label: "Mission Control" },
       { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["abu_head", "ceo"] },
       { icon: FileText,    path: "/agent-logs",     label: "Agent Logs" },
@@ -83,7 +82,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { icon: BookOpen,       path: "/knowledge-studio",  label: "Knowledge" },
       { icon: ScrollText,     path: "/policy-studio",     label: "Policy Studio",     roles: ["abu_head", "ceo"] },
       { icon: TerminalSquare, path: "/prompt-playground", label: "Prompt Playground" },
-      { icon: Boxes,          path: "/unit-of-work",      label: "Unit of Work", roles: ["abu_head", "ceo"] },
+      { icon: Boxes,          path: "/unit-of-work",      label: "Unit of Work", roles: ["dept_manager", "abu_head", "ceo"] },
       { icon: Plug,           path: "/adapters",          label: "Adapters",     roles: ["abu_head", "ceo"] },
       { icon: Cable,          path: "/connectors",        label: "Connectors",   roles: ["abu_head", "ceo"] },
     ],

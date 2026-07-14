@@ -3,11 +3,11 @@ import { HeaderBar } from "@/components/shared/HeaderBar";
 import { useAppContext } from "@/context/AppContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { BU_LIST } from "@/data/enterprise-data";
+import { BU_LIST, resolveDeptTwin } from "@/data/enterprise-data";
 import {
   EMPLOYEES, computeKpis, departmentHeadcount, regionDistribution, HIRING_FUNNEL,
   GROWTH_HISTORY, PRODUCTIVITY_TIMELINE, attritionRiskBuckets, skillsMatrix, orgHierarchy,
-  notificationsFor, AI_INSIGHTS, ACTIVITY_TEMPLATES, type Employee,
+  notificationsFor, AI_INSIGHTS, ACTIVITY_TEMPLATES, DEPT_TWIN_TO_WFI_BUCKET, type Employee,
 } from "@/data/workforce-intelligence-data";
 import { OrgHierarchyTree } from "@/components/workforce-intel/OrgHierarchyTree";
 import { CollaborationNetwork } from "@/components/workforce-intel/CollaborationNetwork";
@@ -45,7 +45,7 @@ interface Filters {
 const EMPTY_FILTERS: Filters = { department: "all", buId: "all", region: "all", employmentType: "all", manager: "all", office: "all", skillGroup: "all", status: "all", risk: "all" };
 
 export default function WorkforceIntelligence() {
-  const { role, currentBuId } = useAppContext();
+  const { role, currentBuId, persona } = useAppContext();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [timeRange, setTimeRange] = useState<TimeRange>("30D");
@@ -57,10 +57,18 @@ export default function WorkforceIntelligence() {
     { id: "a0", text: "Dashboard initialized", time: "just now" },
   ]);
 
-  const baseEmployees = useMemo(
-    () => (role === "abu_head" ? EMPLOYEES.filter((e) => e.buId === currentBuId) : EMPLOYEES),
-    [role, currentBuId]
-  );
+  const deptTwin = role === "dept_manager" ? resolveDeptTwin(persona.deptId, persona.buId) : null;
+  const deptBucket = persona.deptId ? DEPT_TWIN_TO_WFI_BUCKET[persona.deptId] : undefined;
+
+  // Dept Manager gets the slice of the generated roster whose HR department
+  // bucket maps to their department twin; ABU Head gets their whole BU.
+  const baseEmployees = useMemo(() => {
+    if (role === "dept_manager") {
+      return EMPLOYEES.filter((e) => e.buId === persona.buId && (!deptBucket || e.department === deptBucket));
+    }
+    if (role === "abu_head") return EMPLOYEES.filter((e) => e.buId === currentBuId);
+    return EMPLOYEES;
+  }, [role, currentBuId, persona.buId, deptBucket]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -133,6 +141,16 @@ export default function WorkforceIntelligence() {
           { label: "ONLINE", value: kpis.find((k) => k.key === "online")?.value ?? "—" },
         ]}
       />
+
+      {role === "dept_manager" && (
+        <div className="px-6 py-2 border-b border-border bg-primary/5 flex items-center gap-2 shrink-0 text-[10px] text-primary">
+          <Building2 size={12} className="shrink-0" />
+          <span>
+            Scoped to <span className="font-bold">{deptTwin?.name ?? "your department"}</span> ({deptTwin?.buName ?? persona.buId}) —{" "}
+            <span className="font-bold">{baseEmployees.length.toLocaleString()}</span> people in this view.
+          </span>
+        </div>
+      )}
 
       {/* Toolbar: search, time range, filters, actions */}
       <div className="px-6 py-3 border-b border-border bg-white/70 backdrop-blur-sm flex flex-wrap items-center gap-2 shrink-0">
@@ -247,7 +265,7 @@ export default function WorkforceIntelligence() {
               </ResponsiveContainer>
             </div>
 
-            <OrgHierarchyTree root={org} onSelectBu={(buId) => buId && setFilter("buId", buId)} scopedBuId={role === "abu_head" ? currentBuId : null} />
+            <OrgHierarchyTree root={org} onSelectBu={(buId) => buId && setFilter("buId", buId)} scopedBuId={role === "abu_head" ? currentBuId : role === "dept_manager" ? persona.buId : null} />
           </div>
 
           {/* Center column */}

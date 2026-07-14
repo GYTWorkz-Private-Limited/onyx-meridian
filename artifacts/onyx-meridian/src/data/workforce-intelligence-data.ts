@@ -47,6 +47,33 @@ const DEPARTMENTS_BY_BU: Record<string, string[]> = {
   revenue: ["Sales", "Customer Success", "Marketing"],
 };
 
+// Maps a department-twin id (lib/rbac Persona.deptId, e.g.
+// "manufacturing:line-monitor") to the nearest HR department bucket above,
+// so a dept_manager persona's Workforce Intelligence view can be filtered
+// down to roughly "their" slice of the 1200-employee generated roster
+// without re-generating that dataset around the department-twin taxonomy.
+export const DEPT_TWIN_TO_WFI_BUCKET: Record<string, string> = {
+  "manufacturing:production-planner": "Production",
+  "manufacturing:oee-optimizer": "Engineering",
+  "manufacturing:line-monitor": "Production",
+  "manufacturing:predictive-maintenance": "Maintenance",
+  "manufacturing:quality-inspector": "Quality",
+  "supply-chain:inventory-optimizer": "Warehousing",
+  "supply-chain:demand-planner": "Demand Planning",
+  "supply-chain:wms-agent": "Warehousing",
+  "supply-chain:route-optimizer": "Logistics",
+  "procurement:supplier-risk": "Supplier Management",
+  "procurement:sourcing-agent": "Sourcing",
+  "procurement:contract-bot": "Contracts",
+  "finance:finance-analyst": "FP&A",
+  "finance:cost-controller": "Accounting",
+  "finance:audit-agent": "Audit",
+  "revenue:revenue-scout": "Sales",
+  "revenue:deal-closer-ai": "Sales",
+  "revenue:customer-intel": "Customer Success",
+  "revenue:forecast-agent": "Sales",
+};
+
 const SKILLS_BY_BU: Record<string, string[]> = {
   manufacturing: ["Lean Manufacturing", "Six Sigma", "SCADA", "Vibration Analysis", "CMMS", "Root Cause Analysis"],
   "supply-chain": ["Demand Forecasting", "WMS", "Route Optimization", "Inventory Planning"],

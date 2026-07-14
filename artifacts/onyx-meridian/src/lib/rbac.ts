@@ -73,11 +73,12 @@ export function landingRouteFor(role: Role): string {
 // Routes that must be enforced even on direct URL entry, not just hidden
 // from nav. Everything else stays reachable by direct link (e.g. an
 // Employee can still open /tasks via a link from My Work).
-const CEO_ONLY_PATHS = ["/companies", "/abu-onboarding"];
-const ABU_HEAD_PLUS_PATHS = ["/cost-control", "/people", "/workforce-intelligence"];
-// Managers and above: strategy pages where a dept manager sets objectives and
-// breaks them into tasks.
-const DEPT_MANAGER_PLUS_PATHS = ["/goals", "/projects"];
+const CEO_ONLY_PATHS = ["/abu-onboarding"];
+const ABU_HEAD_PLUS_PATHS = ["/cost-control"];
+// Managers and above: strategy pages, plus workforce views a dept manager
+// needs but scoped down to their own department (see isDeptScoped callers
+// in workforce.tsx / people.tsx / workforce-intelligence.tsx / unit-of-work.tsx).
+const DEPT_MANAGER_PLUS_PATHS = ["/goals", "/projects", "/people", "/workforce-intelligence"];
 
 function matches(path: string, prefixes: string[]) {
   return prefixes.some((p) => path === p || path.startsWith(p + "/"));
