@@ -82,7 +82,7 @@ export type Department = typeof departmentsTable.$inferSelect;
 
 // ─── people ──────────────────────────────────────────────────────
 
-export const roleTierEnum = pgEnum("role_tier", ["member", "dept_manager", "abu_head", "ceo"]);
+export const roleTierEnum = pgEnum("role_tier", ["member", "dept_manager", "abu_head", "cxo", "developer"]);
 export const personStatusEnum = pgEnum("person_status", ["active", "invited", "paused"]);
 
 export const peopleTable = pgTable(

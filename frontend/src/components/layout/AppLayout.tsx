@@ -34,8 +34,8 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     label: "My Space",
     items: [
       { icon: ListChecks, path: "/my-work",     label: "My Work" },
-      { icon: LineChart,  path: "/employee-metrics", label: "Employee Metrics", roles: ["employee"] },
-      { icon: History,    path: "/my-activity", label: "My Activity", roles: ["employee"] },
+      { icon: LineChart,  path: "/employee-metrics", label: "Employee Metrics", roles: ["employee", "dept_manager", "abu_head"] },
+      { icon: History,    path: "/my-activity", label: "My Activity" },
     ],
   },
   {
@@ -43,63 +43,67 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { icon: Files,          path: "/documents",        label: "Documents" },
       { icon: BookOpen,       path: "/knowledge-studio", label: "Knowledge" },
-      { icon: ClipboardList,  path: "/sop",               label: "SOP Library", roles: ["dept_manager", "abu_head", "ceo"] },
+      { icon: ClipboardList,  path: "/sop",               label: "SOP Library", roles: ["employee", "dept_manager", "developer"] },
     ],
   },
   {
     label: "Enterprise",
     items: [
-      { icon: Activity,        path: "/digital-twin",    label: "Digital Twin",       roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: Crosshair,       path: "/kpi-studio",      label: "KPI Studio",        roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: LayoutDashboard, path: "/dashboard",       label: "Executive Command", roles: ["abu_head", "ceo"] },
-      { icon: Briefcase,       path: "/business-units",  label: "Business Units",    roles: ["abu_head", "ceo"] },
-      { icon: TrendingUp,      path: "/business-impact", label: "Business Impact",   roles: ["abu_head", "ceo"] },
-      { icon: BrainCircuit,    path: "/intelligence",    label: "Recommendations",   roles: ["abu_head", "ceo"] },
+      { icon: Activity,        path: "/digital-twin",    label: "Digital Twin" },
+      { icon: Crosshair,       path: "/kpi-studio",      label: "KPI Studio",        roles: ["employee", "dept_manager", "abu_head", "cxo", "developer"] },
+      { icon: LayoutDashboard, path: "/dashboard",       label: "Executive Command" },
+      { icon: Briefcase,       path: "/business-units",  label: "Business Units",    roles: ["dept_manager", "abu_head", "cxo"] },
+      { icon: TrendingUp,      path: "/business-impact", label: "Business Impact",   roles: ["abu_head", "cxo"] },
+      { icon: BrainCircuit,    path: "/intelligence",    label: "Recommendations",   roles: ["employee", "dept_manager", "abu_head", "cxo"] },
     ],
   },
   {
     label: "Operate",
     items: [
-      { icon: Cpu,         path: "/workforce",      label: "AI Workforce",    roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: Users,       path: "/people",         label: "People",          roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: Radio,       path: "/agentops",       label: "Mission Control" },
-      { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["abu_head", "ceo"] },
-      { icon: FileText,    path: "/agent-logs",     label: "Agent Logs" },
+      { icon: Cpu,         path: "/workforce",      label: "AI Workforce",    roles: ["employee", "dept_manager", "developer"] },
+      { icon: Users,       path: "/people",         label: "People",          roles: ["dept_manager", "abu_head", "cxo"] },
+      { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["dept_manager", "abu_head", "cxo"] },
+      { icon: Radio,       path: "/agentops",       label: "Mission Control", roles: ["employee", "dept_manager", "abu_head", "developer"] },
+      { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["employee", "dept_manager", "abu_head", "developer"] },
+      { icon: FileText,    path: "/agent-logs",     label: "Agent Logs", roles: ["employee", "dept_manager", "abu_head", "developer"] },
     ],
   },
   {
     label: "Control",
     items: [
-      { icon: ShieldAlert, path: "/governance", label: "Governance", roles: ["abu_head", "ceo"] },
-      { icon: ThumbsUp,    path: "/approvals",  label: "Approvals" },
+      { icon: ShieldAlert, path: "/governance", label: "Governance", roles: ["employee", "dept_manager"] },
+      { icon: ThumbsUp,    path: "/approvals",  label: "Approvals", roles: ["employee", "dept_manager", "abu_head", "cxo"] },
     ],
   },
   {
     label: "Strategy",
     items: [
-      { icon: Target,      path: "/goals",         label: "Goals",         roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: FolderKanban,path: "/projects",      label: "Projects",      roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: Gauge,       path: "/cost-control",  label: "Cost Control",  roles: ["abu_head", "ceo"] },
+      { icon: Target,      path: "/goals",         label: "Goals",         roles: ["employee", "dept_manager", "abu_head", "cxo"] },
+      { icon: FolderKanban,path: "/projects",      label: "Projects",      roles: ["employee", "dept_manager", "abu_head", "cxo"] },
+      { icon: Gauge,       path: "/cost-control",  label: "Cost Control" },
     ],
   },
   {
+    // Build section: matrix reserves this entire section for Developer
+    // ("core") — every other role is "—", with no exceptions.
     label: "Build",
     items: [
-      { icon: Bot,            path: "/agent-studio",      label: "Agent Harness" },
-      { icon: GitBranch,      path: "/workflow-studio",   label: "Mission Creator", roles: ["abu_head", "ceo"] },
-      { icon: ScrollText,     path: "/policy-studio",     label: "Policy Studio",     roles: ["abu_head", "ceo"] },
-      { icon: TerminalSquare, path: "/prompt-playground", label: "Prompt Playground" },
-      { icon: Boxes,          path: "/unit-of-work",      label: "Unit of Work", roles: ["dept_manager", "abu_head", "ceo"] },
-      { icon: Plug,           path: "/adapters",          label: "Adapters",     roles: ["abu_head", "ceo"] },
-      { icon: Cable,          path: "/connectors",        label: "Connectors",   roles: ["abu_head", "ceo"] },
-      { icon: Rocket,         path: "/abu-onboarding",    label: "ABU Onboarding", roles: ["ceo"] },
+      { icon: Bot,            path: "/agent-studio",      label: "Agent Harness",   roles: ["developer"] },
+      { icon: GitBranch,      path: "/workflow-studio",   label: "Mission Creator", roles: ["developer"] },
+      { icon: ScrollText,     path: "/policy-studio",     label: "Policy Studio",   roles: ["developer"] },
+      { icon: TerminalSquare, path: "/prompt-playground", label: "Prompt Playground", roles: ["developer"] },
+      { icon: Boxes,          path: "/unit-of-work",      label: "Unit of Work",    roles: ["developer"] },
+      { icon: Plug,           path: "/adapters",          label: "Adapters",        roles: ["developer"] },
+      { icon: Cable,          path: "/connectors",        label: "Connectors",      roles: ["developer"] },
+      // ABU Onboarding is its own matrix row (not part of "Build section"),
+      // scoped to ABU Head/CXO independent of the Build restriction above.
+      { icon: Rocket,         path: "/abu-onboarding",    label: "ABU Onboarding", roles: ["abu_head", "cxo"] },
     ],
   },
   {
     label: "Optimize",
     items: [
-      { icon: Layers, path: "/simulation", label: "Simulation", roles: ["abu_head", "ceo"] },
+      { icon: Layers, path: "/simulation", label: "Simulation", roles: ["abu_head", "cxo"] },
     ],
   },
 ];
@@ -207,7 +211,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Persona / company strip */}
         <div className="h-9 shrink-0 border-b border-border bg-white flex items-center justify-end gap-2 px-3 z-20">
-          {role === "ceo" && activeCompany && (
+          {role === "cxo" && activeCompany && (
             <span className="text-[10px] uppercase tracking-widest text-muted-foreground border border-border rounded-sm px-2 py-1 bg-muted/30">
               {activeCompany.name}
             </span>

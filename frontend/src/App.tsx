@@ -60,7 +60,7 @@ const queryClient = new QueryClient();
 
 function HomeRoute() {
   const { role } = useAppContext();
-  return role === "ceo" ? <DigitalTwin /> : <Redirect to="/my-work" />;
+  return role === "cxo" ? <DigitalTwin /> : <Redirect to="/my-work" />;
 }
 
 function Router() {
@@ -68,43 +68,43 @@ function Router() {
     <AppLayout>
       <Switch>
         <Route path="/" component={HomeRoute} />
-        <Route path="/digital-twin" component={DigitalTwin} />
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/business-units" component={BusinessUnits} />
-        <Route path="/business-units/:id" component={BusinessUnitDetail} />
-        <Route path="/business-impact" component={BusinessImpact} />
-        <Route path="/intelligence" component={Intelligence} />
-        <Route path="/workforce" component={Workforce} />
-        <Route path="/agentops" component={MissionControl} />
-        <Route path="/governance" component={Governance} />
+        <ProtectedRoute path="/digital-twin" component={DigitalTwin} />
+        <ProtectedRoute path="/dashboard" component={Dashboard} />
+        <ProtectedRoute path="/business-units" component={BusinessUnits} />
+        <ProtectedRoute path="/business-units/:id" component={BusinessUnitDetail} />
+        <ProtectedRoute path="/business-impact" component={BusinessImpact} />
+        <ProtectedRoute path="/intelligence" component={Intelligence} />
+        <ProtectedRoute path="/workforce" component={Workforce} />
+        <ProtectedRoute path="/agentops" component={MissionControl} />
+        <ProtectedRoute path="/governance" component={Governance} />
         <Route path="/outcomes" component={Outcomes} />
         <Route path="/tasks" component={Tasks} />
-        <Route path="/simulation" component={Simulation} />
-        <Route path="/approvals" component={Approvals} />
+        <ProtectedRoute path="/simulation" component={Simulation} />
+        <ProtectedRoute path="/approvals" component={Approvals} />
         {/* Build */}
-        <Route path="/agent-studio" component={AgentStudio} />
+        <ProtectedRoute path="/agent-studio" component={AgentStudio} />
         <Route path="/agents/:id" component={DigitalEmployee} />
-        <Route path="/workflow-studio" component={WorkflowStudio} />
-        <Route path="/knowledge-studio" component={KnowledgeStudio} />
-        <Route path="/sop" component={SopPage} />
-        <Route path="/kpi-studio" component={KpiStudio} />
-        <Route path="/documents" component={Documents} />
-        <Route path="/prompt-playground" component={PromptPlayground} />
+        <ProtectedRoute path="/workflow-studio" component={WorkflowStudio} />
+        <ProtectedRoute path="/knowledge-studio" component={KnowledgeStudio} />
+        <ProtectedRoute path="/sop" component={SopPage} />
+        <ProtectedRoute path="/kpi-studio" component={KpiStudio} />
+        <ProtectedRoute path="/documents" component={Documents} />
+        <ProtectedRoute path="/prompt-playground" component={PromptPlayground} />
         {/* Sub-pages */}
-        <Route path="/policy-studio" component={PolicyStudio} />
+        <ProtectedRoute path="/policy-studio" component={PolicyStudio} />
         <Route path="/workflow/:id" component={WorkflowView} />
         <Route path="/anomaly-deep-dive/:id" component={AnomalyDeepDive} />
         <Route path="/incident/:id" component={IncidentDetail} />
-        <Route path="/agent-logs" component={AgentLogsPage} />
-        <Route path="/mission-replay" component={MissionReplay} />
+        <ProtectedRoute path="/agent-logs" component={AgentLogsPage} />
+        <ProtectedRoute path="/mission-replay" component={MissionReplay} />
         <Route path="/intelligence/recommendation/:id" component={RecommendationDetail} />
         {/* RBAC + capability-synthesis additions */}
         <Route path="/my-work" component={MyWork} />
-        <Route path="/employee-metrics" component={EmployeeMetrics} />
-        <Route path="/my-activity" component={MyActivity} />
-        <Route path="/unit-of-work" component={UnitOfWork} />
-        <Route path="/adapters" component={Adapters} />
-        <Route path="/connectors" component={Connectors} />
+        <ProtectedRoute path="/employee-metrics" component={EmployeeMetrics} />
+        <ProtectedRoute path="/my-activity" component={MyActivity} />
+        <ProtectedRoute path="/unit-of-work" component={UnitOfWork} />
+        <ProtectedRoute path="/adapters" component={Adapters} />
+        <ProtectedRoute path="/connectors" component={Connectors} />
         <ProtectedRoute path="/goals" component={Goals} />
         <ProtectedRoute path="/projects" component={Projects} />
         <ProtectedRoute path="/cost-control" component={CostControl} />

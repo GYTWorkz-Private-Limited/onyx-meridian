@@ -102,7 +102,7 @@ export default function UnitOfWork() {
 
   // Dept Manager: only units their department is RACI-responsible for
   // (falls back to the whole BU if none are tagged yet). ABU Head: their
-  // whole BU. CEO/others: everything, grouped by BU as before.
+  // whole BU. CXO/others: everything, grouped by BU as before.
   const deptItems = role === "dept_manager" ? UNIT_OF_WORK_CATALOG.filter((u) => u.deptId === persona.deptId) : null;
   const deptFallback = role === "dept_manager" && (deptItems?.length ?? 0) === 0;
   const scopedBus = role === "dept_manager" || role === "abu_head"

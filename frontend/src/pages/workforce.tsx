@@ -230,19 +230,22 @@ export default function Workforce() {
 
   const { currentCompanyId, role, persona } = useAppContext();
 
-  // Dept managers are locked to their own department's agent catalog. Most
-  // departments only have 1-2 hand-authored MFG_AGENTS entries, so fall back
-  // to the full BU roster (with a banner) rather than showing an empty page.
-  const deptCatalog = role === "dept_manager" ? MFG_AGENTS.filter(a => (a as any).deptId === persona.deptId) : null;
-  const deptFallback = role === "dept_manager" && (deptCatalog?.length ?? 0) === 0;
-  const scopedAgents = role === "dept_manager"
+  // Dept managers and employees are locked to their own department's agent
+  // catalog (employee: "emp agent inv" — involvement in own agents only).
+  // Most departments only have 1-2 hand-authored MFG_AGENTS entries, so fall
+  // back to the full BU roster (with a banner) rather than showing an empty page.
+  const isDeptScopedRole = role === "dept_manager" || role === "employee";
+  const deptCatalog = isDeptScopedRole ? MFG_AGENTS.filter(a => (a as any).deptId === persona.deptId) : null;
+  const deptFallback = isDeptScopedRole && (deptCatalog?.length ?? 0) === 0;
+  const scopedAgents = isDeptScopedRole
     ? (deptFallback ? MFG_AGENTS.filter(a => a.bu === persona.buId) : deptCatalog!)
     : MFG_AGENTS;
+  const canManageAgents = role !== "employee";
 
   const filteredAgents = scopedAgents.filter(a => {
     const matchCompany = ((a as any).companyId ?? "company-a") === currentCompanyId;
     const matchSearch = search === "" || a.name.toLowerCase().includes(search.toLowerCase()) || a.role.toLowerCase().includes(search.toLowerCase());
-    const matchBU = role === "dept_manager" ? true : (buFilter === "all" || a.bu === buFilter);
+    const matchBU = isDeptScopedRole ? true : (buFilter === "all" || a.bu === buFilter);
     return matchCompany && matchSearch && matchBU;
   });
 
@@ -320,12 +323,14 @@ export default function Workforce() {
           );
         })}
         <div className="flex-1" />
-        <button
-          onClick={() => setShowHireModal(true)}
-          className="mb-2 flex items-center gap-1.5 px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold bg-foreground text-background hover:bg-foreground/90 rounded-sm transition-colors"
-        >
-          <Plus size={10} />Hire Agent
-        </button>
+        {canManageAgents && (
+          <button
+            onClick={() => setShowHireModal(true)}
+            className="mb-2 flex items-center gap-1.5 px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold bg-foreground text-background hover:bg-foreground/90 rounded-sm transition-colors"
+          >
+            <Plus size={10} />Hire Agent
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto">

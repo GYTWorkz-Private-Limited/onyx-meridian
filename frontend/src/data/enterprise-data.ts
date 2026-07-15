@@ -378,7 +378,7 @@ export const KPI_CATALOG: KpiEntry[] = [
     aiSummary: "Complaint volume is falling as delivery and quality issues resolve upstream; still slightly above target." },
 
   // ── Enterprise ──
-  { id: "k12", name: "EEI", abbreviation: "EEI", fullName: "Enterprise Execution Index", category: "Enterprise", value: "82.1", target: "90", trend: "up", delta: "+0.4", variance: "-7.9 pts vs target", healthScore: 84, owner: "CEO", buIds: ["manufacturing", "supply-chain", "procurement", "finance", "revenue"], linked: [],
+  { id: "k12", name: "EEI", abbreviation: "EEI", fullName: "Enterprise Execution Index", category: "Enterprise", value: "82.1", target: "90", trend: "up", delta: "+0.4", variance: "-7.9 pts vs target", healthScore: 84, owner: "CXO", buIds: ["manufacturing", "supply-chain", "procurement", "finance", "revenue"], linked: [],
     formula: "Weighted composite of all 5 ABU execution scores", dataSource: "Data Warehouse", updateFrequency: "Daily", forecastNext: "83.0 next month",
     dependsOn: ["k1", "k2", "k4", "k6", "k8", "k10"], feeds: [], goalIds: ["goal-1"], rootCauses: [],
     aiSummary: "EEI continues its steady climb; Manufacturing and Finance are the strongest contributors, Procurement's Cycle Time is the main drag." },

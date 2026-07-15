@@ -35,7 +35,7 @@ export function UploadModal({
   const [peopleSearch, setPeopleSearch] = useState("");
   const [shares, setShares] = useState<Record<string, { checked: boolean; canEdit: boolean; role: Role }>>({});
 
-  const visibilityOptions: Visibility[] = persona.role === "ceo" ? ["shared", "restricted", "ceo-only"] : ["shared", "restricted"];
+  const visibilityOptions: Visibility[] = persona.role === "cxo" ? ["shared", "restricted", "cxo-only"] : ["shared", "restricted"];
 
   const filteredPeople = PEOPLE.filter((p) => p.id !== persona.id && p.name.toLowerCase().includes(peopleSearch.toLowerCase()));
 
@@ -58,7 +58,7 @@ export function UploadModal({
       id: `doc-${Date.now()}`,
       title: title.trim(),
       categoryId,
-      buId: visibility === "ceo-only" ? null : (buId || null),
+      buId: visibility === "cxo-only" ? null : (buId || null),
       visibility,
       ownerPersonId: persona.id,
       ownerRole: persona.role,
@@ -114,7 +114,7 @@ export function UploadModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">Business Unit</label>
-              <select value={buId} onChange={(e) => setBuId(e.target.value)} disabled={visibility === "ceo-only"}
+              <select value={buId} onChange={(e) => setBuId(e.target.value)} disabled={visibility === "cxo-only"}
                 className="w-full border border-border rounded-sm px-2.5 py-2 text-[12px] bg-white disabled:opacity-50">
                 <option value="">Enterprise-wide</option>
                 {BU_LIST.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -123,7 +123,7 @@ export function UploadModal({
             <div>
               <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">Visibility</label>
               <select value={visibility} onChange={(e) => setVisibility(e.target.value as Visibility)} className="w-full border border-border rounded-sm px-2.5 py-2 text-[12px] bg-white">
-                {visibilityOptions.map((v) => <option key={v} value={v}>{v === "ceo-only" ? "CEO Only" : v[0].toUpperCase() + v.slice(1)}</option>)}
+                {visibilityOptions.map((v) => <option key={v} value={v}>{v === "cxo-only" ? "CXO Only" : v[0].toUpperCase() + v.slice(1)}</option>)}
               </select>
             </div>
           </div>
@@ -157,7 +157,7 @@ export function UploadModal({
               className="w-full border border-border rounded-sm px-3 py-2 text-[12px]" />
           </div>
 
-          {visibility !== "ceo-only" && (
+          {visibility !== "cxo-only" && (
             <div>
               <label className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">Share With</label>
               <div className="border border-border rounded-sm">
@@ -168,7 +168,7 @@ export function UploadModal({
                 </div>
                 <div className="max-h-[160px] overflow-y-auto">
                   {filteredPeople.map((p) => {
-                    const roleTierToRole: Record<string, Role> = { ceo: "ceo", abu_head: "abu_head", member: p.deptId ? "dept_manager" : "employee" };
+                    const roleTierToRole: Record<string, Role> = { cxo: "cxo", abu_head: "abu_head", member: p.deptId ? "dept_manager" : "employee" };
                     const role = roleTierToRole[p.roleTier];
                     const s = shares[p.id];
                     return (

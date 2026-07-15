@@ -33,7 +33,7 @@ export const DOCUMENT_CATEGORIES: DocCategory[] = [
 
 // ─── Access control ───────────────────────────────────────────────
 
-export type Visibility = "ceo-only" | "restricted" | "shared";
+export type Visibility = "cxo-only" | "restricted" | "shared";
 
 export interface AccessGrant {
   personId: string;
@@ -73,7 +73,7 @@ export interface Document {
   id: string;
   title: string;
   categoryId: string;
-  buId: string | null; // null = enterprise-wide (CEO documents typically)
+  buId: string | null; // null = enterprise-wide (CXO documents typically)
   deptId?: string; // set for department-scoped documents
   visibility: Visibility;
   ownerPersonId: string;
@@ -117,10 +117,10 @@ interface ViewerCtx {
 
 // Can this person even see the document exists?
 export function canView(doc: Document, viewer: ViewerCtx): boolean {
-  if (viewer.role === "ceo") return true;
+  if (viewer.role === "cxo") return true;
   const granted = doc.access.some((a) => a.personId === viewer.personId) || doc.ownerPersonId === viewer.personId;
   if (granted) return true;
-  if (doc.visibility === "ceo-only") return false;
+  if (doc.visibility === "cxo-only") return false;
   // Cross-ABU / cross-department guardrail: must be in the same BU (and,
   // if the doc is department-scoped, the same department — ABU heads see
   // every department within their own BU).
@@ -134,15 +134,15 @@ export function editPermission(doc: Document, viewer: ViewerCtx): { canEdit: boo
   const grant = doc.access.find((a) => a.personId === viewer.personId);
   const isOwner = doc.ownerPersonId === viewer.personId;
   const explicitEdit = isOwner || (grant?.canEdit ?? false);
-  if (!explicitEdit && viewer.role !== "ceo") {
-    // Not explicitly shared for editing and not CEO — still allow ABU
+  if (!explicitEdit && viewer.role !== "cxo") {
+    // Not explicitly shared for editing and not CXO — still allow ABU
     // heads/dept managers to propose edits on in-scope documents (subject
     // to approval), matching "lower entities can still request a change."
     if (!canView(doc, viewer)) return { canEdit: false, needsApproval: false, approverRole: null };
   }
 
   // Highest role among everyone who currently holds access to the doc —
-  // this is who "governs" it. CEO always governs their own docs.
+  // this is who "governs" it. CXO always governs their own docs.
   const holders: Role[] = [doc.ownerRole, ...doc.access.map((a) => a.role)];
   const maxHolderRank = Math.max(...holders.map((r) => ROLE_RANK[r]));
   const viewerRank = ROLE_RANK[viewer.role];
@@ -153,21 +153,21 @@ export function editPermission(doc: Document, viewer: ViewerCtx): { canEdit: boo
   // Lower-ranked editor: needs sign-off from the nearest higher-ranked
   // person who already has access (falls back to the top holder role).
   const higherHolders = holders.filter((r) => ROLE_RANK[r] > viewerRank).sort((a, b) => ROLE_RANK[a] - ROLE_RANK[b]);
-  const approverRole = higherHolders[0] ?? "ceo";
+  const approverRole = higherHolders[0] ?? "cxo";
   return { canEdit: true, needsApproval: true, approverRole };
 }
 
 // Does this viewer have standing to approve a given pending change?
 export function canApprove(doc: Document, viewer: ViewerCtx): boolean {
   if (!doc.pendingChange) return false;
-  if (viewer.role === "ceo") return true;
+  if (viewer.role === "cxo") return true;
   const hasAccess = doc.ownerPersonId === viewer.personId || doc.access.some((a) => a.personId === viewer.personId);
   return hasAccess && ROLE_RANK[viewer.role] >= ROLE_RANK[doc.pendingChange.requiredApproverRole];
 }
 
 // ─── Seed documents ───────────────────────────────────────────────
 // 18 documents spanning every category, every BU, every visibility tier,
-// with at least one CEO-only doc, one multi-person share, one with a
+// with at least one CXO-only doc, one multi-person share, one with a
 // pending approval in flight, and multi-version history throughout.
 
 const now = () => new Date().toISOString().slice(0, 10);
@@ -175,13 +175,13 @@ const now = () => new Date().toISOString().slice(0, 10);
 export const DOCUMENTS: Document[] = [
   {
     id: "doc-1", title: "Board Compensation & Equity Framework 2026", categoryId: "cat-policy",
-    buId: null, visibility: "ceo-only", ownerPersonId: "per-ceo", ownerRole: "ceo", access: [],
+    buId: null, visibility: "cxo-only", ownerPersonId: "per-cxo", ownerRole: "cxo", access: [],
     versions: [
-      { version: 1, editedByPersonId: "per-ceo", editedByRole: "ceo", editedAt: "2026-01-08", changeNote: "Initial board approval." },
-      { version: 2, editedByPersonId: "per-ceo", editedByRole: "ceo", editedAt: "2026-05-14", changeNote: "Updated equity vesting schedule." },
+      { version: 1, editedByPersonId: "per-cxo", editedByRole: "cxo", editedAt: "2026-01-08", changeNote: "Initial board approval." },
+      { version: 2, editedByPersonId: "per-cxo", editedByRole: "cxo", editedAt: "2026-05-14", changeNote: "Updated equity vesting schedule." },
     ],
     status: "approved",
-    metadata: { author: "Elena Sokolov", department: "Office of the CEO", effectiveDate: "2026-01-01", reviewDate: "2027-01-01", classification: "restricted", language: "English", fileType: "PDF", fileSizeKb: 842 },
+    metadata: { author: "Elena Sokolov", department: "Office of the CXO", effectiveDate: "2026-01-01", reviewDate: "2027-01-01", classification: "restricted", language: "English", fileType: "PDF", fileSizeKb: 842 },
     tags: ["board", "compensation", "confidential"],
     ocrText: "BOARD COMPENSATION & EQUITY FRAMEWORK — FY2026\n\n1. Purpose. This framework governs cash and equity compensation for the Board of Directors and C-suite executives for fiscal year 2026.\n\n2. Base Compensation. Board members receive an annual retainer of $180,000, payable quarterly...\n\n3. Equity Vesting. Executive equity grants vest over a 4-year schedule with a 1-year cliff...\n\n4. Review Cadence. This framework is reviewed annually by the Compensation Committee.",
     summary: "Governs board and executive compensation, equity grants, and vesting for FY2026. Reviewed annually by the Compensation Committee.",
@@ -189,10 +189,10 @@ export const DOCUMENTS: Document[] = [
   },
   {
     id: "doc-2", title: "Enterprise M&A Target Pipeline — Confidential", categoryId: "cat-report",
-    buId: null, visibility: "ceo-only", ownerPersonId: "per-ceo", ownerRole: "ceo", access: [],
-    versions: [{ version: 1, editedByPersonId: "per-ceo", editedByRole: "ceo", editedAt: "2026-06-20", changeNote: "Q2 pipeline refresh." }],
+    buId: null, visibility: "cxo-only", ownerPersonId: "per-cxo", ownerRole: "cxo", access: [],
+    versions: [{ version: 1, editedByPersonId: "per-cxo", editedByRole: "cxo", editedAt: "2026-06-20", changeNote: "Q2 pipeline refresh." }],
     status: "approved",
-    metadata: { author: "Elena Sokolov", department: "Office of the CEO", effectiveDate: "2026-06-20", reviewDate: "2026-09-20", classification: "restricted", language: "English", fileType: "XLSX", fileSizeKb: 310 },
+    metadata: { author: "Elena Sokolov", department: "Office of the CXO", effectiveDate: "2026-06-20", reviewDate: "2026-09-20", classification: "restricted", language: "English", fileType: "XLSX", fileSizeKb: 310 },
     tags: ["m&a", "strategy", "confidential"],
     ocrText: "M&A TARGET PIPELINE — Q2 2026\n\nTarget A: Regional logistics platform, $40-60M range, synergy with Supply Chain ABU.\nTarget B: Precision components supplier, $15-25M range, vertical integration for Manufacturing.\nTarget C: SaaS analytics vendor, $8-12M range, accelerates Workforce Intelligence roadmap.\n\nAll discussions are subject to NDA and board approval prior to term sheet issuance.",
     summary: "Confidential list of acquisition targets under evaluation, with valuation ranges and strategic rationale per target.",
@@ -331,7 +331,7 @@ export const DOCUMENTS: Document[] = [
   {
     id: "doc-12", title: "Enterprise Data Retention & Classification Policy", categoryId: "cat-policy",
     buId: null, visibility: "shared",
-    ownerPersonId: "per-ceo", ownerRole: "ceo",
+    ownerPersonId: "per-cxo", ownerRole: "cxo",
     access: [
       { personId: "per-head-mfg", role: "abu_head", canEdit: false },
       { personId: "per-head-sc", role: "abu_head", canEdit: false },
@@ -339,11 +339,11 @@ export const DOCUMENTS: Document[] = [
       { personId: "per-head-fin", role: "abu_head", canEdit: false },
       { personId: "per-head-rev", role: "abu_head", canEdit: false },
     ],
-    versions: [{ version: 1, editedByPersonId: "per-ceo", editedByRole: "ceo", editedAt: "2026-01-20", changeNote: "Enterprise-wide policy issued to all ABU heads." }],
+    versions: [{ version: 1, editedByPersonId: "per-cxo", editedByRole: "cxo", editedAt: "2026-01-20", changeNote: "Enterprise-wide policy issued to all ABU heads." }],
     status: "approved",
-    metadata: { author: "Elena Sokolov", department: "Office of the CEO", effectiveDate: "2026-01-20", reviewDate: "2027-01-20", classification: "internal", language: "English", fileType: "PDF", fileSizeKb: 410 },
+    metadata: { author: "Elena Sokolov", department: "Office of the CXO", effectiveDate: "2026-01-20", reviewDate: "2027-01-20", classification: "internal", language: "English", fileType: "PDF", fileSizeKb: 410 },
     tags: ["data", "compliance", "enterprise-wide"],
-    ocrText: "ENTERPRISE DATA RETENTION & CLASSIFICATION POLICY\n\nAll documents must be classified as Public, Internal, Confidential, or Restricted at upload.\n\nRestricted documents are visible only to the CEO unless explicitly shared.\n\nRetention: Financial records 7 years, operational records 3 years, communications 1 year.",
+    ocrText: "ENTERPRISE DATA RETENTION & CLASSIFICATION POLICY\n\nAll documents must be classified as Public, Internal, Confidential, or Restricted at upload.\n\nRestricted documents are visible only to the CXO unless explicitly shared.\n\nRetention: Financial records 7 years, operational records 3 years, communications 1 year.",
     summary: "Enterprise-wide rules for document classification and retention, shared read-only with every ABU head.",
     linkedMissionIds: [], linkedAgentIds: [],
   },
@@ -375,11 +375,11 @@ export const DOCUMENTS: Document[] = [
   {
     id: "doc-15", title: "New AI Employee Onboarding Guide", categoryId: "cat-training",
     buId: null, visibility: "shared",
-    ownerPersonId: "per-ceo", ownerRole: "ceo",
+    ownerPersonId: "per-cxo", ownerRole: "cxo",
     access: [{ personId: "per-1", role: "employee", canEdit: false }, { personId: "per-5", role: "employee", canEdit: false }],
-    versions: [{ version: 1, editedByPersonId: "per-ceo", editedByRole: "ceo", editedAt: "2026-02-01", changeNote: "Initial enterprise-wide onboarding guide." }],
+    versions: [{ version: 1, editedByPersonId: "per-cxo", editedByRole: "cxo", editedAt: "2026-02-01", changeNote: "Initial enterprise-wide onboarding guide." }],
     status: "approved",
-    metadata: { author: "Office of the CEO", department: "Enterprise", effectiveDate: "2026-02-01", reviewDate: "2027-02-01", classification: "public", language: "English", fileType: "PDF", fileSizeKb: 150 },
+    metadata: { author: "Office of the CXO", department: "Enterprise", effectiveDate: "2026-02-01", reviewDate: "2027-02-01", classification: "public", language: "English", fileType: "PDF", fileSizeKb: 150 },
     tags: ["onboarding", "training", "ai-employee"],
     ocrText: "NEW AI EMPLOYEE ONBOARDING GUIDE\n\nEvery new AI employee is provisioned with a scoped adapter, a reasoning-level default, and an autonomy tier (assisted, supervised, or full).\n\nHuman managers review the first 30 days of decisions before autonomy can be upgraded.",
     summary: "Enterprise-wide guide to how new AI employees are provisioned, supervised, and promoted to higher autonomy.",

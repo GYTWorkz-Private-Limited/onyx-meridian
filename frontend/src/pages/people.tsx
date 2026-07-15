@@ -15,7 +15,7 @@ const STATUS_CLS: Record<string, string> = {
 };
 
 const ROLE_TIER_CLS: Record<string, string> = {
-  ceo: "bg-red-50 text-red-700 border-red-200",
+  cxo: "bg-red-50 text-red-700 border-red-200",
   abu_head: "bg-amber-50 text-amber-700 border-amber-200",
   member: "bg-gray-50 text-gray-600 border-gray-200",
 };
@@ -34,7 +34,7 @@ export default function People() {
 
   // Dept Manager sees only their own department's roster (falls back to the
   // full BU if nobody is tagged to that specific department yet); ABU Head
-  // sees their whole ABU; CEO sees everyone (optionally filtered).
+  // sees their whole ABU; CXO sees everyone (optionally filtered).
   const deptRoster = role === "dept_manager" ? people.filter((p) => p.deptId === persona.deptId) : null;
   const deptFallback = role === "dept_manager" && (deptRoster?.length ?? 0) === 0;
 
@@ -93,7 +93,7 @@ export default function People() {
               : "Human operators across the enterprise."}
           </p>
           <div className="flex items-center gap-2">
-            {role === "ceo" && (
+            {role === "cxo" && (
               <select className="border border-border rounded-sm px-2 py-1.5 text-xs bg-white" value={buFilter} onChange={(e) => setBuFilter(e.target.value)}>
                 <option value="all">All Business Units</option>
                 {BU_LIST.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -137,7 +137,7 @@ export default function People() {
                     <td className="px-4 py-3 text-xs text-muted-foreground">{bu?.name ?? "Enterprise"}</td>
                     <td className="px-4 py-3">
                       <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", ROLE_TIER_CLS[p.roleTier])}>
-                        {p.roleTier === "ceo" ? "CEO" : p.roleTier === "abu_head" ? "ABU Head" : "Member"}
+                        {p.roleTier === "cxo" ? "CXO" : p.roleTier === "abu_head" ? "ABU Head" : "Member"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -181,7 +181,7 @@ export default function People() {
                 <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">Title</label>
                 <input className="w-full border border-border rounded-sm px-3 py-2 text-sm" placeholder="e.g. Shift Supervisor" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
               </div>
-              {role === "ceo" && (
+              {role === "cxo" && (
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 block">Business Unit</label>
                   <select className="w-full border border-border rounded-sm px-3 py-2 text-sm" value={form.buId} onChange={e => setForm(f => ({ ...f, buId: e.target.value }))}>

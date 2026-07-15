@@ -49,10 +49,10 @@ export function DocumentViewer({
         status: "pending-approval",
         pendingChange: {
           id: `pc-${Date.now()}`, submittedByPersonId: persona.id, submittedByRole: persona.role,
-          submittedAt: new Date().toISOString().slice(0, 10), changeNote, requiredApproverRole: perm.approverRole ?? "ceo",
+          submittedAt: new Date().toISOString().slice(0, 10), changeNote, requiredApproverRole: perm.approverRole ?? "cxo",
         },
       });
-      toast({ title: "Change submitted for approval", description: `Waiting on sign-off from a ${ROLE_LABEL[perm.approverRole ?? "ceo"]} with access.` });
+      toast({ title: "Change submitted for approval", description: `Waiting on sign-off from a ${ROLE_LABEL[perm.approverRole ?? "cxo"]} with access.` });
     } else {
       onUpdate({
         ...doc,
@@ -107,7 +107,7 @@ export function DocumentViewer({
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border" style={{ color: cat?.color, borderColor: `${cat?.color}55`, background: `${cat?.color}0d` }}>{cat?.name}</span>
               <span className={cn("text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", CLASSIFICATION_CLS[doc.metadata.classification])}>{doc.metadata.classification}</span>
-              {(doc.visibility === "ceo-only" || doc.visibility === "restricted") && (
+              {(doc.visibility === "cxo-only" || doc.visibility === "restricted") && (
                 <span className="text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border bg-muted text-muted-foreground border-border flex items-center gap-0.5"><Lock size={8} />{doc.visibility}</span>
               )}
               {doc.status === "pending-approval" && (
@@ -180,7 +180,7 @@ export function DocumentViewer({
 
               {perm.canEdit && !editing && (
                 <button onClick={() => setEditing(true)} className="w-full flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest font-bold px-3 py-2 rounded-sm border border-border bg-white hover:bg-muted/40 transition-colors">
-                  <Pencil size={12} /> Propose Edit {perm.needsApproval && `(needs ${ROLE_LABEL[perm.approverRole ?? "ceo"]} approval)`}
+                  <Pencil size={12} /> Propose Edit {perm.needsApproval && `(needs ${ROLE_LABEL[perm.approverRole ?? "cxo"]} approval)`}
                 </button>
               )}
               {editing && (
@@ -190,7 +190,7 @@ export function DocumentViewer({
                     className="w-full border border-border rounded-sm px-2.5 py-1.5 text-[11px] focus:outline-none focus:border-primary" />
                   {perm.needsApproval && (
                     <div className="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded-sm px-2 py-1.5">
-                      Your role ({ROLE_LABEL[persona.role]}) is below the document's current access level — this will be submitted to a {ROLE_LABEL[perm.approverRole ?? "ceo"]} for approval, not applied immediately.
+                      Your role ({ROLE_LABEL[persona.role]}) is below the document's current access level — this will be submitted to a {ROLE_LABEL[perm.approverRole ?? "cxo"]} for approval, not applied immediately.
                     </div>
                   )}
                   <div className="flex gap-2">
@@ -253,7 +253,7 @@ export function DocumentViewer({
               <div className="border border-border rounded-sm p-3">
                 <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-2">Shared With</div>
                 {doc.access.length === 0 ? (
-                  <div className="text-[10px] text-muted-foreground">Not shared beyond the owner{doc.visibility === "ceo-only" ? " — CEO-only." : "."}</div>
+                  <div className="text-[10px] text-muted-foreground">Not shared beyond the owner{doc.visibility === "cxo-only" ? " — CXO-only." : "."}</div>
                 ) : (
                   <div className="space-y-1.5">
                     {doc.access.map((a) => {

@@ -6,6 +6,8 @@ import { GOAL_TREE, childrenOf, rootGoals, type Goal } from "@/data/goals-data";
 import { BU_LIST } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
 import { Target, Plus, X } from "lucide-react";
+import { useAppContext } from "@/context/AppContext";
+import { canEdit } from "@/lib/rbac";
 
 const STATUS_CLS: Record<string, string> = {
   active: "bg-blue-50 text-blue-700 border-blue-200",
@@ -58,6 +60,8 @@ export default function Goals() {
   };
 
   const roots = goals.filter(g => g.parentId === null);
+  const { role } = useAppContext();
+  const canManage = canEdit(role, "goals");
 
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] overflow-auto">
@@ -68,9 +72,11 @@ export default function Goals() {
           <p className="text-xs text-muted-foreground max-w-xl">
             Every task traces back to a company goal — agents know what to do and why.
           </p>
-          <Button size="sm" className="h-8 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={() => setShowModal(true)}>
-            <Plus size={14} className="mr-2" /> New Goal
-          </Button>
+          {canManage && (
+            <Button size="sm" className="h-8 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={() => setShowModal(true)}>
+              <Plus size={14} className="mr-2" /> New Goal
+            </Button>
+          )}
         </div>
 
         {roots.length === 0 ? (

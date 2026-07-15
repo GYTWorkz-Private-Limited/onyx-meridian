@@ -292,10 +292,10 @@ export interface OrgNode {
 }
 
 export function orgHierarchy(employees: Employee[]): OrgNode {
-  const ceo = PERSONAS.find((p) => p.role === "ceo")!;
+  const cxo = PERSONAS.find((p) => p.role === "cxo")!;
   const heads = PERSONAS.filter((p) => p.role === "abu_head");
   return {
-    id: ceo.id, name: ceo.name, title: ceo.title, buId: null, headcount: employees.length,
+    id: cxo.id, name: cxo.name, title: cxo.title, buId: null, headcount: employees.length,
     children: heads.map((head) => {
       const buEmployees = employees.filter((e) => e.buId === head.buId);
       const managers = MANAGERS_BY_BU[head.buId ?? ""] ?? [];

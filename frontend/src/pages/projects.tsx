@@ -7,6 +7,8 @@ import { GOAL_TREE } from "@/data/goals-data";
 import { MFG_AGENTS } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
 import { FolderKanban, Plus, X, Calendar, Target } from "lucide-react";
+import { useAppContext } from "@/context/AppContext";
+import { canEdit } from "@/lib/rbac";
 
 const STATUS_CLS: Record<string, string> = {
   planning: "bg-gray-50 text-gray-600 border-gray-200",
@@ -19,6 +21,8 @@ export default function Projects() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", leadAgentId: MFG_AGENTS[0].id, goalId: GOAL_TREE[0].id, status: "planning" as Project["status"], targetDate: "" });
   const { toast } = useToast();
+  const { role } = useAppContext();
+  const canManage = canEdit(role, "projects");
 
   const submit = () => {
     if (!form.name.trim()) {
@@ -43,9 +47,11 @@ export default function Projects() {
       <div className="p-6 max-w-[1400px] mx-auto w-full space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">Group related tasks under a lead agent, a goal, and a target date.</p>
-          <Button size="sm" className="h-8 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={() => setShowModal(true)}>
-            <Plus size={14} className="mr-2" /> New Project
-          </Button>
+          {canManage && (
+            <Button size="sm" className="h-8 text-xs bg-foreground text-background hover:bg-foreground/90" onClick={() => setShowModal(true)}>
+              <Plus size={14} className="mr-2" /> New Project
+            </Button>
+          )}
         </div>
 
         {projects.length === 0 ? (

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAppContext } from "@/context/AppContext";
-import { CEO_LOCK_THRESHOLD } from "@/lib/rbac";
+import { CXO_LOCK_THRESHOLD } from "@/lib/rbac";
 import { Lock } from "lucide-react";
 
 type ApprovalStatus = "pending" | "escalated" | "approved" | "rejected" | "blocked";
@@ -72,8 +72,8 @@ export default function Approvals() {
     }
   };
 
-  // Employee/ABU Head only see their own BU's queue; CEO sees everything.
-  const visibleQueue = role === "ceo" ? queue : queue.filter(i => i.bu === currentBuId);
+  // Employee/ABU Head only see their own BU's queue; CXO sees everything.
+  const visibleQueue = role === "cxo" ? queue : queue.filter(i => i.bu === currentBuId);
 
   const pending   = visibleQueue.filter(a => a.status === "pending").length;
   const blocked   = visibleQueue.filter(a => a.status === "blocked").length;
@@ -133,8 +133,8 @@ export default function Approvals() {
             {visibleQueue.map(item => {
               const Icon = TYPE_ICONS[item.type] || FileText;
               const ss = statusStyle[item.status];
-              const isCeoLocked = (parseCost(item.cost) >= CEO_LOCK_THRESHOLD || item.risk === "critical") && role !== "ceo";
-              const canAct = (item.status === "pending" || item.status === "escalated" || item.status === "blocked") && role !== "employee" && !isCeoLocked;
+              const isCxoLocked = (parseCost(item.cost) >= CXO_LOCK_THRESHOLD || item.risk === "critical") && role !== "cxo";
+              const canAct = (item.status === "pending" || item.status === "escalated" || item.status === "blocked") && role !== "employee" && !isCxoLocked;
               return (
                 <div key={item.id} className={cn("p-4 hover:bg-muted/20 transition-colors", item.status === "blocked" && "bg-red-50/30")}>
                   <div className="flex items-start gap-4">
@@ -180,9 +180,9 @@ export default function Approvals() {
                     </div>
 
                     {/* Actions */}
-                    {isCeoLocked && (item.status === "pending" || item.status === "escalated" || item.status === "blocked") && (
+                    {isCxoLocked && (item.status === "pending" || item.status === "escalated" || item.status === "blocked") && (
                       <span className="flex items-center gap-1 text-[9px] uppercase tracking-widest font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-1 rounded-sm shrink-0">
-                        <Lock size={10} /> Requires CEO
+                        <Lock size={10} /> Requires CXO
                       </span>
                     )}
                     {canAct && (

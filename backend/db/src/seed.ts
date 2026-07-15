@@ -165,7 +165,7 @@ async function seed() {
   const people = await db
     .insert(peopleTable)
     .values([
-      { companyId: company.id, name: "Elena Sokolov", email: "elena.sokolov@meridian-industrial.com", title: "Chief Executive Officer", roleTier: "ceo", status: "active" },
+      { companyId: company.id, name: "Elena Sokolov", email: "elena.sokolov@meridian-industrial.com", title: "Chief Executive Officer", roleTier: "cxo", status: "active" },
       { companyId: company.id, businessUnitId: production.id, name: "Marcus Chen", email: "marcus.chen@meridian-industrial.com", title: "VP of Production", roleTier: "abu_head", status: "active" },
       { companyId: company.id, businessUnitId: quality.id, name: "Priya Nair", email: "priya.nair@meridian-industrial.com", title: "VP of Quality Assurance", roleTier: "abu_head", status: "active" },
       { companyId: company.id, businessUnitId: supplyChain.id, name: "Tom Kowalski", email: "tom.kowalski@meridian-industrial.com", title: "VP of Supply Chain", roleTier: "abu_head", status: "active" },
@@ -174,6 +174,7 @@ async function seed() {
       { companyId: company.id, businessUnitId: production.id, departmentId: dept["cnc-machining"].id, name: "Diego Alvarez", email: "diego.alvarez@meridian-industrial.com", title: "CNC Machining Manager", roleTier: "dept_manager", status: "active" },
       { companyId: company.id, businessUnitId: quality.id, departmentId: dept["spc-lab"].id, name: "Hannah Weiss", email: "hannah.weiss@meridian-industrial.com", title: "SPC Lab Manager", roleTier: "dept_manager", status: "active" },
       { companyId: company.id, businessUnitId: supplyChain.id, departmentId: dept["procurement"].id, name: "Ravi Deshpande", email: "ravi.deshpande@meridian-industrial.com", title: "Procurement Manager", roleTier: "dept_manager", status: "active" },
+      { companyId: company.id, name: "Dev Account", email: "dev@meridian-industrial.com", title: "Platform Developer", roleTier: "developer", status: "active" },
     ])
     .returning();
 
@@ -448,6 +449,7 @@ async function seed() {
     { name: "Diego Alvarez", username: "manufacturing-manager", password: "meridian123" },
     { name: "Hannah Weiss", username: "employee", password: "meridian123" },
     { name: "Ravi Deshpande", username: "procurement-manager", password: "meridian123" },
+    { name: "Dev Account", username: "dev", password: "meridian123" },
   ];
 
   await db.insert(usersTable).values(

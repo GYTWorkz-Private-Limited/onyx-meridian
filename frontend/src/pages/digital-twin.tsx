@@ -899,7 +899,7 @@ function LiveIntelligence() {
 // ─── Page ─────────────────────────────────────────────────────
 
 // Role-aware entry: each persona sees the twin at their own altitude.
-//   ceo          → whole-enterprise topology (this file)
+//   cxo          → whole-enterprise topology (this file)
 //   abu_head     → their single ABU + its departments  (AbuTwin)
 //   dept_manager → their single department + operating nodes (DeptTwin)
 //   employee     → their department twin, read-only feel (DeptTwin)

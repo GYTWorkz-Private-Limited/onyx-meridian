@@ -17,7 +17,7 @@ export function DocumentCard({ doc, onOpen }: { doc: Document; onOpen: () => voi
   const cat = categoryById(doc.categoryId);
   const owner = personById(doc.ownerPersonId);
   const cv = currentVersion(doc);
-  const locked = doc.visibility === "ceo-only" || doc.visibility === "restricted";
+  const locked = doc.visibility === "cxo-only" || doc.visibility === "restricted";
 
   return (
     <button

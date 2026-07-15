@@ -11,15 +11,15 @@ export interface Person {
   name: string;
   email: string;
   title: string;
-  buId: string | null; // null = enterprise-wide (CEO office, Legal)
+  buId: string | null; // null = enterprise-wide (CXO office, Legal)
   deptId?: string; // department twin this person belongs to (dept_manager/employee scoping)
-  roleTier: "member" | "abu_head" | "ceo";
+  roleTier: "member" | "abu_head" | "cxo";
   status: "active" | "invited" | "paused";
 }
 
 export const PEOPLE: Person[] = [
   // Leadership (mirrors the seeded RBAC personas in lib/rbac.ts)
-  { id: "per-ceo",      name: "Elena Sokolov",   email: "elena.sokolov@meridian-mfg.com",   title: "Chief Executive Officer",         buId: null,             roleTier: "ceo",      status: "active" },
+  { id: "per-cxo",      name: "Elena Sokolov",   email: "elena.sokolov@meridian-mfg.com",   title: "Chief Executive Officer",         buId: null,             roleTier: "cxo",      status: "active" },
   { id: "per-head-mfg", name: "Marcus Chen",     email: "marcus.chen@meridian-mfg.com",     title: "VP, Manufacturing Intelligence",  buId: "manufacturing",  roleTier: "abu_head", status: "active" },
   { id: "per-head-sc",  name: "Amara Osei",      email: "amara.osei@meridian-mfg.com",      title: "VP, Supply Chain Intelligence",   buId: "supply-chain",   roleTier: "abu_head", status: "active" },
   { id: "per-head-proc",name: "David Nakamura",  email: "david.nakamura@meridian-mfg.com",  title: "VP, Procurement Intelligence",    buId: "procurement",    roleTier: "abu_head", status: "active" },

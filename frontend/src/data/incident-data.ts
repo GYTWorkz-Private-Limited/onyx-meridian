@@ -542,7 +542,7 @@ export const INCIDENT_DATA: Record<string, IncidentDetail> = {
     escalationPath: [
       { level: 1, role: "Procurement Manager", name: "M. Torres", trigger: "Any tier-1 vendor breach CRITICAL threshold", status: "active" },
       { level: 2, role: "CFO", name: "L. Brennan", trigger: "Spend redirect >$500K or 3+ vendors impacted", status: "active" },
-      { level: 3, role: "CEO", name: "E. Hartwell", trigger: "Production stoppage risk exceeding $2M", status: "pending" },
+      { level: 3, role: "CXO", name: "E. Hartwell", trigger: "Production stoppage risk exceeding $2M", status: "pending" },
     ],
     comments: [
       { id: "c1", author: "Supplier Risk Agent", role: "AI Agent", time: "07:58 UTC", text: "4 qualified alternate suppliers identified. EuroSteel AG (Tier 2, Germany) and FastenerDirect EMEA can cover 87% of at-risk volume at ≤8% premium. Recommend emergency RFQ in next 2 hours.", isAI: true },

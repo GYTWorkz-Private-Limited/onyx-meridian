@@ -37,7 +37,7 @@ export default function MyWork() {
     if ((t.companyId ?? "company-a") !== currentCompanyId) return false;
     if (role === "employee") return t.owner === persona.name;
     if (isDeptScoped(role)) return t.businessUnitId === persona.buId;
-    return true; // ceo landing here directly (edge case) sees everything
+    return true; // cxo landing here directly (edge case) sees everything
   });
 
   const doneCount = scoped.filter((t: any) => t.status === "done").length;

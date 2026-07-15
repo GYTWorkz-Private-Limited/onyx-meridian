@@ -14,7 +14,7 @@ export interface DataScope {
 export function getScope(persona: Persona): DataScope {
   const { role, buId, deptId } = persona;
 
-  if (role === "ceo") {
+  if (role === "cxo") {
     return { level: "enterprise", buId: null, deptId: null, readOnly: false };
   }
 

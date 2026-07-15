@@ -19,7 +19,8 @@ const ROLE_TIER_TO_ROLE: Record<string, Role> = {
   member: "employee",
   dept_manager: "dept_manager",
   abu_head: "abu_head",
-  ceo: "ceo",
+  cxo: "cxo",
+  developer: "developer",
 };
 
 // The Postgres backend (backend/db) models a single manufacturing plant —
@@ -32,7 +33,7 @@ const ROLE_TIER_TO_ROLE: Record<string, Role> = {
 // makes every seeded login resolve to a real, working ABU in the app
 // instead of "No business unit is assigned to this persona."
 const ORG_MODEL_SCOPE_BY_USERNAME: Record<string, { role: Role; buId: string | null; deptId: string | null }> = {
-  cxo: { role: "ceo", buId: null, deptId: null },
+  cxo: { role: "cxo", buId: null, deptId: null },
   "manufacturing-abu": { role: "abu_head", buId: "manufacturing", deptId: null },
   "supply-chain-abu": { role: "abu_head", buId: "supply-chain", deptId: null },
   "procurement-abu": { role: "abu_head", buId: "procurement", deptId: null },
@@ -41,6 +42,7 @@ const ORG_MODEL_SCOPE_BY_USERNAME: Record<string, { role: Role; buId: string | n
   "manufacturing-manager": { role: "dept_manager", buId: "manufacturing", deptId: "manufacturing:production" },
   "procurement-manager": { role: "dept_manager", buId: "procurement", deptId: "procurement:supplier-management" },
   employee: { role: "employee", buId: "procurement", deptId: "procurement:contracts" },
+  dev: { role: "developer", buId: null, deptId: null },
 };
 
 export class LoginError extends Error {}

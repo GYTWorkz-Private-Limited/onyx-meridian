@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { KPI_CATALOG, ENTERPRISE_HEALTH_CARDS, BU_LIST, type KpiEntry } from "@/data/enterprise-data";
 import { GOAL_TREE } from "@/data/goals-data";
+import { useAppContext } from "@/context/AppContext";
+import { canEdit } from "@/lib/rbac";
 import { GraphView } from "@/components/kpi-studio/graph-view";
 import { ForecastCenter } from "@/components/kpi-studio/forecast-center";
 import { AlertsTimeline } from "@/components/kpi-studio/alerts-timeline";
@@ -58,17 +60,17 @@ const categoryCls = (c: string) => CATEGORY_COLORS[c] ?? "bg-muted text-muted-fo
 
 // ─── Hero action row ────────────────────────────────────────────
 
-function HeroActions() {
+function HeroActions({ canManage }: { canManage: boolean }) {
   const { toast } = useToast();
   const actions = [
-    { icon: Plus, label: "Create KPI", primary: true, msg: "KPI creation wizard would open here." },
-    { icon: Upload, label: "Import Library", msg: "Bring in a standard KPI library (e.g. APQC, SCOR)." },
-    { icon: Sparkles, label: "Generate with AI", msg: "AI would draft a KPI from a plain-language description." },
+    { icon: Plus, label: "Create KPI", primary: true, msg: "KPI creation wizard would open here.", manageOnly: true },
+    { icon: Upload, label: "Import Library", msg: "Bring in a standard KPI library (e.g. APQC, SCOR).", manageOnly: true },
+    { icon: Sparkles, label: "Generate with AI", msg: "AI would draft a KPI from a plain-language description.", manageOnly: true },
     { icon: FileBarChart, label: "Executive Report", msg: "Compiling a board-ready performance report." },
     { icon: Download, label: "Export", msg: "Exporting the current KPI view as CSV." },
     { icon: Share2, label: "Share", msg: "Share link copied." },
-    { icon: Settings, label: "Settings", msg: "KPI Studio settings would open here." },
-  ];
+    { icon: Settings, label: "Settings", msg: "KPI Studio settings would open here.", manageOnly: true },
+  ].filter((a) => !a.manageOnly || canManage);
   return (
     <div className="flex items-center gap-2 px-6 py-3 border-b border-border bg-white flex-wrap">
       {actions.map((a) => (
@@ -418,6 +420,7 @@ const TABS: { id: StudioTab; label: string; icon: React.ElementType }[] = [
 export default function KpiStudio() {
   const [, navigate] = useLocation();
   const search = useSearch();
+  const { role, currentBuId } = useAppContext();
   const [tab, setTab] = useState<StudioTab>("overview");
   const [view, setView] = useState<"wall" | "explorer">("wall");
   const [q, setQ] = useState("");
@@ -431,20 +434,28 @@ export default function KpiStudio() {
     if (kpi && kpiById(kpi)) setSelectedId(kpi);
   }, [search]);
 
-  const categories = useMemo(() => ["all", ...Array.from(new Set(KPI_CATALOG.map((k) => k.category)))], []);
+  // Employee/Manager/ABU Head each see only their own BU's KPIs; Developer
+  // (enterprise-wide, view-only per the access matrix) sees everything.
+  const scopedCatalog = useMemo(() => {
+    if (role === "developer" || !currentBuId) return KPI_CATALOG;
+    return KPI_CATALOG.filter((k) => k.buIds.includes(currentBuId));
+  }, [role, currentBuId]);
+  const canManage = canEdit(role, "kpi-studio");
+
+  const categories = useMemo(() => ["all", ...Array.from(new Set(scopedCatalog.map((k) => k.category)))], [scopedCatalog]);
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
-    return KPI_CATALOG.filter((k) =>
+    return scopedCatalog.filter((k) =>
       (category === "all" || k.category === category) &&
       (buFilter === "all" || k.buIds.includes(buFilter)) &&
       (qq === "" || k.fullName.toLowerCase().includes(qq) || k.name.toLowerCase().includes(qq) || (k.abbreviation ?? "").toLowerCase().includes(qq))
     );
-  }, [q, category, buFilter]);
+  }, [scopedCatalog, q, category, buFilter]);
 
   const selected = selectedId ? kpiById(selectedId) : null;
-  const avgHealth = Math.round(KPI_CATALOG.reduce((s, k) => s + k.healthScore, 0) / KPI_CATALOG.length);
-  const critical = KPI_CATALOG.filter((k) => k.healthScore < 70).length;
+  const avgHealth = Math.round(scopedCatalog.reduce((s, k) => s + k.healthScore, 0) / scopedCatalog.length);
+  const critical = scopedCatalog.filter((k) => k.healthScore < 70).length;
 
   const openKpi = (id: string) => {
     setSelectedId(id);
@@ -466,7 +477,7 @@ export default function KpiStudio() {
         ]}
       />
 
-      <HeroActions />
+      <HeroActions canManage={canManage} />
 
       {/* Tab bar */}
       <div className="flex items-center gap-0 px-6 border-b border-border bg-white shrink-0 overflow-x-auto">

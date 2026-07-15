@@ -13,12 +13,12 @@ export default function CostControl() {
     () => Object.fromEntries(MFG_AGENTS.map((a: any) => [a.id, a.reasoningLevel]))
   );
 
-  const scopedAgents = MFG_AGENTS.filter((a: any) => role === "ceo" || a.bu === currentBuId);
+  const scopedAgents = MFG_AGENTS.filter((a: any) => role === "cxo" || a.bu === currentBuId);
 
   const costFor = (a: any) => monthlyCost(a.tokenUsage, a.costModelId, levels[a.id]);
   const totalMonthly = scopedAgents.reduce((s, a: any) => s + costFor(a), 0);
 
-  const byBu = BU_LIST.filter((b: any) => role === "ceo" || b.id === currentBuId).map((b: any) => ({
+  const byBu = BU_LIST.filter((b: any) => role === "cxo" || b.id === currentBuId).map((b: any) => ({
     name: b.name,
     cost: Math.round(MFG_AGENTS.filter((a: any) => a.bu === b.id).reduce((s, a: any) => s + costFor(a), 0)),
   }));

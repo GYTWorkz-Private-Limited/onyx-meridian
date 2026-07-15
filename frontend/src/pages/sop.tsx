@@ -5,6 +5,8 @@ import { SOP_CATALOG } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ScrollText, Plus, ArrowRight, CheckCircle2, AlertTriangle, Bot, Users, Settings, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAppContext } from "@/context/AppContext";
+import { accessLevel } from "@/lib/rbac";
 
 const RISK_STYLE: Record<string, string> = {
   low: "text-emerald-600 bg-emerald-50 border-emerald-200",
@@ -22,7 +24,10 @@ export default function SopPage() {
   const [selected, setSelected] = useState("sop1");
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { role } = useAppContext();
   const sop = SOP_CATALOG.find((s) => s.id === selected) ?? SOP_CATALOG[0];
+  // Employee gets "scoped" (suggest edits only); Manager/Developer get "full" direct edit.
+  const canEditDirectly = accessLevel(role, "sop") === "full";
 
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] overflow-hidden">
@@ -34,10 +39,12 @@ export default function SopPage() {
           <ChevronRight size={10} />
           <span className="text-foreground font-semibold">SOP Framework</span>
         </div>
-        <button onClick={() => navigate("/workflow-studio")} className="flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm hover:bg-primary/90 transition-colors">
-          <Plus size={11} />
-          New SOP
-        </button>
+        {canEditDirectly && (
+          <button onClick={() => navigate("/workflow-studio")} className="flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm hover:bg-primary/90 transition-colors">
+            <Plus size={11} />
+            New SOP
+          </button>
+        )}
       </div>
 
       <div className="flex-1 flex overflow-hidden">
@@ -91,9 +98,15 @@ export default function SopPage() {
               </div>
             </div>
             <div className="flex gap-2 shrink-0">
-              <button onClick={() => toast({ title: "Edit Mode", description: `Editing ${sop.title} — changes auto-saved` })} className="flex items-center gap-1.5 border border-border bg-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm hover:bg-muted/60">
-                <Settings size={10} />Edit
-              </button>
+              {canEditDirectly ? (
+                <button onClick={() => toast({ title: "Edit Mode", description: `Editing ${sop.title} — changes auto-saved` })} className="flex items-center gap-1.5 border border-border bg-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm hover:bg-muted/60">
+                  <Settings size={10} />Edit
+                </button>
+              ) : (
+                <button onClick={() => toast({ title: "Edit Suggested", description: `Your suggested changes to ${sop.title} were sent to the SOP owner for review.` })} className="flex items-center gap-1.5 border border-border bg-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm hover:bg-muted/60">
+                  <Settings size={10} />Suggest Edit
+                </button>
+              )}
               <button onClick={() => navigate("/agentops")} className="flex items-center gap-1.5 bg-primary text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-sm hover:bg-primary/90">
                 <Play size={10} />Execute
               </button>

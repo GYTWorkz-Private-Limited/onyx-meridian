@@ -123,7 +123,7 @@ export default function EmployeeMetrics() {
 
         <div className="bg-blue-50 border border-blue-100 rounded-sm px-4 py-2.5 text-xs text-blue-800 flex items-center gap-2">
           <Target size={13} className="shrink-0" />
-          This is your personal view — for enterprise-wide workforce analytics, ask your ABU Head or CEO to open the People page.
+          This is your personal view — for enterprise-wide workforce analytics, ask your ABU Head or CXO to open the People page.
         </div>
       </div>
     </div>
