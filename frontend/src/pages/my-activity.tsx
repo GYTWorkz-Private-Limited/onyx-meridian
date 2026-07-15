@@ -1,4 +1,4 @@
-import { useGetAuditLogs } from "@workspace/api-client-react";
+import { useGetAuditLogs } from "@/lib/api";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppContext } from "@/context/AppContext";

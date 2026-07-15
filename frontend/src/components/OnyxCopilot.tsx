@@ -4,7 +4,7 @@ import {
   X, Search, ChevronRight, Navigation2, BookOpen,
   Plus, Zap, CornerDownLeft, MessageCircle,
 } from "lucide-react";
-import onyxStar from "@assets/image_1782459540221.png";
+import onyxStar from "@/assets/onyx-star.png";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

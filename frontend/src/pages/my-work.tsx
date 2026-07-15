@@ -1,4 +1,4 @@
-import { useGetTasks } from "@workspace/api-client-react";
+import { useGetTasks } from "@/lib/api";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

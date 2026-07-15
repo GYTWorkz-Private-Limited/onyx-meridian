@@ -1,174 +1,33 @@
-export const BU_LIST = [
-  {
-    id: "manufacturing",
-    companyId: "company-a",
-    name: "Manufacturing",
-    eei: 88,
-    health: 91,
-    agents: 18,
-    workflows: 42,
-    risk: "low",
-    eeiContrib: "+4.8",
-    kpis: { oee: "87.4%", throughput: "2,840 u/hr", scrapRate: "1.2%" },
-    cost: "$148K/mo",
-    openTasks: 14,
-    roi: "2.4x",
-    revenueProtected: "$4.2M",
-    costSaved: "$920K",
-    hoursSaved: 2840,
-    downtimePrevented: "84 hrs",
-    automationPct: 87,
-    productivityImprovement: 22,
-    eeiContribution: 4.8,
-    color: "blue",
-    employees: [
-      { name: "Production Planner", role: "Production Scheduling", status: "active" },
-      { name: "OEE Optimizer", role: "Equipment Efficiency", status: "active" },
-      { name: "Line Monitor", role: "Real-time Line Intel", status: "active" },
-      { name: "Predictive Maintenance", role: "Failure Prediction", status: "active" },
-      { name: "Quality Inspector", role: "Defect Detection", status: "active" },
-    ],
-  },
-  {
-    id: "supply-chain",
-    companyId: "company-a",
-    name: "Supply Chain",
-    eei: 76,
-    health: 79,
-    agents: 14,
-    workflows: 33,
-    risk: "high",
-    eeiContrib: "+1.8",
-    kpis: { inventoryTurns: "8.2x", forecastAccuracy: "82%", fillRate: "94.1%" },
-    cost: "$112K/mo",
-    openTasks: 38,
-    roi: "1.6x",
-    revenueProtected: "$2.8M",
-    costSaved: "$480K",
-    hoursSaved: 1240,
-    downtimePrevented: "—",
-    automationPct: 64,
-    productivityImprovement: 14,
-    eeiContribution: 1.8,
-    color: "amber",
-    employees: [
-      { name: "Inventory Optimizer", role: "Stock Intelligence", status: "watch" },
-      { name: "Demand Planner", role: "Forecast Modeling", status: "active" },
-      { name: "WMS Agent", role: "Warehouse Ops", status: "watch" },
-      { name: "Route Optimizer", role: "Route Intelligence", status: "active" },
-    ],
-  },
-  {
-    id: "procurement",
-    companyId: "company-a",
-    name: "Procurement",
-    eei: 73,
-    health: 77,
-    agents: 9,
-    workflows: 22,
-    risk: "high",
-    eeiContrib: "+1.6",
-    kpis: { costSavings: "$2.1M/yr", supplierScore: "74/100", cycleTime: "12.4 days" },
-    cost: "$84K/mo",
-    openTasks: 29,
-    roi: "1.4x",
-    revenueProtected: "$1.2M",
-    costSaved: "$340K",
-    hoursSaved: 680,
-    downtimePrevented: "—",
-    automationPct: 52,
-    productivityImprovement: 11,
-    eeiContribution: 1.6,
-    color: "orange",
-    employees: [
-      { name: "Supplier Risk", role: "Risk Scoring", status: "watch" },
-      { name: "Sourcing Agent", role: "Strategic Sourcing", status: "active" },
-      { name: "Contract Bot", role: "Contract Lifecycle", status: "active" },
-    ],
-  },
-  {
-    id: "finance",
-    companyId: "company-a",
-    name: "Finance",
-    eei: 87,
-    health: 92,
-    agents: 8,
-    workflows: 18,
-    risk: "low",
-    eeiContrib: "+3.9",
-    kpis: { forecastAccuracy: "94.2%", closeCycle: "3.1 days", costPerUnit: "$18.40" },
-    cost: "$68K/mo",
-    openTasks: 6,
-    roi: "2.2x",
-    revenueProtected: "$2.2M",
-    costSaved: "$284K",
-    hoursSaved: 1120,
-    downtimePrevented: "—",
-    automationPct: 88,
-    productivityImprovement: 18,
-    eeiContribution: 3.9,
-    color: "emerald",
-    employees: [
-      { name: "Finance Analyst", role: "Cost Analytics", status: "active" },
-      { name: "Cost Controller", role: "Budget Intelligence", status: "active" },
-      { name: "Audit Agent", role: "Compliance & Audit", status: "active" },
-    ],
-  },
-  {
-    id: "revenue",
-    companyId: "company-a",
-    name: "Revenue",
-    eei: 83,
-    health: 87,
-    agents: 13,
-    workflows: 28,
-    risk: "medium",
-    eeiContrib: "+2.8",
-    kpis: { forecastAccuracy: "88%", pipelineHealth: "78/100", dealVelocity: "22.4 days" },
-    cost: "$118K/mo",
-    openTasks: 19,
-    roi: "2.7x",
-    revenueProtected: "$14.2M",
-    costSaved: "$620K",
-    hoursSaved: 1840,
-    downtimePrevented: "—",
-    automationPct: 78,
-    productivityImprovement: 24,
-    eeiContribution: 2.8,
-    color: "violet",
-    employees: [
-      { name: "Revenue Scout", role: "Pipeline Intelligence", status: "active" },
-      { name: "Deal Closer AI", role: "Sales Acceleration", status: "active" },
-      { name: "Customer Intel", role: "Account Intelligence", status: "active" },
-      { name: "Forecast Agent", role: "Demand Forecasting", status: "watch" },
-    ],
-  },
-];
+// Org hierarchy + metrics: single source of truth in org-model.ts
+export {
+  BU_LIST,
+  ENTERPRISE_METRICS,
+  computeEnterpriseMetrics,
+  buildDeptTwin,
+  departmentsForBu,
+  resolveDeptTwin,
+  deptSlug,
+  deptTwinId,
+  getAbu,
+  getDepartment,
+  agentsInDepartment,
+} from "@/data/org-model";
+export type {
+  BuListItem,
+  Department,
+  DepartmentLegacy,
+  DeptChildNode,
+  DeptNodeKind,
+  DeptNodeStatus,
+  DeptTwinModel,
+  EnterpriseMetrics,
+} from "@/data/org-model";
 
-export const ENTERPRISE_METRICS = {
-  eeiScore: 82,
-  eeiTrend: 1.4,
-  roi: "2.1x",
-  revenueProtected: "$24.6M",
-  costSaved: "$2.64M",
-  hoursSaved: 7720,
-  downtimePrevented: "84 hrs",
-  automationPct: 74,
-  productivityImprovement: 18,
-  eeiContribution: 14.9,
-  activeAgents: 62,
-  totalWorkflows: 143,
-  governanceHealth: 91,
-  aiWorkforceHealth: 87,
-  riskExposure: 18,
-  businessHealth: 84,
-  forecastAccuracy: 91,
-  activeEscalations: 2,
-  activeBusinessUnits: 5,
-  totalAgents: 62,
-  revenueImpact: 24600000,
-  costSavings: 2640000,
-};
+export { MFG_AGENTS, ALL_AGENTS, agentsForBu, agentsForDept } from "@/data/agents-registry";
+export type { AgentRecord } from "@/data/agents-registry";
+
+import { ENTERPRISE_METRICS } from "@/data/org-model";
+import { deptTwinId } from "@/data/org-ids";
 
 // ─── KPI Studio: Enterprise Health Overview ────────────────────
 // Ten executive score cards shown at the top of KPI Studio. Each maps to
@@ -202,7 +61,7 @@ export const ENTERPRISE_HEALTH_CARDS: HealthCard[] = [
   { id: "sustainability", label: "Sustainability Score", score: 82, target: 90, trend: [77, 78, 79, 80, 81, 81, 82], confidence: 88,
     summary: "Energy load-balancing is cutting consumption and emissions steadily toward the two-quarter target." },
   { id: "ai-workforce", label: "AI Workforce Health", score: 87, target: 92, trend: [83, 84, 85, 86, 86, 87, 87], confidence: 96,
-    summary: "247 AI agents at 97.2% uptime; automation coverage up 4 pts this quarter across all 5 ABUs." },
+    summary: `${ENTERPRISE_METRICS.totalAgents} AI agents at 97.2% uptime; automation coverage up 4 pts this quarter across all 5 ABUs.` },
 ];
 
 export const ANOMALIES = [
@@ -216,6 +75,7 @@ export const ANOMALIES = [
     age: "6 min ago",
     trend: [72, 71, 70, 68, 65, 61, 57, 52, 48],
     buId: "manufacturing",
+    deptId: deptTwinId("manufacturing", "OEE Optimizer"),
   },
   {
     id: "a2",
@@ -227,6 +87,7 @@ export const ANOMALIES = [
     age: "22 min ago",
     trend: [20, 22, 28, 31, 36, 42, 48, 54, 61],
     buId: "procurement",
+    deptId: deptTwinId("procurement", "Supplier Risk"),
   },
   {
     id: "a3",
@@ -238,6 +99,7 @@ export const ANOMALIES = [
     age: "1 hr ago",
     trend: [60, 58, 56, 53, 50, 47, 44, 41, 38],
     buId: "supply-chain",
+    deptId: deptTwinId("supply-chain", "Inventory Optimizer"),
   },
   {
     id: "a4",
@@ -249,6 +111,7 @@ export const ANOMALIES = [
     age: "2 hrs ago",
     trend: [85, 83, 81, 79, 77, 74, 72, 70, 68],
     buId: "revenue",
+    deptId: deptTwinId("revenue", "Revenue Scout"),
   },
 ];
 
@@ -315,151 +178,6 @@ export const IMPACT_MAP: Record<string, {
   },
 };
 
-export const MFG_AGENTS = [
-  {
-    id: "ag1", companyId: "company-a", name: "Production Planner", employeeId: "AIE-0101", role: "Production Scheduling Agent",
-    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Production Planner"), status: "active", autonomy: "full",
-    utilization: 94, sla: 97.8, costPerDay: 182, tasks: 412,
-    skills: ["MES Integration", "Scheduling Optimization", "Capacity Planning", "ERP Sync"],
-    systems: ["ERP", "MES", "SCADA"],
-    hoursSaved: 1840, revenueProtected: "$4.2M", downtimePrevented: "42 hrs", costSaved: "$380K",
-    automationPct: 87, roi: "2.3x", eeiContrib: "+1.8", kpisImproved: ["OEE", "Throughput", "EEI"],
-    health: 96, version: "v3.2", model: "GPT-4o",
-    latencyMs: 840, accuracy: 94.2, hallucination: 0.8, policyCompliance: 99.1,
-    tokenUsage: 2840000, costMtd: "$5,420",
-    adapterId: "codex", costModelId: "gpt-4o", reasoningLevel: "High",
-  },
-  {
-    id: "ag2", companyId: "company-a", name: "OEE Optimizer", employeeId: "AIE-0102", role: "Equipment Efficiency Agent",
-    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "OEE Optimizer"), status: "active", autonomy: "supervised",
-    utilization: 88, sla: 95.4, costPerDay: 148, tasks: 284,
-    skills: ["OEE Monitoring", "Root Cause Analysis", "Shift Optimization", "SCADA Integration"],
-    systems: ["SCADA", "MES", "IoT"],
-    hoursSaved: 960, revenueProtected: "$2.8M", downtimePrevented: "28 hrs", costSaved: "$214K",
-    automationPct: 79, roi: "1.9x", eeiContrib: "+1.2", kpisImproved: ["OEE", "Scrap Rate"],
-    health: 92, version: "v2.8", model: "GPT-4o",
-    latencyMs: 1120, accuracy: 91.8, hallucination: 1.2, policyCompliance: 98.4,
-    tokenUsage: 1920000, costMtd: "$4,180",
-    adapterId: "codex", costModelId: "gpt-4o", reasoningLevel: "Medium",
-  },
-  {
-    id: "ag3", companyId: "company-a", name: "Predictive Maintenance", employeeId: "AIE-0201", role: "Failure Prediction Agent",
-    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Predictive Maintenance"), status: "active", autonomy: "full",
-    utilization: 97, sla: 98.2, costPerDay: 162, tasks: 543,
-    skills: ["Acoustic Analysis", "Vibration Monitoring", "Failure Prediction", "CMMS Integration"],
-    systems: ["CMMS", "IoT", "SCADA"],
-    hoursSaved: 2240, revenueProtected: "$6.1M", downtimePrevented: "84 hrs", costSaved: "$920K",
-    automationPct: 91, roi: "2.4x", eeiContrib: "+2.1", kpisImproved: ["Downtime", "OEE", "EEI"],
-    health: 98, version: "v4.1", model: "GPT-4o",
-    latencyMs: 620, accuracy: 96.4, hallucination: 0.4, policyCompliance: 99.8,
-    tokenUsage: 3410000, costMtd: "$6,840",
-    adapterId: "claude-code", costModelId: "gpt-4o", reasoningLevel: "High",
-  },
-  {
-    id: "ag4", companyId: "company-a", name: "Quality Inspector", employeeId: "AIE-0301", role: "Defect Detection Agent",
-    department: "Manufacturing", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Quality Inspector"), status: "active", autonomy: "supervised",
-    utilization: 91, sla: 96.8, costPerDay: 138, tasks: 389,
-    skills: ["Vision AI", "Defect Classification", "Statistical Process Control", "MES Integration"],
-    systems: ["MES", "IoT", "ERP"],
-    hoursSaved: 1280, revenueProtected: "$1.8M", downtimePrevented: "12 hrs", costSaved: "$340K",
-    automationPct: 83, roi: "2.1x", eeiContrib: "+1.4", kpisImproved: ["Yield", "Scrap Rate", "Defect Rate"],
-    health: 94, version: "v2.4", model: "Claude-3.5-Sonnet",
-    latencyMs: 780, accuracy: 93.6, hallucination: 0.9, policyCompliance: 98.9,
-    tokenUsage: 2180000, costMtd: "$3,960",
-    adapterId: "claude-code", costModelId: "claude-3-5-sonnet", reasoningLevel: "Medium",
-  },
-  {
-    id: "ag5", companyId: "company-a", name: "Inventory Optimizer", employeeId: "AIE-0401", role: "Stock Intelligence Agent",
-    department: "Supply Chain", bu: "supply-chain", deptId: deptTwinId("supply-chain", "Inventory Optimizer"), status: "watch", autonomy: "supervised",
-    utilization: 76, sla: 88.4, costPerDay: 124, tasks: 241,
-    skills: ["Demand Sensing", "Replenishment Optimization", "WMS Integration", "Stockout Prediction"],
-    systems: ["WMS", "ERP", "IoT"],
-    hoursSaved: 680, revenueProtected: "$1.4M", downtimePrevented: "—", costSaved: "$182K",
-    automationPct: 64, roi: "1.4x", eeiContrib: "+0.8", kpisImproved: ["Inventory Turns", "Fill Rate"],
-    health: 82, version: "v1.9", model: "GPT-4o-mini",
-    latencyMs: 1840, accuracy: 84.2, hallucination: 2.1, policyCompliance: 96.2,
-    tokenUsage: 1240000, costMtd: "$2,840",
-    adapterId: "gemini-cli", costModelId: "gpt-4o-mini", reasoningLevel: "Medium",
-  },
-  {
-    id: "ag6", companyId: "company-a", name: "Supplier Risk Agent", employeeId: "AIE-0501", role: "Supplier Intelligence Agent",
-    department: "Procurement", bu: "procurement", deptId: deptTwinId("procurement", "Supplier Risk"), status: "watch", autonomy: "assisted",
-    utilization: 71, sla: 84.2, costPerDay: 108, tasks: 187,
-    skills: ["Supplier Risk Scoring", "Market Intelligence", "Contract Analysis", "ERP Integration"],
-    systems: ["ERP", "PLM"],
-    hoursSaved: 420, revenueProtected: "$0.8M", downtimePrevented: "—", costSaved: "$128K",
-    automationPct: 52, roi: "1.2x", eeiContrib: "+0.5", kpisImproved: ["Supplier Score", "Cycle Time"],
-    health: 78, version: "v1.4", model: "GPT-4o-mini",
-    latencyMs: 2140, accuracy: 81.8, hallucination: 2.8, policyCompliance: 94.8,
-    tokenUsage: 880000, costMtd: "$2,120",
-    adapterId: "http-webhook", costModelId: "gpt-4o-mini", reasoningLevel: "Low",
-  },
-  {
-    id: "ag7", companyId: "company-a", name: "Finance Analyst", employeeId: "AIE-0601", role: "Cost Analytics Agent",
-    department: "Finance", bu: "finance", deptId: deptTwinId("finance", "Finance Analyst"), status: "active", autonomy: "full",
-    utilization: 86, sla: 97.4, costPerDay: 142, tasks: 318,
-    skills: ["Cost Analysis", "Variance Reporting", "ERP Integration", "Budget Intelligence"],
-    systems: ["ERP", "MES"],
-    hoursSaved: 1120, revenueProtected: "$2.2M", downtimePrevented: "—", costSaved: "$284K",
-    automationPct: 88, roi: "2.2x", eeiContrib: "+1.6", kpisImproved: ["Cost per Unit", "Forecast Accuracy"],
-    health: 95, version: "v3.0", model: "GPT-4o",
-    latencyMs: 920, accuracy: 95.1, hallucination: 0.6, policyCompliance: 99.4,
-    tokenUsage: 1840000, costMtd: "$4,620",
-    adapterId: "codex", costModelId: "gpt-4o", reasoningLevel: "High",
-  },
-  {
-    id: "ag8", companyId: "company-a", name: "Revenue Scout", employeeId: "AIE-0701", role: "Pipeline Intelligence Agent",
-    department: "Revenue", bu: "revenue", deptId: deptTwinId("revenue", "Revenue Scout"), status: "active", autonomy: "supervised",
-    utilization: 89, sla: 94.8, costPerDay: 158, tasks: 342,
-    skills: ["Pipeline Analysis", "Opportunity Scoring", "CRM Integration", "Forecast Modeling"],
-    systems: ["CRM", "ERP"],
-    hoursSaved: 1240, revenueProtected: "$14.2M", downtimePrevented: "—", costSaved: "$380K",
-    automationPct: 78, roi: "2.7x", eeiContrib: "+1.4", kpisImproved: ["Pipeline Health", "Forecast Accuracy"],
-    health: 91, version: "v2.6", model: "GPT-4o",
-    latencyMs: 980, accuracy: 92.4, hallucination: 1.1, policyCompliance: 98.2,
-    tokenUsage: 2140000, costMtd: "$4,840",
-    adapterId: "cursor", costModelId: "gpt-4o", reasoningLevel: "Medium",
-  },
-  {
-    id: "ag9", companyId: "company-a", name: "Deal Closer AI", employeeId: "AIE-0702", role: "Sales Acceleration Agent",
-    department: "Revenue", bu: "revenue", deptId: deptTwinId("revenue", "Deal Closer AI"), status: "active", autonomy: "supervised",
-    utilization: 83, sla: 91.2, costPerDay: 134, tasks: 218,
-    skills: ["Deal Qualification", "Proposal Generation", "Objection Handling", "CRM Sync"],
-    systems: ["CRM", "ERP"],
-    hoursSaved: 840, revenueProtected: "$6.8M", downtimePrevented: "—", costSaved: "$240K",
-    automationPct: 72, roi: "2.4x", eeiContrib: "+1.0", kpisImproved: ["Deal Velocity", "Win Rate"],
-    health: 88, version: "v2.1", model: "GPT-4o",
-    latencyMs: 1140, accuracy: 89.6, hallucination: 1.4, policyCompliance: 97.4,
-    tokenUsage: 1640000, costMtd: "$3,820",
-    adapterId: "cursor", costModelId: "gpt-4o", reasoningLevel: "Medium",
-  },
-  {
-    id: "ag10", companyId: "company-a", name: "Energy Intelligence", employeeId: "AIE-0801", role: "EEI Optimization Agent",
-    department: "Facilities & Sustainability", bu: "manufacturing", deptId: deptTwinId("manufacturing", "OEE Optimizer"), status: "active", autonomy: "full",
-    utilization: 88, sla: 97.4, costPerDay: 91, tasks: 312,
-    skills: ["Energy Monitoring", "Load Balancing", "SCADA Integration", "Anomaly Detection"],
-    systems: ["SCADA", "BMS", "IoT"],
-    hoursSaved: 640, revenueProtected: "$1.1M", downtimePrevented: "—", costSaved: "$218K",
-    automationPct: 81, roi: "1.9x", eeiContrib: "+1.2", kpisImproved: ["EEI", "Energy Cost"],
-    health: 95, version: "v2.0", model: "GPT-4o",
-    latencyMs: 740, accuracy: 94.8, hallucination: 0.7, policyCompliance: 98.6,
-    tokenUsage: 1480000, costMtd: "$2,730",
-    adapterId: "bash", costModelId: "gpt-4o", reasoningLevel: "High",
-  },
-  {
-    id: "ag11", companyId: "company-a", name: "Scrap Rate Reducer", employeeId: "AIE-0901", role: "Waste Reduction Agent",
-    department: "Manufacturing Ops", bu: "manufacturing", deptId: deptTwinId("manufacturing", "Quality Inspector"), status: "watch", autonomy: "assisted",
-    utilization: 0, sla: 0, costPerDay: 0, tasks: 0,
-    skills: ["Defect Analysis", "Root Cause Analysis", "SPC Integration"],
-    systems: ["MES", "ERP"],
-    hoursSaved: 0, revenueProtected: "$0", downtimePrevented: "—", costSaved: "$0",
-    automationPct: 0, roi: "—", eeiContrib: "+0.0", kpisImproved: ["Scrap Rate", "OEE"],
-    health: 0, version: "v0.1", model: "GPT-4o-mini",
-    latencyMs: 0, accuracy: 0, hallucination: 0, policyCompliance: 0,
-    tokenUsage: 0, costMtd: "$0",
-    adapterId: "gemini-cli", costModelId: "gpt-4o-mini", reasoningLevel: "Minimal",
-  },
-];
 
 // ─── KPI Studio catalog ───────────────────────────────────────
 // Every KPI abbreviation must be spelled out (fullName) wherever it's
@@ -822,192 +540,3 @@ export const BU_INTELLIGENCE: Record<string, {
   },
 };
 
-// ─── Department Twins ─────────────────────────────────────────
-// Each ABU department (an entry in BU_LIST[].employees) can be opened as its
-// own small digital twin: the department at the center, ringed by the AI
-// agents, workflows, integrations and KPIs it operates. The model is derived
-// deterministically from the department so every persona gets a populated
-// twin without hand-authoring all 19 of them.
-
-export type DeptNodeKind = "agent" | "workflow" | "integration" | "kpi";
-export type DeptNodeStatus = "active" | "watch" | "critical";
-
-export interface DeptChildNode {
-  id: string;
-  label: string;
-  sub: string;
-  kind: DeptNodeKind;
-  status: DeptNodeStatus;
-  metric: string;
-}
-
-export interface DeptTwinModel {
-  id: string;
-  buId: string;
-  buName: string;
-  name: string;
-  role: string;
-  status: string;
-  health: number;
-  automation: number;
-  agents: number;
-  workflows: number;
-  openTasks: number;
-  nodes: DeptChildNode[];
-}
-
-export function deptSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-export function deptTwinId(buId: string, name: string): string {
-  return `${buId}:${deptSlug(name)}`;
-}
-
-function fnv1a(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-function seeded(seed: number) {
-  let a = seed;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-const between = (r: () => number, lo: number, hi: number) => Math.round(lo + r() * (hi - lo));
-
-const INTEGRATIONS_BY_BU: Record<string, string[]> = {
-  manufacturing: ["MES / SCADA", "SAP PP", "Historian DB", "IoT Gateway"],
-  "supply-chain": ["SAP EWM", "TMS", "Demand Cloud", "EDI Hub"],
-  procurement: ["SAP Ariba", "Coupa", "D&B Risk", "Contract Vault"],
-  finance: ["SAP FICO", "Anaplan", "BlackLine", "Data Warehouse"],
-  revenue: ["Salesforce", "Gong", "Clari", "Marketo"],
-};
-const WORKFLOW_POOL = [
-  "Auto-triage queue",
-  "Anomaly escalation",
-  "Nightly reconcile",
-  "Forecast refresh",
-  "Approval routing",
-  "SLA monitor",
-  "Exception handling",
-];
-
-function prettyKpi(k: string): string {
-  return k
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (c) => c.toUpperCase())
-    .trim();
-}
-
-export function buildDeptTwin(
-  buId: string,
-  dept: { name: string; role: string; status: string }
-): DeptTwinModel {
-  const bu = BU_LIST.find((b) => b.id === buId);
-  const id = deptTwinId(buId, dept.name);
-  const r = seeded(fnv1a(id));
-  const status = dept.status;
-  const health =
-    status === "critical" ? between(r, 58, 70) : status === "watch" ? between(r, 70, 82) : between(r, 84, 96);
-  const automation = status === "watch" ? between(r, 55, 72) : between(r, 74, 93);
-  const agents = between(r, 2, 4);
-  const workflows = between(r, 3, 7);
-  const openTasks = status === "watch" ? between(r, 12, 30) : between(r, 2, 12);
-
-  const integrations = INTEGRATIONS_BY_BU[buId] ?? ["ERP", "Data Lake"];
-  const kpiEntries = bu ? Object.entries(bu.kpis) : [];
-  const first = dept.name.split(" ")[0];
-
-  const nodes: DeptChildNode[] = [];
-  const agentNames = [`${first} Copilot`, `${dept.role} Engine`, "Anomaly Sentinel", "Ops Assistant"];
-  for (let i = 0; i < agents; i++) {
-    const st: DeptNodeStatus = i === 0 && status !== "active" ? (status as DeptNodeStatus) : r() > 0.85 ? "watch" : "active";
-    nodes.push({
-      id: `${id}:agent:${i}`,
-      label: agentNames[i] ?? `Agent ${i + 1}`,
-      sub: "AI Agent",
-      kind: "agent",
-      status: st,
-      metric: `${between(r, 82, 99)}% conf`,
-    });
-  }
-  const wfCount = Math.min(3, Math.max(2, Math.round(workflows / 2)));
-  const wfShuffle = [...WORKFLOW_POOL].sort(() => r() - 0.5);
-  for (let i = 0; i < wfCount; i++) {
-    nodes.push({
-      id: `${id}:wf:${i}`,
-      label: wfShuffle[i],
-      sub: "Workflow",
-      kind: "workflow",
-      status: r() > 0.8 ? "watch" : "active",
-      metric: `${between(r, 40, 320)} runs/wk`,
-    });
-  }
-  for (let i = 0; i < 2; i++) {
-    nodes.push({
-      id: `${id}:int:${i}`,
-      label: integrations[i] ?? "System",
-      sub: "Integration",
-      kind: "integration",
-      status: r() > 0.9 ? "watch" : "active",
-      metric: r() > 0.5 ? "synced" : "live",
-    });
-  }
-  const kpiCount = Math.min(3, kpiEntries.length || 2);
-  for (let i = 0; i < kpiCount; i++) {
-    const entry = kpiEntries[i] ?? [`kpi${i + 1}`, "—"];
-    nodes.push({
-      id: `${id}:kpi:${i}`,
-      label: prettyKpi(entry[0]),
-      sub: "KPI",
-      kind: "kpi",
-      status: "active",
-      metric: String(entry[1]),
-    });
-  }
-
-  return {
-    id,
-    buId,
-    buName: bu?.name ?? buId,
-    name: dept.name,
-    role: dept.role,
-    status,
-    health,
-    automation,
-    agents,
-    workflows,
-    openTasks,
-    nodes,
-  };
-}
-
-// All departments of a BU, with their stable twin ids attached.
-export function departmentsForBu(buId: string) {
-  const bu = BU_LIST.find((b) => b.id === buId);
-  if (!bu) return [];
-  return bu.employees.map((e) => ({ ...e, id: deptTwinId(buId, e.name) }));
-}
-
-// Resolve a department twin from a persona's deptId (or fall back to the
-// first department of the given BU) so every scoped role has something to show.
-export function resolveDeptTwin(deptId: string | null | undefined, fallbackBuId: string | null): DeptTwinModel | null {
-  for (const bu of BU_LIST) {
-    for (const emp of bu.employees) {
-      if (deptTwinId(bu.id, emp.name) === deptId) return buildDeptTwin(bu.id, emp);
-    }
-  }
-  if (fallbackBuId) {
-    const bu = BU_LIST.find((b) => b.id === fallbackBuId);
-    if (bu && bu.employees[0]) return buildDeptTwin(bu.id, bu.employees[0]);
-  }
-  return null;
-}

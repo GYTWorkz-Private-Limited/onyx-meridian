@@ -16,7 +16,7 @@ export interface Persona {
   role: Role;
   buId: string | null; // null = enterprise-wide (CEO)
   // For department-scoped roles: which department's digital twin they own.
-  // Format matches deptTwinId() in enterprise-data: `${buId}:${slug(name)}`.
+  // Format matches department id in org-model: `${buId}:${slug(name)}`.
   deptId?: string;
 }
 
@@ -51,9 +51,9 @@ export const PERSONAS: Persona[] = [
   { id: "p-head-proc",name: "David Nakamura",      title: "VP, Procurement Intelligence",   role: "abu_head", buId: "procurement" },
   { id: "p-head-fin", name: "Priya Raman",         title: "VP, Finance Intelligence",       role: "abu_head", buId: "finance" },
   { id: "p-head-rev", name: "Jordan Blake",        title: "VP, Revenue Intelligence",       role: "abu_head", buId: "revenue" },
-  { id: "p-mgr-proc", name: "Ravi Menon",          title: "Procurement Operations Manager", role: "dept_manager", buId: "procurement",   deptId: "procurement:supplier-risk" },
-  { id: "p-mgr-mfg",  name: "Lena Fischer",        title: "Manufacturing Line Manager",     role: "dept_manager", buId: "manufacturing", deptId: "manufacturing:line-monitor" },
-  { id: "p-emp",      name: "Operations Coordinator", title: "Operations Coordinator",     role: "employee",  buId: "procurement",   deptId: "procurement:contract-bot" },
+  { id: "p-mgr-proc", name: "Ravi Menon",          title: "Procurement Operations Manager", role: "dept_manager", buId: "procurement",   deptId: "procurement:supplier-management" },
+  { id: "p-mgr-mfg",  name: "Lena Fischer",        title: "Manufacturing Line Manager",     role: "dept_manager", buId: "manufacturing", deptId: "manufacturing:production" },
+  { id: "p-emp",      name: "Operations Coordinator", title: "Operations Coordinator",     role: "employee",  buId: "procurement",   deptId: "procurement:contracts" },
 ];
 
 export const DEFAULT_PERSONA_ID = "p-ceo";

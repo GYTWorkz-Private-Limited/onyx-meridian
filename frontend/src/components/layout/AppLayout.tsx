@@ -9,7 +9,7 @@ import {
   ListChecks, History, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3, Crosshair,
   Files, ClipboardList,
 } from "lucide-react";
-import onyxStar from "@assets/image_1782459540221.png";
+import onyxStar from "@/assets/onyx-star.png";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnyxCopilot } from "@/components/OnyxCopilot";

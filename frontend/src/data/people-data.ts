@@ -4,7 +4,7 @@
 // People directory feels connected to the rest of the app rather than
 // introducing a disconnected cast of names.
 
-import { deptTwinId } from "@/data/enterprise-data";
+import { deptTwinId } from "@/data/org-ids";
 
 export interface Person {
   id: string;
@@ -28,24 +28,24 @@ export const PEOPLE: Person[] = [
 
   // Manufacturing
   { id: "per-1", name: "Plant Manager",          email: "plant.manager@meridian-mfg.com",       title: "Plant Manager",           buId: "manufacturing", roleTier: "member", status: "active" },
-  { id: "per-2", name: "Maintenance Supervisor",  email: "maintenance.supervisor@meridian-mfg.com", title: "Maintenance Supervisor", buId: "manufacturing", deptId: deptTwinId("manufacturing", "Predictive Maintenance"), roleTier: "member", status: "active" },
-  { id: "per-3", name: "Quality Manager",         email: "quality.manager@meridian-mfg.com",     title: "Quality Manager",          buId: "manufacturing", deptId: deptTwinId("manufacturing", "Quality Inspector"), roleTier: "member", status: "active" },
-  { id: "per-4", name: "Line Supervisor",         email: "line.supervisor@meridian-mfg.com",     title: "Line Supervisor",          buId: "manufacturing", deptId: deptTwinId("manufacturing", "Line Monitor"), roleTier: "member", status: "active" },
-  { id: "per-5", name: "Operations Coordinator",  email: "operations.coordinator@meridian-mfg.com", title: "Operations Coordinator", buId: "procurement",   deptId: deptTwinId("procurement", "Contract Bot"), roleTier: "member", status: "active" },
+  { id: "per-2", name: "Maintenance Supervisor",  email: "maintenance.supervisor@meridian-mfg.com", title: "Maintenance Supervisor", buId: "manufacturing", deptId: deptTwinId("manufacturing", "Maintenance"), roleTier: "member", status: "active" },
+  { id: "per-3", name: "Quality Manager",         email: "quality.manager@meridian-mfg.com",     title: "Quality Manager",          buId: "manufacturing", deptId: deptTwinId("manufacturing", "Quality"), roleTier: "member", status: "active" },
+  { id: "per-4", name: "Line Supervisor",         email: "line.supervisor@meridian-mfg.com",     title: "Line Supervisor",          buId: "manufacturing", deptId: deptTwinId("manufacturing", "Production"), roleTier: "member", status: "active" },
+  { id: "per-5", name: "Operations Coordinator",  email: "operations.coordinator@meridian-mfg.com", title: "Operations Coordinator", buId: "procurement",   deptId: deptTwinId("procurement", "Contracts"), roleTier: "member", status: "active" },
 
   // Supply Chain
-  { id: "per-6", name: "Warehouse Manager",       email: "warehouse.manager@meridian-mfg.com",   title: "Warehouse Manager",        buId: "supply-chain",  deptId: deptTwinId("supply-chain", "WMS Agent"), roleTier: "member", status: "active" },
+  { id: "per-6", name: "Warehouse Manager",       email: "warehouse.manager@meridian-mfg.com",   title: "Warehouse Manager",        buId: "supply-chain",  deptId: deptTwinId("supply-chain", "Warehousing"), roleTier: "member", status: "active" },
 
   // Procurement
-  { id: "per-7", name: "Procurement Manager",     email: "procurement.manager@meridian-mfg.com", title: "Procurement Manager",      buId: "procurement",   deptId: deptTwinId("procurement", "Supplier Risk"), roleTier: "member", status: "active" },
-  { id: "per-8", name: "Procurement Director",    email: "procurement.director@meridian-mfg.com",title: "Procurement Director",     buId: "procurement",   deptId: deptTwinId("procurement", "Sourcing Agent"), roleTier: "member", status: "active" },
-  { id: "per-9", name: "Legal Counsel",           email: "legal.counsel@meridian-mfg.com",       title: "Legal Counsel",            buId: "procurement",   deptId: deptTwinId("procurement", "Contract Bot"), roleTier: "member", status: "active" },
+  { id: "per-7", name: "Procurement Manager",     email: "procurement.manager@meridian-mfg.com", title: "Procurement Manager",      buId: "procurement",   deptId: deptTwinId("procurement", "Supplier Management"), roleTier: "member", status: "active" },
+  { id: "per-8", name: "Procurement Director",    email: "procurement.director@meridian-mfg.com",title: "Procurement Director",     buId: "procurement",   deptId: deptTwinId("procurement", "Sourcing"), roleTier: "member", status: "active" },
+  { id: "per-9", name: "Legal Counsel",           email: "legal.counsel@meridian-mfg.com",       title: "Legal Counsel",            buId: "procurement",   deptId: deptTwinId("procurement", "Contracts"), roleTier: "member", status: "active" },
 
   // Finance
-  { id: "per-10", name: "Finance Director",       email: "finance.director@meridian-mfg.com",    title: "Finance Director",         buId: "finance",       deptId: deptTwinId("finance", "Finance Analyst"), roleTier: "member", status: "active" },
-  { id: "per-11", name: "CFO",                    email: "cfo@meridian-mfg.com",                 title: "Chief Financial Officer",  buId: "finance",       deptId: deptTwinId("finance", "Audit Agent"), roleTier: "member", status: "active" },
+  { id: "per-10", name: "Finance Director",       email: "finance.director@meridian-mfg.com",    title: "Finance Director",         buId: "finance",       deptId: deptTwinId("finance", "FP&A"), roleTier: "member", status: "active" },
+  { id: "per-11", name: "CFO",                    email: "cfo@meridian-mfg.com",                 title: "Chief Financial Officer",  buId: "finance",       deptId: deptTwinId("finance", "Audit"), roleTier: "member", status: "active" },
 
   // Revenue
-  { id: "per-12", name: "Revenue Manager",        email: "revenue.manager@meridian-mfg.com",     title: "Revenue Manager",          buId: "revenue",       deptId: deptTwinId("revenue", "Deal Closer AI"), roleTier: "member", status: "active" },
-  { id: "per-13", name: "VP Sales",               email: "vp.sales@meridian-mfg.com",            title: "VP Sales",                 buId: "revenue",       deptId: deptTwinId("revenue", "Revenue Scout"), roleTier: "member", status: "active" },
+  { id: "per-12", name: "Revenue Manager",        email: "revenue.manager@meridian-mfg.com",     title: "Revenue Manager",          buId: "revenue",       deptId: deptTwinId("revenue", "Sales"), roleTier: "member", status: "active" },
+  { id: "per-13", name: "VP Sales",               email: "vp.sales@meridian-mfg.com",            title: "VP Sales",                 buId: "revenue",       deptId: deptTwinId("revenue", "Sales"), roleTier: "member", status: "active" },
 ];

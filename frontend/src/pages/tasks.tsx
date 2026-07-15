@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetTasks } from "@workspace/api-client-react";
+import { useGetTasks } from "@/lib/api";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

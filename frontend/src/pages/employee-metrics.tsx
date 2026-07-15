@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useGetTasks } from "@workspace/api-client-react";
+import { useGetTasks } from "@/lib/api";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { useAppContext } from "@/context/AppContext";
 import { MFG_AGENTS, BU_LIST } from "@/data/enterprise-data";

@@ -58,7 +58,7 @@ export default function DeptTwin() {
     ...twin.nodes.map((n) => ({ id: n.id, color: kindMeta(n.kind).color })),
   ];
 
-  const anomalies = ANOMALIES.filter((a) => a.buId === twin.buId);
+  const anomalies = ANOMALIES.filter((a) => a.deptId === twin.id);
   const activeNode = selected ? twin.nodes.find((n) => n.id === selected) : null;
   const grouped = KIND_ORDER.map((k) => ({ kind: k, items: twin.nodes.filter((n) => n.kind === k) })).filter((g) => g.items.length);
 

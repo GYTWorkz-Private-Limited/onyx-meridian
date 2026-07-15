@@ -1,49 +1,47 @@
 # Onyx Meridian
 
-An AI-workforce monitoring platform — an "Executive Command" dashboard for tracking AI agents, tasks, costs, model performance, knowledge retrieval, security, and infrastructure health, backed by an Express API and Postgres/Drizzle.
+An AI-workforce monitoring platform — an "Executive Command" dashboard for tracking AI agents, tasks, costs, model performance, knowledge retrieval, security, and infrastructure health.
 
 ## Stack
 
-- pnpm workspace monorepo, Node.js 24, TypeScript 5.9
-- Frontend: Vite + React (`artifacts/onyx-meridian`)
-- API: Express 5 (`artifacts/api-server`)
-- DB: PostgreSQL + Drizzle ORM (`lib/db`)
-- Validation: Zod (`lib/api-zod`)
-- API client codegen: Orval, generated from an OpenAPI spec (`lib/api-spec`, `lib/api-client-react`)
-
-## Setup
-
-Dependencies **must** be installed with `pnpm` — the repo is a pnpm workspace (see `pnpm-workspace.yaml` for the package list, version catalog, and supply-chain install policy) and `npm install` / `yarn install` are blocked by a `preinstall` guard.
-
-```bash
-pnpm install
-```
-
-Required env var: `DATABASE_URL` — Postgres connection string.
+- `frontend/` — Vite + React, standalone npm project
+- `backend/` — FastAPI (Python), standalone venv project
+- `backend/db/` — PostgreSQL schema + seed data (Drizzle ORM, standalone npm project)
 
 ## Running
 
-Once dependencies are installed, day-to-day scripts can be run with either `pnpm` or `npm run` (the root scripts just shell out to `pnpm --filter`/`pnpm -r` internally, so `npm run <script>` works too):
+**Backend** (FastAPI, port 8010):
 
 ```bash
-npm run dev       # frontend dev server (artifacts/onyx-meridian, Vite)
-npm run dev:api   # API server (artifacts/api-server, port 5000)
-npm run build     # typecheck + build all packages
-npm run typecheck # typecheck across all packages
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python main.py        # or: .venv/bin/uvicorn app.main:app --reload --port 8010
 ```
 
-Other useful commands (run via `pnpm --filter <package> run <script>`):
+Requires `backend/.env` with `DATABASE_URL` pointing at Postgres.
 
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+**Database** (schema push + seed):
 
-## Repo map
+```bash
+cd backend/db
+npm install
+npm run push   # push schema to Postgres
+npm run seed   # seed manufacturing mock data + login users
+```
 
-- `artifacts/onyx-meridian` — main frontend app
-- `artifacts/api-server` — Express API server
-- `artifacts/mockup-sandbox` — UI mockup/sandbox app
-- `lib/db` — Drizzle schema and DB access
-- `lib/api-spec` — OpenAPI spec, source of truth for API contracts
-- `lib/api-zod` — Zod schemas generated from the API spec
-- `lib/api-client-react` — generated React Query hooks for the API
-- `scripts` — misc workspace scripts
+Requires `backend/db/.env` with `DATABASE_URL`.
+
+**Frontend** (Vite dev server):
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Proxies `/api` requests to the backend at `http://localhost:8010` by default (override with `API_PROXY_TARGET`).
+
+## Login
+
+The login page authenticates against `backend/db`'s seeded `users` table (see `backend/db/src/seed.ts` for the credential list). All other API data is served as static mock data ported from the original Express prototype.

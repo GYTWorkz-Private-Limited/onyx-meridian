@@ -4,7 +4,7 @@ import { HeaderBar } from "@/components/shared/HeaderBar";
 import { BlurGate } from "@/components/shared/BlurGate";
 import { useAppContext } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
-import { BU_LIST, ANOMALIES } from "@/data/enterprise-data";
+import { BU_LIST, ANOMALIES, ENTERPRISE_METRICS } from "@/data/enterprise-data";
 import { deptStatus, DepartmentStack } from "@/components/twin/twin-canvas";
 import AbuTwin from "@/pages/twins/abu-twin";
 import DeptTwin from "@/pages/twins/dept-twin";
@@ -511,7 +511,7 @@ function TopologyMap({
                     <div className="text-[7px] uppercase tracking-widest text-primary/60 mt-0.5">Rev / Day</div>
                   </div>
                   <div className="flex flex-col items-center justify-center py-1.5 px-2">
-                    <div className="text-[13px] font-bold text-primary leading-none">247</div>
+                    <div className="text-[13px] font-bold text-primary leading-none">{ENTERPRISE_METRICS.totalAgents}</div>
                     <div className="text-[7px] uppercase tracking-widest text-primary/60 mt-0.5">AI Agents</div>
                   </div>
                   <div className="flex flex-col items-center justify-center py-1.5 px-2">
@@ -898,13 +898,6 @@ function LiveIntelligence() {
 
 // ─── Page ─────────────────────────────────────────────────────
 
-const TWIN_DATA = {
-  aiWorkforce: 247,
-  humanWorkforce: 1840,
-  totalDecisions: "18.4K",
-  eeiScore: 84,
-};
-
 // Role-aware entry: each persona sees the twin at their own altitude.
 //   ceo          → whole-enterprise topology (this file)
 //   abu_head     → their single ABU + its departments  (AbuTwin)
@@ -925,9 +918,9 @@ function EnterpriseTwin() {
       <HeaderBar
         moduleName="ENTERPRISE DIGITAL TWIN"
         metrics={[
-          { label: "AI Workforce", value: TWIN_DATA.aiWorkforce },
-          { label: "Human Workforce", value: TWIN_DATA.humanWorkforce },
-          { label: "Total Decisions", value: TWIN_DATA.totalDecisions },
+          { label: "AI Workforce", value: ENTERPRISE_METRICS.totalAgents },
+          { label: "Human Workforce", value: 1840 },
+          { label: "Total Decisions", value: "18.4K" },
         ]}
       />
 
@@ -938,7 +931,7 @@ function EnterpriseTwin() {
             Enterprise Topology
           </span>
           <span className="text-[10px] text-muted-foreground font-mono">
-            EEI <span className="text-primary font-bold">{TWIN_DATA.eeiScore}</span>
+            EEI <span className="text-primary font-bold">{ENTERPRISE_METRICS.eeiScore}</span>
           </span>
           <span className="text-[10px] text-muted-foreground">·</span>
           <span className="text-[10px] text-muted-foreground">
@@ -961,7 +954,7 @@ function EnterpriseTwin() {
 
         <div className="flex-1 flex flex-col overflow-hidden p-3">
           <TopologyMap
-            eeiScore={TWIN_DATA.eeiScore}
+            eeiScore={ENTERPRISE_METRICS.eeiScore}
             selectedBu={selectedBu}
             onSelectBu={setSelectedBu}
             scopedBuId={null}

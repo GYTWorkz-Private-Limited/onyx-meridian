@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { DEFAULT_PERSONA_ID, getPersona, PERSONAS, type Persona, type Role } from "@/lib/rbac";
+import { login as apiLogin, type AuthUser } from "@/lib/auth";
 
 export interface WorkflowInstance {
   id: string;
@@ -37,12 +38,19 @@ interface AppContextType {
   // Companies (shallow multi-tenancy)
   currentCompanyId: string;
   setCurrentCompanyId: (id: string) => void;
+  // Auth — real login against the FastAPI backend, replaces manual persona
+  // switching once a user is logged in.
+  authUser: AuthUser | null;
+  isAuthenticated: boolean;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 const PERSONA_STORAGE_KEY = "onyx.personaId";
 const COMPANY_STORAGE_KEY = "onyx.companyId";
+const AUTH_STORAGE_KEY = "onyx.authUser";
 
 const INITIAL_WORKFLOWS: WorkflowInstance[] = [
   { id: "wf1", title: "APAC Enterprise Account Recovery", description: "Reallocate AI SDR to enterprise accounts", status: "running", agent: "Revenue Scout AI", startedAt: "2h ago", progress: 64 },
@@ -73,7 +81,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(COMPANY_STORAGE_KEY, currentCompanyId);
   }, [currentCompanyId]);
 
-  const persona = getPersona(activePersonaId);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = window.localStorage.getItem(AUTH_STORAGE_KEY);
+    return stored ? (JSON.parse(stored) as AuthUser) : null;
+  });
+
+  useEffect(() => {
+    if (authUser) window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authUser));
+    else window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  }, [authUser]);
+
+  const login = useCallback(async (username: string, password: string) => {
+    const user = await apiLogin(username, password);
+    setAuthUser(user);
+  }, []);
+
+  const logout = useCallback(() => setAuthUser(null), []);
+
+  // Once logged in, the real user drives persona/role/scope instead of the
+  // manual persona switcher.
+  const persona: Persona = authUser
+    ? { id: authUser.id, name: authUser.name, title: authUser.title, role: authUser.role, buId: authUser.buId, deptId: authUser.deptId ?? undefined }
+    : getPersona(activePersonaId);
   const setActivePersonaId = useCallback((id: string) => setActivePersonaIdState(id), []);
   const setCurrentCompanyId = useCallback((id: string) => setCurrentCompanyIdState(id), []);
 
@@ -103,6 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       workflows, addWorkflow, updateWorkflowStatus, pendingApprovals, decrementApprovals, incrementApprovals,
       persona, role: persona.role, currentBuId: persona.buId, setActivePersonaId,
       currentCompanyId, setCurrentCompanyId,
+      authUser, isAuthenticated: authUser !== null, login, logout,
     }}>
       {children}
     </AppContext.Provider>

@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { useAppContext } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
-import { BU_LIST, ANOMALIES, departmentsForBu, buildDeptTwin } from "@/data/enterprise-data";
+import { ANOMALIES, departmentsForBu, buildDeptTwin, getAbu } from "@/data/enterprise-data";
+import type { BuListItem } from "@/data/org-model";
 import {
   useTwinCanvas,
   CanvasStage,
@@ -23,10 +24,14 @@ const CY = 300;
 export default function AbuTwin() {
   const [, navigate] = useLocation();
   const { currentBuId, persona } = useAppContext();
-  const bu = BU_LIST.find((b) => b.id === currentBuId) ?? BU_LIST[0];
+  const buId = currentBuId ?? persona.buId;
+  const bu = buId ? getAbu(buId) : undefined;
 
-  const departments = useMemo(() => departmentsForBu(bu.id), [bu.id]);
-  const twins = useMemo(() => departments.map((d) => buildDeptTwin(bu.id, d)), [departments, bu.id]);
+  const departments = useMemo(() => (bu ? departmentsForBu(bu.id) : []), [bu]);
+  const twins = useMemo(
+    () => (bu ? departments.map((d) => buildDeptTwin(bu.id, d)) : []),
+    [departments, bu]
+  );
   const twinById = useMemo(() => Object.fromEntries(twins.map((t) => [t.id, t])), [twins]);
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -38,6 +43,17 @@ export default function AbuTwin() {
   }, [departments]);
 
   const cv = useTwinCanvas(build, WORLD);
+
+  if (!bu) {
+    return (
+      <div className="flex flex-col h-full bg-[#F8F9FA]">
+        <HeaderBar moduleName="ABU DIGITAL TWIN" />
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+          No business unit is assigned to this persona.
+        </div>
+      </div>
+    );
+  }
 
   const edges = departments.map((d) => ["__abu__", d.id] as [string, string]);
   const miniNodes = [
@@ -292,7 +308,7 @@ export default function AbuTwin() {
 
 // ─── Nodes ────────────────────────────────────────────────────
 
-function AbuCore({ cv, bu, onOpen }: { cv: ReturnType<typeof useTwinCanvas>; bu: (typeof BU_LIST)[number]; onOpen: () => void }) {
+function AbuCore({ cv, bu, onOpen }: { cv: ReturnType<typeof useTwinCanvas>; bu: BuListItem; onOpen: () => void }) {
   const p = cv.positions.__abu__;
   const dragging = cv.dragId === "__abu__";
   return (

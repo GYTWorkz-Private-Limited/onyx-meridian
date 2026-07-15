@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppProvider, useAppContext } from "@/context/AppContext";
 import { ProtectedRoute } from "@/components/routing/ProtectedRoute";
 import NotFound from "@/pages/not-found";
+import Login from "@/pages/login";
 
 // Pages
 import Dashboard from "@/pages/dashboard";
@@ -116,13 +117,18 @@ function Router() {
   );
 }
 
+function Gate() {
+  const { isAuthenticated } = useAppContext();
+  return isAuthenticated ? <Router /> : <Login />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
+            <Gate />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>
