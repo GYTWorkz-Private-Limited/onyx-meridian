@@ -1,0 +1,3378 @@
+{
+  "database": "onyx_meridian",
+  "generated_at": "2026-07-15T10:31:06.964012+00:00",
+  "tables": [
+    {
+      "table_name": "agents",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "department_id",
+          "references": {
+            "table": "departments",
+            "column": "id"
+          }
+        },
+        {
+          "column": "manager_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "department_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "employee_id",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "AIE-1002",
+            "AIE-1003",
+            "AIE-1004",
+            "AIE-1005",
+            "AIE-1001",
+            "AIE-1006"
+          ]
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Defect Vision Inspector",
+            "Line Throughput Optimizer",
+            "Predictive Maintenance Sentinel",
+            "Freight Routing Agent",
+            "Supplier Risk Sentinel",
+            "Incident Compliance Monitor"
+          ]
+        },
+        {
+          "column_name": "role",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "EHS Compliance Agent",
+            "Production Scheduling Agent",
+            "Automated Visual QA Agent",
+            "Logistics Optimization Agent",
+            "Condition Monitoring Agent",
+            "Procurement Risk Agent"
+          ]
+        },
+        {
+          "column_name": "manager_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "agent_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "active",
+            "critical",
+            "watch"
+          ]
+        },
+        {
+          "column_name": "autonomy_level",
+          "data_type": "autonomy_level",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "full",
+            "supervised",
+            "assisted"
+          ]
+        },
+        {
+          "column_name": "utilization_pct",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "sla_performance",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "cost_per_day",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "task_count",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "skills",
+          "data_type": "ARRAY",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "systems",
+          "data_type": "ARRAY",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "hours_saved",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "revenue_protected",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "downtime_prevented_hours",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "cost_saved",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "automation_pct",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "roi",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "eei_contribution",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "health",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "version",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "2.1.0",
+            "3.5.2",
+            "4.0.0",
+            "2.3.1",
+            "1.2.0",
+            "1.8.4"
+          ]
+        },
+        {
+          "column_name": "model",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "claude-sonnet-5"
+          ]
+        },
+        {
+          "column_name": "latency_ms",
+          "data_type": "integer",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "accuracy",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "hallucination_rate",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "policy_compliance",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "token_usage",
+          "data_type": "integer",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "cost_mtd",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "adapter_id",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "cost_model_id",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "reasoning_level",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "agents_company_employee_idx",
+          "columns": [
+            "company_id",
+            "employee_id"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "approval_comments",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "approval_id",
+          "references": {
+            "table": "approvals",
+            "column": "id"
+          }
+        },
+        {
+          "column": "author_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "approval_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "author_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "comment",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Requesting expedited review \u2014 misroutes are actively affecting OTD.",
+            "Approved pending confirmation that v1.3 has passed staging validation.",
+            "Sensor procurement lead time confirmed at 3 weeks; budget already allocated."
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "approvals",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "requested_by_person_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        },
+        {
+          "column": "requested_by_agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "SPC Lab Automation Expansion \u2014 Line 3",
+            "Line Throughput Optimizer \u2014 Cross-Shift Scheduling Authorization",
+            "Freight Routing Agent Replacement \u2014 v1.3 Deployment",
+            "Predictive Maintenance Sentinel \u2014 Sensor Grid Expansion (Plant 2)"
+          ]
+        },
+        {
+          "column_name": "requested_by_person_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "requested_by_agent_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "requested_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "type",
+          "data_type": "approval_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "agent-deployment",
+            "workflow",
+            "agent-replacement",
+            "agent-action"
+          ]
+        },
+        {
+          "column_name": "priority",
+          "data_type": "approval_priority",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "normal",
+            "urgent"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "approval_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "pending",
+            "approved"
+          ]
+        },
+        {
+          "column_name": "estimated_impact",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "-18% Inspection Time, +4% FPY",
+            "+9% MTBF, -12% Unplanned Downtime",
+            "+6% OEE, -9% Changeover Time",
+            "+22% Routing Accuracy, -60% Misroute Rate"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "audit_logs",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "policy_id",
+          "references": {
+            "table": "policies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "actor_person_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        },
+        {
+          "column": "actor_agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "policy_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "action",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "FPY breach on Line 3 \u2014 SPC lab review triggered",
+            "Flagged supplier contract renewal exceeding $100K",
+            "Dispatched work order on energized conveyor motor after LOTO verification",
+            "Modified agent budget threshold \u2014 Maintenance raised to $75K",
+            "Freight Routing Agent quarantined \u2014 repeated misroutes"
+          ]
+        },
+        {
+          "column_name": "actor_type",
+          "data_type": "actor_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "human",
+            "system",
+            "agent"
+          ]
+        },
+        {
+          "column_name": "actor_person_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "actor_agent_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "outcome",
+          "data_type": "audit_outcome",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "escalated",
+            "auto-approved",
+            "approved"
+          ]
+        },
+        {
+          "column_name": "risk_level",
+          "data_type": "risk_level",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "critical",
+            "high",
+            "medium"
+          ]
+        },
+        {
+          "column_name": "details",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Governance board approved raised autonomous budget threshold for Maintenance & Reliability agents.",
+            "Agent accuracy dropped below threshold after carrier API schema change; automatically quarantined pending fix.",
+            "First pass yield dropped to 91.2% on Line 3, below 95% threshold. Escalated to SPC Lab Manager.",
+            "LOTO checklist auto-verified against CMMS lock records prior to dispatch.",
+            "Contract with Titan Alloys Ltd. renewal at $142K exceeds autonomous authorization. Routed to Procurement Manager."
+          ]
+        },
+        {
+          "column_name": "occurred_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "business_results",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "metric",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Scrap Rate",
+            "Units Produced",
+            "Freight Cost per Unit",
+            "Recordable Incidents"
+          ]
+        },
+        {
+          "column_name": "value",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "unit",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "$",
+            "count",
+            "%",
+            "units"
+          ]
+        },
+        {
+          "column_name": "change",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "period",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "2026-06"
+          ]
+        },
+        {
+          "column_name": "category",
+          "data_type": "business_result_category",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "safety",
+            "quality",
+            "efficiency",
+            "cost"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "business_units",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "slug",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "production",
+            "safety-compliance",
+            "quality",
+            "supply-chain",
+            "maintenance"
+          ]
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Maintenance & Reliability",
+            "Safety & Compliance",
+            "Supply Chain",
+            "Quality Assurance",
+            "Production"
+          ]
+        },
+        {
+          "column_name": "domain",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Procurement & Logistics",
+            "Inspection & Compliance",
+            "EHS & Regulatory",
+            "Predictive Maintenance",
+            "Assembly & Fabrication"
+          ]
+        },
+        {
+          "column_name": "color",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "#16a34a",
+            "#dc2626",
+            "#9333ea",
+            "#2563eb",
+            "#d97706"
+          ]
+        },
+        {
+          "column_name": "eei_score",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "health_score",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "bu_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "optimizing",
+            "at-risk",
+            "healthy"
+          ]
+        },
+        {
+          "column_name": "risk",
+          "data_type": "bu_risk",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "medium",
+            "low",
+            "high"
+          ]
+        },
+        {
+          "column_name": "cost_mtd",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "roi",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "revenue_protected",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "cost_saved",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "hours_saved",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "downtime_prevented_hours",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "automation_pct",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "forecast_accuracy",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "business_units_company_slug_idx",
+          "columns": [
+            "company_id",
+            "slug"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "companies",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Meridian Industrial Group"
+          ]
+        },
+        {
+          "column_name": "industry",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Discrete Manufacturing"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "departments",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "slug",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "predictive-maint",
+            "spc-lab",
+            "cnc-machining",
+            "logistics",
+            "ehs",
+            "procurement",
+            "final-assembly",
+            "incoming-inspection"
+          ]
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "CNC Machining",
+            "Logistics",
+            "Incoming Inspection",
+            "Final Assembly",
+            "Predictive Maintenance",
+            "EHS",
+            "SPC Lab",
+            "Procurement"
+          ]
+        },
+        {
+          "column_name": "function",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Precision fabrication",
+            "Inbound/outbound freight",
+            "Supplier material QA",
+            "Line assembly",
+            "Raw material sourcing",
+            "Environmental health & safety",
+            "Condition monitoring",
+            "Statistical process control"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "bu_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "optimizing",
+            "at-risk",
+            "healthy"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "departments_bu_slug_idx",
+          "columns": [
+            "business_unit_id",
+            "slug"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "documents",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "department_id",
+          "references": {
+            "table": "departments",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "department_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Line 3 FPY Deviation \u2014 Root Cause Decision Log",
+            "CNC Changeover Standard Operating Procedure",
+            "Lockout-Tagout Policy v4"
+          ]
+        },
+        {
+          "column_name": "type",
+          "data_type": "document_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "sop",
+            "decision",
+            "policy"
+          ]
+        },
+        {
+          "column_name": "usage_count",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "relevance_score",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "summary",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Step-by-step changeover procedure minimizing setup time between part runs.",
+            "Historical record of prior FPY deviation investigations and resolutions on Line 3.",
+            "Energy isolation procedure required before any maintenance on powered equipment."
+          ]
+        },
+        {
+          "column_name": "last_updated",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "goals",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Restore On-Time Delivery to 95%",
+            "Raise MTBF to 450 hours plant-wide"
+          ]
+        },
+        {
+          "column_name": "target_value",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "current_value",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "due_date",
+          "data_type": "timestamp with time zone",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "goal_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "on-track",
+            "at-risk"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "insights",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "linked_kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "type",
+          "data_type": "insight_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "risk",
+            "anomaly",
+            "recommendation"
+          ]
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Line 3 tooling drift detected via SPC control charts",
+            "Expand predictive sensor coverage to Plant 2 press line",
+            "On-time delivery trending below target for 3 consecutive weeks"
+          ]
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "OTD dropped from 88% to 81.3% following carrier API disruption.",
+            "Vibration pattern analysis suggests early bearing wear undetected on uninstrumented equipment.",
+            "Cpk trending downward over 5 shifts, correlating with FPY deviation."
+          ]
+        },
+        {
+          "column_name": "confidence",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "priority",
+          "data_type": "insight_priority",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "p2",
+            "p1"
+          ]
+        },
+        {
+          "column_name": "impact",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "High \u2014 customer SLA breach risk",
+            "Medium \u2014 quality escape risk",
+            "Medium \u2014 potential unplanned downtime avoidance"
+          ]
+        },
+        {
+          "column_name": "business_impact",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "+9% MTBF projected",
+            "-$180K exposure in late-delivery penalties",
+            "Rework cost avoidance"
+          ]
+        },
+        {
+          "column_name": "kpi_impact",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "+18 hrs MTBF",
+            "-13.7% vs OTD target",
+            "-1.6% vs FPY target"
+          ]
+        },
+        {
+          "column_name": "evidence",
+          "data_type": "ARRAY",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "linked_kpi_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "kpi_agent_links",
+      "description": null,
+      "primary_key": [
+        "kpi_id",
+        "agent_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        },
+        {
+          "column": "agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "agent_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "kpi_dependencies",
+      "description": null,
+      "primary_key": [
+        "kpi_id",
+        "depends_on_kpi_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        },
+        {
+          "column": "depends_on_kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "depends_on_kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "kpi_goal_links",
+      "description": null,
+      "primary_key": [
+        "kpi_id",
+        "goal_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        },
+        {
+          "column": "goal_id",
+          "references": {
+            "table": "goals",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "goal_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "kpis",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "owner_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "slug",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "first-pass-yield",
+            "trir",
+            "otd",
+            "oee",
+            "mtbf"
+          ]
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Total Recordable Incident Rate",
+            "Mean Time Between Failures",
+            "On-Time Delivery",
+            "First Pass Yield",
+            "Overall Equipment Effectiveness"
+          ]
+        },
+        {
+          "column_name": "abbreviation",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "TRIR",
+            "MTBF",
+            "OTD",
+            "OEE",
+            "FPY"
+          ]
+        },
+        {
+          "column_name": "category",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Quality",
+            "Safety",
+            "Supply Chain",
+            "Maintenance",
+            "Production"
+          ]
+        },
+        {
+          "column_name": "value",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "unit",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "hrs",
+            "per 200k hrs",
+            "%"
+          ]
+        },
+        {
+          "column_name": "target",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "trend",
+          "data_type": "kpi_trend",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "up",
+            "down"
+          ]
+        },
+        {
+          "column_name": "delta",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "variance",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "health_score",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "kpi_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "critical",
+            "watch",
+            "on-track"
+          ]
+        },
+        {
+          "column_name": "owner_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "formula",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Total uptime / number of failures",
+            "On-time shipments / total shipments",
+            "Availability x Performance x Quality",
+            "(Recordable incidents x 200,000) / hours worked",
+            "Units passed without rework / total units"
+          ]
+        },
+        {
+          "column_name": "data_source",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "LIMS",
+            "TMS",
+            "CMMS",
+            "EHS Platform",
+            "MES"
+          ]
+        },
+        {
+          "column_name": "update_frequency",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "daily",
+            "weekly",
+            "hourly",
+            "monthly"
+          ]
+        },
+        {
+          "column_name": "forecast_next",
+          "data_type": "numeric",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "kpis_company_slug_idx",
+          "columns": [
+            "company_id",
+            "slug"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "opportunities",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Extend predictive maintenance to packaging line",
+            "Automate changeover sequencing across all CNC cells"
+          ]
+        },
+        {
+          "column_name": "estimated_value",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "confidence",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "opportunity_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "analyzing",
+            "identified"
+          ]
+        },
+        {
+          "column_name": "detected_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "people",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "department_id",
+          "references": {
+            "table": "departments",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "department_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Marcus Chen",
+            "Tom Kowalski",
+            "James Rutherford",
+            "Priya Nair",
+            "Elena Sokolov",
+            "Ravi Deshpande",
+            "Hannah Weiss",
+            "Diego Alvarez",
+            "Amara Okafor"
+          ]
+        },
+        {
+          "column_name": "email",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "amara.okafor@meridian-industrial.com",
+            "diego.alvarez@meridian-industrial.com",
+            "elena.sokolov@meridian-industrial.com",
+            "hannah.weiss@meridian-industrial.com",
+            "james.rutherford@meridian-industrial.com",
+            "marcus.chen@meridian-industrial.com",
+            "priya.nair@meridian-industrial.com",
+            "ravi.deshpande@meridian-industrial.com",
+            "tom.kowalski@meridian-industrial.com"
+          ]
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "VP of Maintenance & Reliability",
+            "VP of Quality Assurance",
+            "SPC Lab Manager",
+            "VP of Supply Chain",
+            "VP of Production",
+            "Procurement Manager",
+            "Chief Executive Officer",
+            "CNC Machining Manager",
+            "VP of Safety & Compliance"
+          ]
+        },
+        {
+          "column_name": "role_tier",
+          "data_type": "role_tier",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "abu_head",
+            "ceo",
+            "dept_manager"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "person_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "active"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "people_email_idx",
+          "columns": [
+            "email"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "policies",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Supplier Contract Approval Threshold",
+            "Agent Replacement Trigger \u2014 Risk Score > 75",
+            "Human Oversight \u2014 High-Risk Actions",
+            "RBAC \u2014 Agent Data Access Tiers",
+            "Lockout-Tagout Compliance",
+            "OSHA Recordable Data Residency",
+            "Agent Budget Authorization Limits",
+            "First Pass Yield Deviation Escalation"
+          ]
+        },
+        {
+          "column_name": "type",
+          "data_type": "policy_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "quality",
+            "rbac",
+            "governance",
+            "behavior",
+            "data",
+            "safety",
+            "budget",
+            "compliance"
+          ]
+        },
+        {
+          "column_name": "scope",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Safety & Compliance",
+            "Supply Chain",
+            "Enterprise",
+            "Quality Assurance",
+            "All AI Agents",
+            "Production"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "policy_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "draft",
+            "active"
+          ]
+        },
+        {
+          "column_name": "enforcement_level",
+          "data_type": "policy_enforcement_level",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "warn",
+            "block",
+            "log"
+          ]
+        },
+        {
+          "column_name": "violation_count",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Contracts exceeding $100K require Procurement Manager review and CFO approval. Agents authorized up to $100K autonomously.",
+            "Agents with risk score above 75 are flagged for replacement evaluation within 24 hours; suspension may be automatic.",
+            "Incident and injury data must remain on-premises infrastructure, not transferred to cloud analytics without redaction.",
+            "Any action affecting >2 business units or classified P1 critical requires human approval before execution.",
+            "All maintenance work orders on energized equipment must pass automated LOTO verification before agent-initiated dispatch.",
+            "FPY drops below 95% on any line trigger automatic SPC lab review and supervisor notification.",
+            "Spend thresholds per agent role: Procurement $100K, Maintenance $75K, all others $50K. Exceeding requires manager approval.",
+            "Four-tier access model: Public, Internal, Confidential, Restricted. Cross-BU data access requires approval."
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "last_updated",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "policy_rules",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "policy_id",
+          "references": {
+            "table": "policies",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "policy_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "field",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "contract_value_usd",
+            "fpy_pct",
+            "loto_verified",
+            "risk_score",
+            "spend_amount_usd"
+          ]
+        },
+        {
+          "column_name": "operator",
+          "data_type": "rule_operator",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "lt",
+            "gt",
+            "eq"
+          ]
+        },
+        {
+          "column_name": "threshold_value",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "75",
+            "95",
+            "false",
+            "100000",
+            "50000"
+          ]
+        },
+        {
+          "column_name": "action",
+          "data_type": "policy_enforcement_level",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "warn",
+            "block"
+          ]
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Flag agent for replacement evaluation.",
+            "Route to Procurement Manager + CFO for contracts above $100K.",
+            "Procurement and Maintenance agent spend cap.",
+            "Block any work order dispatch to energized equipment without LOTO verification.",
+            "Default spend cap for any agent role not explicitly listed.",
+            "Trigger SPC lab review when first pass yield drops below 95%."
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "policy_versions",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "policy_id",
+          "references": {
+            "table": "policies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "created_by_person_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "policy_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "version",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "policy_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "draft",
+            "active",
+            "deprecated"
+          ]
+        },
+        {
+          "column_name": "change_summary",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Initial LOTO policy draft.",
+            "Initial draft pending legal review.",
+            "Upgraded to blocking enforcement with automated CMMS lock-record verification."
+          ]
+        },
+        {
+          "column_name": "snapshot",
+          "data_type": "jsonb",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "created_by_person_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "policy_versions_policy_version_idx",
+          "columns": [
+            "policy_id",
+            "version"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "policy_violations",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "policy_id",
+          "references": {
+            "table": "policies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        },
+        {
+          "column": "person_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "policy_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "agent_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "person_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Line 3 FPY dropped to 91.2%, below the 95% threshold.",
+            "Risk score reached 82, exceeding the 75 replacement-evaluation trigger.",
+            "Titan Alloys Ltd. contract renewal at $142K exceeded autonomous authorization without prior escalation.",
+            "Unauthorized carrier override committed spend above role threshold."
+          ]
+        },
+        {
+          "column_name": "severity",
+          "data_type": "risk_level",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "critical",
+            "high",
+            "medium"
+          ]
+        },
+        {
+          "column_name": "resolved",
+          "data_type": "boolean",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            false,
+            true
+          ]
+        },
+        {
+          "column_name": "resolved_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "occurred_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "risk_scores",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "agent_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "risk_score",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "drift_score",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "hallucination_risk",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "policy_violations",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "unauthorized_actions",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "agent_risk_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "safe",
+            "watch",
+            "quarantined"
+          ]
+        },
+        {
+          "column_name": "risk_reason",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Carrier API schema change caused systematic misrouting across 65% of shipments. Unauthorized carrier override detected.",
+            "Minor contract threshold breach detected. Within acceptable range but trending up."
+          ]
+        },
+        {
+          "column_name": "replacement_name",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Freight Routing Agent v1.3"
+          ]
+        },
+        {
+          "column_name": "replacement_expected_improvement",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "+22% Routing Accuracy, -85% Drift Score"
+          ]
+        },
+        {
+          "column_name": "evaluated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "risk_scores_agent_idx",
+          "columns": [
+            "agent_id"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "risks",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Single-source dependency on Titan Alloys for raw aluminum",
+            "Aging CNC spindle motors approaching end-of-life on Line 2"
+          ]
+        },
+        {
+          "column_name": "severity",
+          "data_type": "risk_severity",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "high",
+            "medium"
+          ]
+        },
+        {
+          "column_name": "impact",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Production halt risk if supplier disruption occurs",
+            "Increased unplanned downtime risk over next 2 quarters"
+          ]
+        },
+        {
+          "column_name": "probability",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "risk_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "mitigating",
+            "active"
+          ]
+        },
+        {
+          "column_name": "detected_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "sop_agent_links",
+      "description": null,
+      "primary_key": [
+        "sop_id",
+        "agent_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "sop_id",
+          "references": {
+            "table": "sops",
+            "column": "id"
+          }
+        },
+        {
+          "column": "agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "sop_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "agent_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "sop_kpi_links",
+      "description": null,
+      "primary_key": [
+        "sop_id",
+        "kpi_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "sop_id",
+          "references": {
+            "table": "sops",
+            "column": "id"
+          }
+        },
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "sop_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "sop_policy_links",
+      "description": null,
+      "primary_key": [
+        "sop_id",
+        "policy_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "sop_id",
+          "references": {
+            "table": "sops",
+            "column": "id"
+          }
+        },
+        {
+          "column": "policy_id",
+          "references": {
+            "table": "policies",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "sop_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "policy_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "sops",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "owner_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "CNC Changeover & Setup",
+            "SPC Deviation Response"
+          ]
+        },
+        {
+          "column_name": "owner_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "version",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "3.1",
+            "2.0"
+          ]
+        },
+        {
+          "column_name": "automation_pct",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "risk",
+          "data_type": "sop_risk",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "medium",
+            "high"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "sop_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "active"
+          ]
+        },
+        {
+          "column_name": "workflow_steps",
+          "data_type": "ARRAY",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "systems",
+          "data_type": "ARRAY",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "systems_health",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "TMS (Transportation Management)",
+            "CMMS (Maintenance)",
+            "SAP PP/MM",
+            "MES (Manufacturing Execution System)"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "system_health_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "degraded",
+            "healthy"
+          ]
+        },
+        {
+          "column_name": "uptime_pct",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "last_sync",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "task_dependencies",
+      "description": null,
+      "primary_key": [
+        "task_id",
+        "depends_on_task_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "task_id",
+          "references": {
+            "table": "tasks",
+            "column": "id"
+          }
+        },
+        {
+          "column": "depends_on_task_id",
+          "references": {
+            "table": "tasks",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "task_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "depends_on_task_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "tasks",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "department_id",
+          "references": {
+            "table": "departments",
+            "column": "id"
+          }
+        },
+        {
+          "column": "owner_person_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        },
+        {
+          "column": "owner_agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        },
+        {
+          "column": "linked_kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "department_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Rebuild Freight Routing Agent carrier API adapter",
+            "File Q2 OSHA 300 log",
+            "Expand vibration sensor coverage to Plant 2 press line",
+            "Root-cause Line 3 FPY deviation"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "task_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "in-progress",
+            "done",
+            "todo"
+          ]
+        },
+        {
+          "column_name": "priority",
+          "data_type": "task_priority",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "p1",
+            "p2"
+          ]
+        },
+        {
+          "column_name": "owner_type",
+          "data_type": "owner_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "human",
+            "shared",
+            "ai"
+          ]
+        },
+        {
+          "column_name": "owner_person_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "owner_agent_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "linked_kpi_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "due_date",
+          "data_type": "timestamp with time zone",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "progress",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "ai_generated",
+          "data_type": "boolean",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            false,
+            true
+          ]
+        },
+        {
+          "column_name": "workflow",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Regulatory Filing",
+            "Sensor Grid Expansion",
+            "Carrier Integration Recovery",
+            "SPC Deviation Review"
+          ]
+        },
+        {
+          "column_name": "escalation_status",
+          "data_type": "escalation_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "none",
+            "escalated"
+          ]
+        },
+        {
+          "column_name": "linked_recommendation",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "expected_outcome",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Restore OTD to 95% target",
+            "Regulatory compliance filed on time",
+            "+9% MTBF on Plant 2 press line",
+            "Identify tooling drift on Line 3"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "users",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "person_id",
+          "references": {
+            "table": "people",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "person_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "username",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "cxo",
+            "employee",
+            "finance-abu",
+            "manufacturing-abu",
+            "manufacturing-manager",
+            "procurement-abu",
+            "procurement-manager",
+            "revenue-abu",
+            "supply-chain-abu"
+          ]
+        },
+        {
+          "column_name": "password",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "meridian123"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "users_username_idx",
+          "columns": [
+            "username"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
+      "table_name": "workflows",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "company_id",
+          "references": {
+            "table": "companies",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        },
+        {
+          "column": "assigned_agent_id",
+          "references": {
+            "table": "agents",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "company_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "Sensor Grid Expansion \u2014 Plant 2",
+            "Cross-Shift Changeover Optimization",
+            "Carrier Integration Recovery"
+          ]
+        },
+        {
+          "column_name": "status",
+          "data_type": "workflow_status",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "blocked",
+            "running"
+          ]
+        },
+        {
+          "column_name": "started_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "step_count",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "completed_steps",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "priority",
+          "data_type": "workflow_priority",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "p2",
+            "p1"
+          ]
+        },
+        {
+          "column_name": "assigned_agent_id",
+          "data_type": "uuid",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "blockers",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "Awaiting carrier API credential rotation from IT"
+          ]
+        },
+        {
+          "column_name": "estimated_completion",
+          "data_type": "timestamp with time zone",
+          "is_nullable": true,
+          "description": null
+        }
+      ],
+      "indexes": []
+    }
+  ]
+}
