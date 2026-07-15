@@ -90,7 +90,7 @@ export const FEATURE_ACCESS: Record<string, Partial<Record<Role, AccessLevel>>> 
   "digital-twin":       { employee: "view", dept_manager: "scoped", abu_head: "scoped", cxo: "full", developer: "full" },
   "dashboard":          { employee: "view", dept_manager: "scoped", abu_head: "scoped", cxo: "full", developer: "full" },
   "business-units":     { dept_manager: "view", abu_head: "scoped", cxo: "full" },
-  "kpi-studio":         { employee: "view", dept_manager: "scoped", abu_head: "scoped", cxo: "full", developer: "full" },
+  "kpi-studio":         { employee: "view", dept_manager: "scoped", developer: "full" },
   "approvals":          { employee: "scoped", dept_manager: "full", abu_head: "full", cxo: "full" },
   "goals":              { employee: "view", dept_manager: "scoped", abu_head: "scoped", cxo: "full" },
   "workforce":          { employee: "scoped", dept_manager: "view", developer: "full" },
@@ -99,11 +99,11 @@ export const FEATURE_ACCESS: Record<string, Partial<Record<Role, AccessLevel>>> 
   // keeps the manager/exec-tier access it already had pre-rename.
   "workforce-intelligence": { dept_manager: "scoped", abu_head: "scoped", cxo: "full" },
   "governance":         { employee: "scoped", dept_manager: "scoped" },
-  "cost-control":       { employee: "scoped", dept_manager: "scoped", abu_head: "full", cxo: "full", developer: "full" },
+  "cost-control":       { employee: "scoped", dept_manager: "scoped", developer: "full" },
   "intelligence":       { employee: "view", dept_manager: "scoped", abu_head: "full", cxo: "full" },
   "documents":          { employee: "full", dept_manager: "full", abu_head: "full", cxo: "full", developer: "full" },
-  "knowledge-studio":   { employee: "scoped", dept_manager: "scoped", abu_head: "scoped", cxo: "full", developer: "full" },
-  "employee-metrics":   { employee: "view", dept_manager: "view", abu_head: "view" },
+  "knowledge-studio":   { employee: "scoped", dept_manager: "scoped", developer: "full" },
+  "employee-metrics":   { employee: "view", dept_manager: "view" },
   "my-activity":        { employee: "view", dept_manager: "view", abu_head: "view", cxo: "view", developer: "view" },
   "projects":           { employee: "view", dept_manager: "full", abu_head: "scoped", cxo: "full" },
   "business-impact":    { abu_head: "view", cxo: "view" },
@@ -113,8 +113,9 @@ export const FEATURE_ACCESS: Record<string, Partial<Record<Role, AccessLevel>>> 
   // SOP Library: matrix explicitly excludes CXO/ABU Head — Manager and
   // Developer get full edit rights, Employee can only suggest edits.
   "sop":                { employee: "scoped", dept_manager: "full", developer: "full" },
-  // Mission Control / Logs: matrix excludes CXO entirely.
-  "mission-control":    { employee: "view", dept_manager: "view", abu_head: "view", developer: "full" },
+  // Mission Control / Logs: matrix excludes CXO entirely; ABU Head's page
+  // list is kept as an exact mirror of CXO's, so also excluded here.
+  "mission-control":    { employee: "view", dept_manager: "view", developer: "full" },
   // Build section: matrix gives Developer exclusive access ("core") and
   // every other role "—". Covers Agent Harness, Workflow Studio, Policy
   // Studio, Prompt Playground, Unit of Work, Adapters, Connectors.

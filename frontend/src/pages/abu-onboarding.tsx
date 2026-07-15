@@ -8,8 +8,10 @@ import { UNIT_OF_WORK_CATALOG, effectivenessFor } from "@/data/unit-of-work-data
 import { KPI_CATALOG } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
 import { Check, RefreshCw, Boxes, ChevronRight, ChevronLeft } from "lucide-react";
+import { useAppContext } from "@/context/AppContext";
 
-const STEPS = ["ABU Basics", "Connect Systems", "Discover Units of Work", "KPI Inventory", "Effectiveness Mapping", "Review & Publish"];
+const stepsFor = (isDept: boolean) =>
+  [isDept ? "Department Basics" : "ABU Basics", "Connect Systems", "Discover Units of Work", "KPI Inventory", "Effectiveness Mapping", "Review & Publish"];
 
 const PHASES = [
   "Authenticating with connected systems",
@@ -24,6 +26,9 @@ const PHASES = [
 export default function AbuOnboarding() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { role } = useAppContext();
+  const isDept = role === "abu_head";
+  const STEPS = stepsFor(isDept);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ name: "", region: "", description: "" });
   const [selectedConnectors, setSelectedConnectors] = useState<string[]>(CONNECTOR_CATALOG.filter(c => c.connected).map(c => c.id));
@@ -67,13 +72,16 @@ export default function AbuOnboarding() {
   };
 
   const publish = () => {
-    toast({ title: "ABU Onboarded", description: `${form.name || "New ABU"} published — ${candidates.length} Units of Work available.` });
+    toast({
+      title: isDept ? "Department Onboarded" : "ABU Onboarded",
+      description: `${form.name || (isDept ? "New department" : "New ABU")} published — ${candidates.length} Units of Work available.`,
+    });
     navigate("/business-units");
   };
 
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] overflow-auto">
-      <HeaderBar moduleName="ABU ONBOARDING" metrics={[{ label: "STEP", value: `${step + 1} / ${STEPS.length}` }]} />
+      <HeaderBar moduleName={isDept ? "DEPARTMENT ONBOARDING" : "ABU ONBOARDING"} metrics={[{ label: "STEP", value: `${step + 1} / ${STEPS.length}` }]} />
 
       <div className="p-6 max-w-[1200px] mx-auto w-full">
         <div className="bg-white border border-border rounded-sm shadow-sm">

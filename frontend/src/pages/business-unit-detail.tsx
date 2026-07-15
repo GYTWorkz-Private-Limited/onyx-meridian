@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useParams, useLocation, useSearch } from "wouter";
+import { useParams, useLocation, useSearch, Redirect } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useAppContext } from "@/context/AppContext";
 import { BU_LIST, MFG_AGENTS, KPI_CATALOG, SOP_CATALOG, ANOMALIES, BU_INTELLIGENCE, ENTERPRISE_METRICS } from "@/data/enterprise-data";
 import {
   Bot, Shield, TrendingUp, TrendingDown, ArrowRight, CheckCircle2,
@@ -445,11 +446,17 @@ export default function BusinessUnitDetail() {
   const [, navigate] = useLocation();
   const search = useSearch();
   const { toast } = useToast();
+  const { role, currentBuId } = useAppContext();
 
   const searchParams = new URLSearchParams(search);
   const tabFromUrl = searchParams.get("tab") || "overview";
 
   const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+  // ABU Head is scoped to his own ABU — block direct-URL access to another ABU's detail page.
+  if (role === "abu_head" && id !== currentBuId) {
+    return <Redirect to="/business-units" />;
+  }
 
   const bu = BU_LIST.find((b) => b.id === id);
   if (!bu) {

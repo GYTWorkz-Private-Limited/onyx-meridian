@@ -27,6 +27,7 @@ interface NavItem {
   path: string;
   label: string;
   roles?: Role[]; // omit = visible to all roles
+  roleLabels?: Partial<Record<Role, string>>; // override label for specific roles
 }
 
 const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
@@ -34,7 +35,8 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     label: "My Space",
     items: [
       { icon: ListChecks, path: "/my-work",     label: "My Work" },
-      { icon: LineChart,  path: "/employee-metrics", label: "Employee Metrics", roles: ["employee", "dept_manager", "abu_head"] },
+      { icon: ThumbsUp,    path: "/approvals",  label: "Approvals", roles: ["employee", "dept_manager", "abu_head", "cxo"] },
+      { icon: LineChart,  path: "/employee-metrics", label: "Employee Metrics", roles: ["employee", "dept_manager"] },
       { icon: History,    path: "/my-activity", label: "My Activity" },
     ],
   },
@@ -42,7 +44,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     label: "Knowledge",
     items: [
       { icon: Files,          path: "/documents",        label: "Documents" },
-      { icon: BookOpen,       path: "/knowledge-studio", label: "Knowledge" },
+      { icon: BookOpen,       path: "/knowledge-studio", label: "Knowledge", roles: ["employee", "dept_manager", "developer"] },
       { icon: ClipboardList,  path: "/sop",               label: "SOP Library", roles: ["employee", "dept_manager", "developer"] },
     ],
   },
@@ -50,7 +52,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     label: "Enterprise",
     items: [
       { icon: Activity,        path: "/digital-twin",    label: "Digital Twin" },
-      { icon: Crosshair,       path: "/kpi-studio",      label: "KPI Studio",        roles: ["employee", "dept_manager", "abu_head", "cxo", "developer"] },
+      { icon: Crosshair,       path: "/kpi-studio",      label: "KPI Studio",        roles: ["employee", "dept_manager", "developer"] },
       { icon: LayoutDashboard, path: "/dashboard",       label: "Executive Command" },
       { icon: Briefcase,       path: "/business-units",  label: "Business Units",    roles: ["dept_manager", "abu_head", "cxo"] },
       { icon: TrendingUp,      path: "/business-impact", label: "Business Impact",   roles: ["abu_head", "cxo"] },
@@ -63,16 +65,15 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { icon: Cpu,         path: "/workforce",      label: "AI Workforce",    roles: ["employee", "dept_manager", "developer"] },
       { icon: Users,       path: "/people",         label: "People",          roles: ["dept_manager", "abu_head", "cxo"] },
       { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["dept_manager", "abu_head", "cxo"] },
-      { icon: Radio,       path: "/agentops",       label: "Mission Control", roles: ["employee", "dept_manager", "abu_head", "developer"] },
-      { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["employee", "dept_manager", "abu_head", "developer"] },
-      { icon: FileText,    path: "/agent-logs",     label: "Agent Logs", roles: ["employee", "dept_manager", "abu_head", "developer"] },
+      { icon: Radio,       path: "/agentops",       label: "Mission Control", roles: ["employee", "dept_manager", "developer"] },
+      { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["employee", "dept_manager", "developer"] },
+      { icon: FileText,    path: "/agent-logs",     label: "Agent Logs", roles: ["employee", "dept_manager", "developer"] },
     ],
   },
   {
     label: "Control",
     items: [
       { icon: ShieldAlert, path: "/governance", label: "Governance", roles: ["employee", "dept_manager"] },
-      { icon: ThumbsUp,    path: "/approvals",  label: "Approvals", roles: ["employee", "dept_manager", "abu_head", "cxo"] },
     ],
   },
   {
@@ -80,7 +81,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { icon: Target,      path: "/goals",         label: "Goals",         roles: ["employee", "dept_manager", "abu_head", "cxo"] },
       { icon: FolderKanban,path: "/projects",      label: "Projects",      roles: ["employee", "dept_manager", "abu_head", "cxo"] },
-      { icon: Gauge,       path: "/cost-control",  label: "Cost Control" },
+      { icon: Gauge,       path: "/cost-control",  label: "Cost Control", roles: ["employee", "dept_manager", "developer"] },
     ],
   },
   {
@@ -97,7 +98,9 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { icon: Cable,          path: "/connectors",        label: "Connectors",      roles: ["developer"] },
       // ABU Onboarding is its own matrix row (not part of "Build section"),
       // scoped to ABU Head/CXO independent of the Build restriction above.
-      { icon: Rocket,         path: "/abu-onboarding",    label: "ABU Onboarding", roles: ["abu_head", "cxo"] },
+      // ABU Head's version is department-scoped ("Dept onboarding" in the
+      // matrix), so it reads as "Department Onboarding" for that role only.
+      { icon: Rocket,         path: "/abu-onboarding",    label: "ABU Onboarding", roles: ["abu_head", "cxo"], roleLabels: { abu_head: "Department Onboarding" } },
     ],
   },
 ];
@@ -168,6 +171,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   location === item.path ||
                   (item.path !== "/" && location.startsWith(item.path));
                 const Icon = item.icon;
+                const label = item.roleLabels?.[role] ?? item.label;
                 return (
                   <Link
                     key={item.path + item.label}
@@ -191,7 +195,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         "max-w-0 opacity-0 group-hover/sidebar:max-w-[160px] group-hover/sidebar:opacity-100"
                       )}
                     >
-                      {item.label}
+                      {label}
                     </span>
                   </Link>
                 );

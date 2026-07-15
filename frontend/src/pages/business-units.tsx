@@ -60,8 +60,12 @@ const riskColors: Record<string, string> = {
 
 export default function BusinessUnits() {
   const [, navigate] = useLocation();
-  const { currentCompanyId } = useAppContext();
-  const visibleBUs = BU_LIST.filter((bu: any) => (bu.companyId ?? "company-a") === currentCompanyId);
+  const { currentCompanyId, role, currentBuId } = useAppContext();
+  // ABU Head is scoped to "only relevant abu" — never sees other ABUs' health/metrics.
+  const visibleBUs = BU_LIST.filter((bu: any) =>
+    (bu.companyId ?? "company-a") === currentCompanyId &&
+    (role !== "abu_head" || bu.id === currentBuId)
+  );
 
   const goTo = (id: string, tab?: string) => {
     navigate(`/business-units/${id}${tab ? `?tab=${tab}` : ""}`);
