@@ -5,7 +5,7 @@ import {
   ShieldAlert, TrendingUp, BrainCircuit,
   ThumbsUp,
   Bot, GitBranch, BookOpen, ScrollText,
-  Target, Layers, TerminalSquare, Radio, FileText, FlaskConical,
+  Target, TerminalSquare, Radio, FileText, FlaskConical,
   ListChecks, History, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3, Crosshair,
   Files, ClipboardList,
 } from "lucide-react";
@@ -98,12 +98,6 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       // ABU Onboarding is its own matrix row (not part of "Build section"),
       // scoped to ABU Head/CXO independent of the Build restriction above.
       { icon: Rocket,         path: "/abu-onboarding",    label: "ABU Onboarding", roles: ["abu_head", "cxo"] },
-    ],
-  },
-  {
-    label: "Optimize",
-    items: [
-      { icon: Layers, path: "/simulation", label: "Simulation", roles: ["abu_head", "cxo"] },
     ],
   },
 ];

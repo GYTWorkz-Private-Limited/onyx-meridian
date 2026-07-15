@@ -107,7 +107,8 @@ export const FEATURE_ACCESS: Record<string, Partial<Record<Role, AccessLevel>>> 
   "my-activity":        { employee: "view", dept_manager: "view", abu_head: "view", cxo: "view", developer: "view" },
   "projects":           { employee: "view", dept_manager: "full", abu_head: "scoped", cxo: "full" },
   "business-impact":    { abu_head: "view", cxo: "view" },
-  "simulation":         { abu_head: "view", cxo: "view" },
+  // Simulation module removed for every role — no entry means "none" for
+  // all roles via accessLevel()'s fallback.
   "abu-onboarding":     { abu_head: "scoped", cxo: "full" },
   // SOP Library: matrix explicitly excludes CXO/ABU Head — Manager and
   // Developer get full edit rights, Employee can only suggest edits.
