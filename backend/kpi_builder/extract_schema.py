@@ -25,9 +25,10 @@ MAX_UNIQUE_VALUES = 25
 SAMPLE_LIMIT = 500
 CATEGORICAL_TYPES = {"text", "character varying", "USER-DEFINED", "boolean"}
 
-# kpi_schema_embeddings is this pipeline's own output table — exclude it so we don't
-# embed the embeddings store into itself.
-EXCLUDED_TABLES = ("kpi_schema_embeddings",)
+# kpi_schema_embeddings is this pipeline's own output table, and kpi_saved_chats
+# stores pinned chat history — both are app-internal, not business data to reason
+# over, so exclude them from the semantic layer.
+EXCLUDED_TABLES = ("kpi_schema_embeddings", "kpi_saved_chats")
 
 TABLES_QUERY = """
     SELECT table_name

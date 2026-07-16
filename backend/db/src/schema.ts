@@ -190,6 +190,7 @@ export const kpisTable = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
     businessUnitId: uuid("business_unit_id").notNull().references(() => businessUnitsTable.id, { onDelete: "cascade" }),
+    externalId: text("external_id"),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     abbreviation: text("abbreviation"),
@@ -207,9 +208,19 @@ export const kpisTable = pgTable(
     dataSource: text("data_source"),
     updateFrequency: text("update_frequency"),
     forecastNext: numeric("forecast_next", { precision: 14, scale: 2 }),
+    aiSummary: text("ai_summary"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("kpis_company_slug_idx").on(t.companyId, t.slug)],
+);
+
+export const kpiBusinessUnitLinksTable = pgTable(
+  "kpi_business_unit_links",
+  {
+    kpiId: uuid("kpi_id").notNull().references(() => kpisTable.id, { onDelete: "cascade" }),
+    businessUnitId: uuid("business_unit_id").notNull().references(() => businessUnitsTable.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.kpiId, t.businessUnitId] })],
 );
 
 export const kpiDependenciesTable = pgTable(
@@ -230,9 +241,62 @@ export const kpiAgentLinksTable = pgTable(
   (t) => [primaryKey({ columns: [t.kpiId, t.agentId] })],
 );
 
+export const kpiRootCausesTable = pgTable("kpi_root_causes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  kpiId: uuid("kpi_id").notNull().references(() => kpisTable.id, { onDelete: "cascade" }),
+  cause: text("cause").notNull(),
+  confidence: integer("confidence").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+});
+
 export const insertKpiSchema = createInsertSchema(kpisTable).omit({ id: true, createdAt: true });
 export type InsertKpi = z.infer<typeof insertKpiSchema>;
 export type Kpi = typeof kpisTable.$inferSelect;
+
+export const insertKpiRootCauseSchema = createInsertSchema(kpiRootCausesTable).omit({ id: true });
+export type InsertKpiRootCause = z.infer<typeof insertKpiRootCauseSchema>;
+export type KpiRootCause = typeof kpiRootCausesTable.$inferSelect;
+
+// ─── KPI Studio surfaces ─────────────────────────────────────────
+
+export const kpiHealthCardsTable = pgTable(
+  "kpi_health_cards",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
+    externalId: text("external_id").notNull(),
+    label: text("label").notNull(),
+    score: integer("score").notNull(),
+    target: integer("target").notNull(),
+    trend: integer("trend").array().notNull().default([]),
+    confidence: integer("confidence").notNull(),
+    summary: text("summary").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [uniqueIndex("kpi_health_cards_company_external_idx").on(t.companyId, t.externalId)],
+);
+
+export const businessEventImpactEnum = pgEnum("business_event_impact", ["info", "watch", "critical"]);
+
+export const businessEventsTable = pgTable("business_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
+  businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
+  externalId: text("external_id").notNull(),
+  kind: text("kind").notNull(),
+  title: text("title").notNull(),
+  detail: text("detail").notNull(),
+  impact: businessEventImpactEnum("impact").notNull().default("info"),
+  eventDate: timestamp("event_date", { withTimezone: true }).notNull(),
+});
+
+export const insertKpiHealthCardSchema = createInsertSchema(kpiHealthCardsTable).omit({ id: true });
+export type InsertKpiHealthCard = z.infer<typeof insertKpiHealthCardSchema>;
+export type KpiHealthCard = typeof kpiHealthCardsTable.$inferSelect;
+
+export const insertBusinessEventSchema = createInsertSchema(businessEventsTable).omit({ id: true });
+export type InsertBusinessEvent = z.infer<typeof insertBusinessEventSchema>;
+export type BusinessEvent = typeof businessEventsTable.$inferSelect;
 
 // ─── policies ────────────────────────────────────────────────────
 
@@ -597,6 +661,31 @@ export const insertBusinessResultSchema = createInsertSchema(businessResultsTabl
 export type InsertBusinessResult = z.infer<typeof insertBusinessResultSchema>;
 export type BusinessResult = typeof businessResultsTable.$inferSelect;
 
+// ─── connectors ──────────────────────────────────────────────────
+
+export const connectorsTable = pgTable(
+  "connectors",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
+    businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
+    externalId: text("external_id").notNull(),
+    name: text("name").notNull(),
+    category: text("category").notNull(),
+    protocol: text("protocol").notNull(),
+    connected: boolean("connected").notNull().default(false),
+    secretName: text("secret_name"),
+    lastSyncLabel: text("last_sync_label"),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("connectors_company_external_idx").on(t.companyId, t.externalId)],
+);
+
+export const insertConnectorSchema = createInsertSchema(connectorsTable).omit({ id: true, createdAt: true });
+export type InsertConnector = z.infer<typeof insertConnectorSchema>;
+export type Connector = typeof connectorsTable.$inferSelect;
+
 // ─── systems-health ──────────────────────────────────────────────
 
 export const systemHealthStatusEnum = pgEnum("system_health_status", ["healthy", "degraded", "down"]);
@@ -669,17 +758,24 @@ export type Sop = typeof sopsTable.$inferSelect;
 
 export const goalStatusEnum = pgEnum("goal_status", ["on-track", "at-risk", "missed", "achieved"]);
 
-export const goalsTable = pgTable("goals", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
-  businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
-  title: text("title").notNull(),
-  targetValue: numeric("target_value", { precision: 14, scale: 2 }),
-  currentValue: numeric("current_value", { precision: 14, scale: 2 }),
-  dueDate: timestamp("due_date", { withTimezone: true }),
-  status: goalStatusEnum("status").notNull().default("on-track"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const goalsTable = pgTable(
+  "goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
+    businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
+    externalId: text("external_id"),
+    parentExternalId: text("parent_external_id"),
+    title: text("title").notNull(),
+    description: text("description"),
+    targetValue: numeric("target_value", { precision: 14, scale: 2 }),
+    currentValue: numeric("current_value", { precision: 14, scale: 2 }),
+    dueDate: timestamp("due_date", { withTimezone: true }),
+    status: goalStatusEnum("status").notNull().default("on-track"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("goals_company_external_idx").on(t.companyId, t.externalId)],
+);
 
 export const kpiGoalLinksTable = pgTable(
   "kpi_goal_links",
@@ -693,3 +789,106 @@ export const kpiGoalLinksTable = pgTable(
 export const insertGoalSchema = createInsertSchema(goalsTable).omit({ id: true, createdAt: true });
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type Goal = typeof goalsTable.$inferSelect;
+
+// ─── projects ────────────────────────────────────────────────────
+
+export const projectStatusEnum = pgEnum("project_status", ["planning", "active", "done"]);
+
+export const projectsTable = pgTable(
+  "projects",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
+    businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
+    leadAgentId: uuid("lead_agent_id").references(() => agentsTable.id, { onDelete: "set null" }),
+    goalId: uuid("goal_id").references(() => goalsTable.id, { onDelete: "set null" }),
+    externalId: text("external_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    status: projectStatusEnum("status").notNull().default("planning"),
+    color: text("color"),
+    targetDate: timestamp("target_date", { withTimezone: true }),
+    progress: integer("progress").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("projects_company_external_idx").on(t.companyId, t.externalId)],
+);
+
+export const insertProjectSchema = createInsertSchema(projectsTable).omit({ id: true, createdAt: true });
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Project = typeof projectsTable.$inferSelect;
+
+// ─── unit-of-work ─────────────────────────────────────────────────
+
+export const httpMethodEnum = pgEnum("http_method", ["GET", "POST", "PATCH", "PUT", "DELETE"]);
+export const authModeEnum = pgEnum("auth_mode", ["proxy-delegated", "vault-credential"]);
+
+export const unitsOfWorkTable = pgTable(
+  "units_of_work",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
+    businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
+    departmentId: uuid("department_id").references(() => departmentsTable.id, { onDelete: "set null" }),
+    externalId: text("external_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description").notNull(),
+    endpointBaseUrl: text("endpoint_base_url").notNull(),
+    endpointPath: text("endpoint_path").notNull(),
+    endpointMethod: httpMethodEnum("endpoint_method").notNull(),
+    authMode: authModeEnum("auth_mode").notNull(),
+    secretName: text("secret_name"),
+    usedInWorkflows: text("used_in_workflows").array().notNull().default([]),
+    raci: jsonb("raci").notNull(),
+    mapping: jsonb("mapping").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("units_of_work_company_external_idx").on(t.companyId, t.externalId)],
+);
+
+export const insertUnitOfWorkSchema = createInsertSchema(unitsOfWorkTable).omit({ id: true, createdAt: true });
+export type InsertUnitOfWork = z.infer<typeof insertUnitOfWorkSchema>;
+export type UnitOfWork = typeof unitsOfWorkTable.$inferSelect;
+
+// ─── model cost controls ─────────────────────────────────────────
+
+export const modelCostModelsTable = pgTable(
+  "model_cost_models",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    ratePerMillionTokens: numeric("rate_per_million_tokens", { precision: 10, scale: 4 }).notNull(),
+  },
+);
+
+export const reasoningLevelsTable = pgTable(
+  "reasoning_levels",
+  {
+    id: text("id").primaryKey(),
+    label: text("label").notNull(),
+    multiplier: numeric("multiplier", { precision: 6, scale: 3 }).notNull(),
+    note: text("note").notNull(),
+  },
+);
+
+export const insertModelCostModelSchema = createInsertSchema(modelCostModelsTable);
+export type InsertModelCostModel = z.infer<typeof insertModelCostModelSchema>;
+export type ModelCostModel = typeof modelCostModelsTable.$inferSelect;
+
+export const insertReasoningLevelSchema = createInsertSchema(reasoningLevelsTable);
+export type InsertReasoningLevel = z.infer<typeof insertReasoningLevelSchema>;
+export type ReasoningLevel = typeof reasoningLevelsTable.$inferSelect;
+
+// ─── kpi saved chats (pinned Ask AI conversations) ────────────────
+
+export const kpiSavedChatsTable = pgTable("kpi_saved_chats", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  sqlQuery: text("sql_query"),
+  resultData: jsonb("result_data"),
+  chartSpec: jsonb("chart_spec"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type KpiSavedChat = typeof kpiSavedChatsTable.$inferSelect;

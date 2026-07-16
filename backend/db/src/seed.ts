@@ -5,22 +5,30 @@ import {
   approvalCommentsTable,
   approvalsTable,
   auditLogsTable,
+  businessEventsTable,
   businessResultsTable,
   businessUnitsTable,
   companiesTable,
+  connectorsTable,
   departmentsTable,
   documentsTable,
   goalsTable,
   insightsTable,
   kpiAgentLinksTable,
+  kpiBusinessUnitLinksTable,
   kpiGoalLinksTable,
+  kpiHealthCardsTable,
+  kpiRootCausesTable,
   kpisTable,
+  modelCostModelsTable,
   opportunitiesTable,
   peopleTable,
   policiesTable,
   policyRulesTable,
   policyVersionsTable,
   policyViolationsTable,
+  projectsTable,
+  reasoningLevelsTable,
   risksTable,
   riskScoresTable,
   sopAgentLinksTable,
@@ -29,6 +37,7 @@ import {
   sopsTable,
   systemsHealthTable,
   tasksTable,
+  unitsOfWorkTable,
   usersTable,
   workflowsTable,
 } from "./schema";
@@ -39,6 +48,7 @@ async function seed() {
   // Reseed cleanly on every run: truncating the root `companies` row
   // cascades through every FK-linked table in the schema.
   await db.execute(sql`TRUNCATE TABLE ${companiesTable} CASCADE`);
+  await db.execute(sql`TRUNCATE TABLE ${modelCostModelsTable}, ${reasoningLevelsTable}`);
 
   const [company] = await db
     .insert(companiesTable)
@@ -50,9 +60,9 @@ async function seed() {
     .values([
       {
         companyId: company.id,
-        slug: "production",
-        name: "Production",
-        domain: "Assembly & Fabrication",
+        slug: "manufacturing",
+        name: "Manufacturing",
+        domain: "Production, quality, maintenance, and plant operations",
         color: "#2563eb",
         eeiScore: "84.2",
         healthScore: "88.0",
@@ -69,9 +79,9 @@ async function seed() {
       },
       {
         companyId: company.id,
-        slug: "quality",
-        name: "Quality Assurance",
-        domain: "Inspection & Compliance",
+        slug: "procurement",
+        name: "Procurement",
+        domain: "Supplier risk, sourcing, and contracts",
         color: "#16a34a",
         eeiScore: "79.5",
         healthScore: "82.0",
@@ -107,9 +117,9 @@ async function seed() {
       },
       {
         companyId: company.id,
-        slug: "maintenance",
-        name: "Maintenance & Reliability",
-        domain: "Predictive Maintenance",
+        slug: "finance",
+        name: "Finance",
+        domain: "Close, forecast, allocation, and audit",
         color: "#9333ea",
         eeiScore: "88.6",
         healthScore: "90.5",
@@ -126,9 +136,9 @@ async function seed() {
       },
       {
         companyId: company.id,
-        slug: "safety-compliance",
-        name: "Safety & Compliance",
-        domain: "EHS & Regulatory",
+        slug: "revenue",
+        name: "Revenue",
+        domain: "Pipeline, forecast, and customer growth",
         color: "#dc2626",
         eeiScore: "82.1",
         healthScore: "85.0",
@@ -166,11 +176,11 @@ async function seed() {
     .insert(peopleTable)
     .values([
       { companyId: company.id, name: "Elena Sokolov", email: "elena.sokolov@meridian-industrial.com", title: "Chief Executive Officer", roleTier: "cxo", status: "active" },
-      { companyId: company.id, businessUnitId: production.id, name: "Marcus Chen", email: "marcus.chen@meridian-industrial.com", title: "VP of Production", roleTier: "abu_head", status: "active" },
-      { companyId: company.id, businessUnitId: quality.id, name: "Priya Nair", email: "priya.nair@meridian-industrial.com", title: "VP of Quality Assurance", roleTier: "abu_head", status: "active" },
+      { companyId: company.id, businessUnitId: production.id, name: "Marcus Chen", email: "marcus.chen@meridian-industrial.com", title: "VP of Manufacturing", roleTier: "abu_head", status: "active" },
+      { companyId: company.id, businessUnitId: quality.id, name: "Priya Nair", email: "priya.nair@meridian-industrial.com", title: "VP of Procurement", roleTier: "abu_head", status: "active" },
       { companyId: company.id, businessUnitId: supplyChain.id, name: "Tom Kowalski", email: "tom.kowalski@meridian-industrial.com", title: "VP of Supply Chain", roleTier: "abu_head", status: "active" },
-      { companyId: company.id, businessUnitId: maintenance.id, name: "Amara Okafor", email: "amara.okafor@meridian-industrial.com", title: "VP of Maintenance & Reliability", roleTier: "abu_head", status: "active" },
-      { companyId: company.id, businessUnitId: safety.id, name: "James Rutherford", email: "james.rutherford@meridian-industrial.com", title: "VP of Safety & Compliance", roleTier: "abu_head", status: "active" },
+      { companyId: company.id, businessUnitId: maintenance.id, name: "Amara Okafor", email: "amara.okafor@meridian-industrial.com", title: "VP of Finance", roleTier: "abu_head", status: "active" },
+      { companyId: company.id, businessUnitId: safety.id, name: "James Rutherford", email: "james.rutherford@meridian-industrial.com", title: "VP of Revenue", roleTier: "abu_head", status: "active" },
       { companyId: company.id, businessUnitId: production.id, departmentId: dept["cnc-machining"].id, name: "Diego Alvarez", email: "diego.alvarez@meridian-industrial.com", title: "CNC Machining Manager", roleTier: "dept_manager", status: "active" },
       { companyId: company.id, businessUnitId: quality.id, departmentId: dept["spc-lab"].id, name: "Hannah Weiss", email: "hannah.weiss@meridian-industrial.com", title: "SPC Lab Manager", roleTier: "dept_manager", status: "active" },
       { companyId: company.id, businessUnitId: supplyChain.id, departmentId: dept["procurement"].id, name: "Ravi Deshpande", email: "ravi.deshpande@meridian-industrial.com", title: "Procurement Manager", roleTier: "dept_manager", status: "active" },
@@ -257,22 +267,46 @@ async function seed() {
   const kpis = await db
     .insert(kpisTable)
     .values([
-      { companyId: company.id, businessUnitId: production.id, slug: "oee", name: "Overall Equipment Effectiveness", abbreviation: "OEE", category: "Production", value: "84.20", unit: "%", target: "88.00", trend: "up", delta: "1.80", variance: "-3.80", healthScore: "88.0", status: "on-track", ownerId: personByName["Marcus Chen"].id, formula: "Availability x Performance x Quality", dataSource: "MES", updateFrequency: "hourly", forecastNext: "85.10" },
-      { companyId: company.id, businessUnitId: quality.id, slug: "first-pass-yield", name: "First Pass Yield", abbreviation: "FPY", category: "Quality", value: "96.40", unit: "%", target: "98.00", trend: "up", delta: "0.60", variance: "-1.60", healthScore: "82.0", status: "on-track", ownerId: personByName["Priya Nair"].id, formula: "Units passed without rework / total units", dataSource: "LIMS", updateFrequency: "daily", forecastNext: "96.80" },
-      { companyId: company.id, businessUnitId: supplyChain.id, slug: "otd", name: "On-Time Delivery", abbreviation: "OTD", category: "Supply Chain", value: "81.30", unit: "%", target: "95.00", trend: "down", delta: "-2.40", variance: "-13.70", healthScore: "58.0", status: "critical", ownerId: personByName["Tom Kowalski"].id, formula: "On-time shipments / total shipments", dataSource: "TMS", updateFrequency: "daily", forecastNext: "79.80" },
-      { companyId: company.id, businessUnitId: maintenance.id, slug: "mtbf", name: "Mean Time Between Failures", abbreviation: "MTBF", category: "Maintenance", value: "412.00", unit: "hrs", target: "450.00", trend: "up", delta: "18.00", variance: "-38.00", healthScore: "90.0", status: "on-track", ownerId: personByName["Amara Okafor"].id, formula: "Total uptime / number of failures", dataSource: "CMMS", updateFrequency: "weekly", forecastNext: "421.00" },
-      { companyId: company.id, businessUnitId: safety.id, slug: "trir", name: "Total Recordable Incident Rate", abbreviation: "TRIR", category: "Safety", value: "0.86", unit: "per 200k hrs", target: "0.60", trend: "down", delta: "-0.12", variance: "0.26", healthScore: "78.0", status: "watch", ownerId: personByName["James Rutherford"].id, formula: "(Recordable incidents x 200,000) / hours worked", dataSource: "EHS Platform", updateFrequency: "monthly", forecastNext: "0.79" },
+      { companyId: company.id, businessUnitId: production.id, externalId: "k1", slug: "oee", name: "Overall Equipment Effectiveness", abbreviation: "OEE", category: "Manufacturing", value: "84.20", unit: "%", target: "88.00", trend: "up", delta: "1.80", variance: "-3.80", healthScore: "88.0", status: "on-track", ownerId: personByName["Marcus Chen"].id, formula: "Availability x Performance x Quality", dataSource: "MES", updateFrequency: "hourly", forecastNext: "85.10", aiSummary: "OEE is recovering after scheduling and maintenance interventions, with Line 7 still the main constraint to target performance." },
+      { companyId: company.id, businessUnitId: quality.id, externalId: "k-fpy", slug: "first-pass-yield", name: "First Pass Yield", abbreviation: "FPY", category: "Manufacturing", value: "96.40", unit: "%", target: "98.00", trend: "up", delta: "0.60", variance: "-1.60", healthScore: "82.0", status: "on-track", ownerId: personByName["Priya Nair"].id, formula: "Units passed without rework / total units", dataSource: "LIMS", updateFrequency: "daily", forecastNext: "96.80", aiSummary: "First Pass Yield is stabilizing after supplier material variance was isolated and routed into procurement follow-up." },
+      { companyId: company.id, businessUnitId: supplyChain.id, externalId: "k-otd", slug: "otd", name: "On-Time Delivery", abbreviation: "OTD", category: "Supply Chain", value: "81.30", unit: "%", target: "95.00", trend: "down", delta: "-2.40", variance: "-13.70", healthScore: "58.0", status: "critical", ownerId: personByName["Tom Kowalski"].id, formula: "On-time shipments / total shipments", dataSource: "TMS", updateFrequency: "daily", forecastNext: "79.80", aiSummary: "On-Time Delivery is below target because the freight routing agent is degraded after a carrier API schema change." },
+      { companyId: company.id, businessUnitId: maintenance.id, externalId: "k-close", slug: "close-cycle-time", name: "Monthly Close Cycle Time", abbreviation: "MCT", category: "Finance", value: "4.20", unit: "days", target: "3.00", trend: "down", delta: "-0.50", variance: "1.20", healthScore: "88.0", status: "on-track", ownerId: personByName["Amara Okafor"].id, formula: "Close completion timestamp - period end", dataSource: "ERP / Snowflake", updateFrequency: "monthly", forecastNext: "3.80", aiSummary: "Finance close is moving toward zero-touch execution as reconciliation and allocation automation expands." },
+      { companyId: company.id, businessUnitId: safety.id, externalId: "k-pipeline", slug: "pipeline-conversion", name: "Pipeline Conversion Rate", abbreviation: "PCR", category: "Revenue", value: "31.40", unit: "%", target: "38.00", trend: "down", delta: "-1.10", variance: "-6.60", healthScore: "72.0", status: "watch", ownerId: personByName["James Rutherford"].id, formula: "Closed won opportunities / qualified pipeline", dataSource: "Salesforce CRM", updateFrequency: "daily", forecastNext: "32.10", aiSummary: "Revenue conversion is under pressure in APAC, but targeted outreach automation is expected to improve next-month conversion." },
     ])
     .returning();
 
   const kpiBySlug = Object.fromEntries(kpis.map((k) => [k.slug, k]));
 
+  await db.insert(kpiBusinessUnitLinksTable).values(kpis.map((k) => ({ kpiId: k.id, businessUnitId: k.businessUnitId })));
+
+  await db.insert(kpiRootCausesTable).values([
+    { kpiId: kpiBySlug["oee"].id, cause: "Line 7 bearing degradation raising unplanned downtime", confidence: 94, sortOrder: 1 },
+    { kpiId: kpiBySlug["oee"].id, cause: "Shift-change micro-stoppages reducing availability", confidence: 61, sortOrder: 2 },
+    { kpiId: kpiBySlug["otd"].id, cause: "Carrier API schema change caused repeated freight misroutes", confidence: 89, sortOrder: 1 },
+    { kpiId: kpiBySlug["pipeline-conversion"].id, cause: "APAC tier-1 account engagement dropped over the last 30 days", confidence: 87, sortOrder: 1 },
+  ]);
+
+  await db.insert(kpiHealthCardsTable).values([
+    { companyId: company.id, externalId: "enterprise", label: "Enterprise Health", score: 84, target: 90, trend: [79, 80, 81, 82, 83, 83, 84], confidence: 96, summary: "Steady climb across all 5 ABUs; Manufacturing and Finance leading, Procurement cycle time the main drag.", sortOrder: 1 },
+    { companyId: company.id, externalId: "mfg-perf", label: "Manufacturing Performance", score: 91, target: 92, trend: [88, 89, 90, 90, 91, 91, 91], confidence: 97, summary: "Near target, with Line 7 downtime as the main open risk.", sortOrder: 2 },
+    { companyId: company.id, externalId: "supply-chain", label: "Supply Chain Health", score: 79, target: 88, trend: [82, 81, 80, 79, 79, 80, 79], confidence: 89, summary: "Demand volatility and freight routing issues are pressuring service levels.", sortOrder: 3 },
+    { companyId: company.id, externalId: "finance", label: "Financial Performance", score: 88, target: 92, trend: [83, 84, 85, 86, 87, 87, 88], confidence: 95, summary: "Close-cycle automation and cost allocation controls are improving.", sortOrder: 4 },
+    { companyId: company.id, externalId: "ai-workforce", label: "AI Workforce Health", score: 87, target: 92, trend: [83, 84, 85, 86, 86, 87, 87], confidence: 96, summary: "AI agents remain healthy overall, with one routing agent quarantined for remediation.", sortOrder: 5 },
+  ]);
+
+  await db.insert(businessEventsTable).values([
+    { companyId: company.id, businessUnitId: production.id, externalId: "ev1", kind: "maintenance", title: "Line 7 Planned Maintenance Window", detail: "4-hour bearing replacement during shift changeover.", impact: "watch", eventDate: new Date("2026-07-15") },
+    { companyId: company.id, businessUnitId: quality.id, externalId: "ev2", kind: "supplier", title: "Tier-1 Supplier Delay - Continuity Risk", detail: "3 flagged vendors extending lead time by up to 18 days.", impact: "critical", eventDate: new Date("2026-07-13") },
+    { companyId: company.id, businessUnitId: maintenance.id, externalId: "ev3", kind: "erp", title: "ERP Upgrade - Finance Module v4.1", detail: "Off-hours cutover; close-cycle automation gains expected after.", impact: "info", eventDate: new Date("2026-07-20") },
+    { companyId: company.id, businessUnitId: supplyChain.id, externalId: "ev4", kind: "expansion", title: "Warehouse 3 Capacity Expansion", detail: "Additional 40K sq ft coming online to absorb APAC demand surge.", impact: "info", eventDate: new Date("2026-08-01") },
+  ]);
+
   await db.insert(kpiAgentLinksTable).values([
     { kpiId: kpiBySlug["oee"].id, agentId: agentByName["Line Throughput Optimizer"].id },
     { kpiId: kpiBySlug["first-pass-yield"].id, agentId: agentByName["Defect Vision Inspector"].id },
     { kpiId: kpiBySlug["otd"].id, agentId: agentByName["Freight Routing Agent"].id },
-    { kpiId: kpiBySlug["mtbf"].id, agentId: agentByName["Predictive Maintenance Sentinel"].id },
-    { kpiId: kpiBySlug["trir"].id, agentId: agentByName["Incident Compliance Monitor"].id },
+    { kpiId: kpiBySlug["close-cycle-time"].id, agentId: agentByName["Predictive Maintenance Sentinel"].id },
+    { kpiId: kpiBySlug["pipeline-conversion"].id, agentId: agentByName["Incident Compliance Monitor"].id },
   ]);
 
   const policies = await db
@@ -318,8 +352,8 @@ async function seed() {
   await db.insert(tasksTable).values([
     { companyId: company.id, businessUnitId: supplyChain.id, departmentId: dept["logistics"].id, title: "Rebuild Freight Routing Agent carrier API adapter", status: "in-progress", priority: "p1", ownerType: "shared", ownerPersonId: personByName["Tom Kowalski"].id, ownerAgentId: agentByName["Freight Routing Agent"].id, linkedKpiId: kpiBySlug["otd"].id, dueDate: new Date("2026-07-22"), progress: 40, aiGenerated: false, workflow: "Carrier Integration Recovery", escalationStatus: "escalated", expectedOutcome: "Restore OTD to 95% target" },
     { companyId: company.id, businessUnitId: quality.id, departmentId: dept["spc-lab"].id, title: "Root-cause Line 3 FPY deviation", status: "todo", priority: "p2", ownerType: "human", ownerPersonId: personByName["Hannah Weiss"].id, linkedKpiId: kpiBySlug["first-pass-yield"].id, dueDate: new Date("2026-07-20"), progress: 0, aiGenerated: true, workflow: "SPC Deviation Review", escalationStatus: "none", expectedOutcome: "Identify tooling drift on Line 3" },
-    { companyId: company.id, businessUnitId: maintenance.id, departmentId: dept["predictive-maint"].id, title: "Expand vibration sensor coverage to Plant 2 press line", status: "in-progress", priority: "p2", ownerType: "ai", ownerAgentId: agentByName["Predictive Maintenance Sentinel"].id, linkedKpiId: kpiBySlug["mtbf"].id, dueDate: new Date("2026-08-01"), progress: 65, aiGenerated: false, workflow: "Sensor Grid Expansion", escalationStatus: "none", expectedOutcome: "+9% MTBF on Plant 2 press line" },
-    { companyId: company.id, businessUnitId: safety.id, departmentId: dept["ehs"].id, title: "File Q2 OSHA 300 log", status: "done", priority: "p2", ownerType: "human", ownerPersonId: personByName["James Rutherford"].id, linkedKpiId: kpiBySlug["trir"].id, dueDate: new Date("2026-07-10"), progress: 100, aiGenerated: false, workflow: "Regulatory Filing", escalationStatus: "none", expectedOutcome: "Regulatory compliance filed on time" },
+    { companyId: company.id, businessUnitId: maintenance.id, departmentId: dept["predictive-maint"].id, title: "Expand close automation exception handling", status: "in-progress", priority: "p2", ownerType: "ai", ownerAgentId: agentByName["Predictive Maintenance Sentinel"].id, linkedKpiId: kpiBySlug["close-cycle-time"].id, dueDate: new Date("2026-08-01"), progress: 65, aiGenerated: false, workflow: "Finance Close Automation", escalationStatus: "none", expectedOutcome: "Reduce close cycle to 3.8 days" },
+    { companyId: company.id, businessUnitId: safety.id, departmentId: dept["ehs"].id, title: "Launch APAC conversion recovery playbook", status: "done", priority: "p2", ownerType: "human", ownerPersonId: personByName["James Rutherford"].id, linkedKpiId: kpiBySlug["pipeline-conversion"].id, dueDate: new Date("2026-07-10"), progress: 100, aiGenerated: false, workflow: "Pipeline Recovery", escalationStatus: "none", expectedOutcome: "Improve APAC stage conversion" },
   ]);
 
   await db.insert(workflowsTable).values([
@@ -330,7 +364,7 @@ async function seed() {
 
   await db.insert(insightsTable).values([
     { companyId: company.id, businessUnitId: supplyChain.id, type: "risk", title: "On-time delivery trending below target for 3 consecutive weeks", description: "OTD dropped from 88% to 81.3% following carrier API disruption.", confidence: "0.910", priority: "p1", impact: "High — customer SLA breach risk", businessImpact: "-$180K exposure in late-delivery penalties", kpiImpact: "-13.7% vs OTD target", evidence: ["Carrier API error logs", "Shipment tracking variance"], linkedKpiId: kpiBySlug["otd"].id },
-    { companyId: company.id, businessUnitId: maintenance.id, type: "recommendation", title: "Expand predictive sensor coverage to Plant 2 press line", description: "Vibration pattern analysis suggests early bearing wear undetected on uninstrumented equipment.", confidence: "0.870", priority: "p2", impact: "Medium — potential unplanned downtime avoidance", businessImpact: "+9% MTBF projected", kpiImpact: "+18 hrs MTBF", evidence: ["Historical failure correlation", "Sensor gap analysis"], linkedKpiId: kpiBySlug["mtbf"].id },
+    { companyId: company.id, businessUnitId: maintenance.id, type: "recommendation", title: "Expand automated exception handling in close workflow", description: "Reconciliation exceptions are clustering around intercompany allocations.", confidence: "0.870", priority: "p2", impact: "Medium - close-cycle reduction", businessImpact: "-0.4 days projected close duration", kpiImpact: "-0.4 days vs MCT target gap", evidence: ["Exception queue history", "Allocation variance analysis"], linkedKpiId: kpiBySlug["close-cycle-time"].id },
     { companyId: company.id, businessUnitId: quality.id, type: "anomaly", title: "Line 3 tooling drift detected via SPC control charts", description: "Cpk trending downward over 5 shifts, correlating with FPY deviation.", confidence: "0.780", priority: "p2", impact: "Medium — quality escape risk", businessImpact: "Rework cost avoidance", kpiImpact: "-1.6% vs FPY target", evidence: ["SPC control chart Cpk trend"], linkedKpiId: kpiBySlug["first-pass-yield"].id },
   ]);
 
@@ -355,6 +389,17 @@ async function seed() {
     { companyId: company.id, businessUnitId: quality.id, metric: "Scrap Rate", value: "1.80", unit: "%", change: "-0.30", period: "2026-06", category: "quality" },
     { companyId: company.id, businessUnitId: supplyChain.id, metric: "Freight Cost per Unit", value: "4.12", unit: "$", change: "0.45", period: "2026-06", category: "cost" },
     { companyId: company.id, businessUnitId: safety.id, metric: "Recordable Incidents", value: "2", unit: "count", change: "-1.00", period: "2026-06", category: "safety" },
+  ]);
+
+  await db.insert(connectorsTable).values([
+    { companyId: company.id, businessUnitId: maintenance.id, externalId: "conn-sap", name: "SAP ERP", category: "ERP", protocol: "OData", connected: true, secretName: "SAP_ERP_SVC", lastSyncLabel: "3m ago", lastSyncedAt: new Date() },
+    { companyId: company.id, businessUnitId: production.id, externalId: "conn-scada", name: "SCADA Gateway", category: "Industrial Control", protocol: "OPC-UA", connected: true, secretName: "SCADA_GATEWAY_KEY", lastSyncLabel: "1m ago", lastSyncedAt: new Date() },
+    { companyId: company.id, businessUnitId: production.id, externalId: "conn-mes", name: "MES System", category: "Manufacturing Exec.", protocol: "REST", connected: true, secretName: "MES_API_TOKEN", lastSyncLabel: "4m ago", lastSyncedAt: new Date() },
+    { companyId: company.id, businessUnitId: supplyChain.id, externalId: "conn-wms", name: "WMS Platform", category: "Warehouse", protocol: "REST", connected: true, secretName: "WMS_API_KEY", lastSyncLabel: "6m ago", lastSyncedAt: new Date() },
+    { companyId: company.id, businessUnitId: quality.id, externalId: "conn-plm", name: "PLM System", category: "Supplier / Contracts", protocol: "REST", connected: true, secretName: "PLM_OAUTH", lastSyncLabel: "18m ago", lastSyncedAt: new Date() },
+    { companyId: company.id, businessUnitId: safety.id, externalId: "conn-sfdc", name: "Salesforce CRM", category: "CRM", protocol: "REST", connected: true, secretName: "SALESFORCE_OAUTH", lastSyncLabel: "2m ago", lastSyncedAt: new Date() },
+    { companyId: company.id, businessUnitId: quality.id, externalId: "conn-docusign", name: "DocuSign", category: "e-Signature", protocol: "REST", connected: false, secretName: "DOCUSIGN_OAUTH", lastSyncLabel: "-", lastSyncedAt: null },
+    { companyId: company.id, businessUnitId: maintenance.id, externalId: "conn-snowflake", name: "Snowflake", category: "Data Warehouse", protocol: "JDBC", connected: true, secretName: "SNOWFLAKE_SVC", lastSyncLabel: "9m ago", lastSyncedAt: new Date() },
   ]);
 
   await db.insert(systemsHealthTable).values([
@@ -410,17 +455,109 @@ async function seed() {
     { sopId: spcSop.id, policyId: policyByName["First Pass Yield Deviation Escalation"].id },
   ]);
 
-  const [otdGoal, mtbfGoal] = await db
+  const [enterpriseGoal, oeeGoal, aiCostGoal, closeGoal, downtimeGoal] = await db
     .insert(goalsTable)
     .values([
-      { companyId: company.id, businessUnitId: supplyChain.id, title: "Restore On-Time Delivery to 95%", targetValue: "95.00", currentValue: "81.30", dueDate: new Date("2026-09-30"), status: "at-risk" },
-      { companyId: company.id, businessUnitId: maintenance.id, title: "Raise MTBF to 450 hours plant-wide", targetValue: "450.00", currentValue: "412.00", dueDate: new Date("2026-12-31"), status: "on-track" },
+      { companyId: company.id, externalId: "goal-1", parentExternalId: null, title: "Lift Enterprise Execution Index to 90", description: "Composite EEI across all 5 ABUs, weighted by contribution.", targetValue: "90.00", currentValue: "84.00", dueDate: new Date("2026-12-31"), status: "on-track" },
+      { companyId: company.id, businessUnitId: production.id, externalId: "goal-2", parentExternalId: "goal-1", title: "Hold Manufacturing OEE at or above 90%", description: "Overall Equipment Effectiveness across all monitored lines.", targetValue: "90.00", currentValue: "84.20", dueDate: new Date("2026-09-30"), status: "on-track" },
+      { companyId: company.id, externalId: "goal-3", parentExternalId: "goal-1", title: "Cut enterprise operating cost 15% via AI workforce", description: "Reduce blended operating cost through agent-driven automation.", targetValue: "15.00", currentValue: "8.00", dueDate: new Date("2026-12-31"), status: "on-track" },
+      { companyId: company.id, businessUnitId: maintenance.id, externalId: "goal-4", parentExternalId: "goal-3", title: "Zero-touch monthly financial close", description: "Fully automated reconciliation and cost allocation, human sign-off only.", targetValue: "3.00", currentValue: "4.20", dueDate: new Date("2026-08-31"), status: "on-track" },
+      { companyId: company.id, businessUnitId: production.id, externalId: "goal-5", parentExternalId: "goal-2", title: "Reduce unplanned downtime below 40 hrs/quarter", description: "Predictive maintenance coverage across all Tier-1 production lines.", targetValue: "40.00", currentValue: "52.00", dueDate: new Date("2026-10-15"), status: "at-risk" },
     ])
     .returning();
 
   await db.insert(kpiGoalLinksTable).values([
-    { kpiId: kpiBySlug["otd"].id, goalId: otdGoal.id },
-    { kpiId: kpiBySlug["mtbf"].id, goalId: mtbfGoal.id },
+    { kpiId: kpiBySlug["oee"].id, goalId: oeeGoal.id },
+    { kpiId: kpiBySlug["oee"].id, goalId: downtimeGoal.id },
+    { kpiId: kpiBySlug["otd"].id, goalId: aiCostGoal.id },
+    { kpiId: kpiBySlug["close-cycle-time"].id, goalId: closeGoal.id },
+  ]);
+
+  await db.insert(projectsTable).values([
+    { companyId: company.id, businessUnitId: production.id, leadAgentId: agentByName["Predictive Maintenance Sentinel"].id, goalId: downtimeGoal.id, externalId: "proj-1", name: "Line 7 Bearing Failure Prevention", description: "Close the predictive-maintenance coverage gap on Line 7's highest-risk assets before Q4.", status: "active", color: "#3a86d4", targetDate: new Date("2026-10-01"), progress: 62 },
+    { companyId: company.id, businessUnitId: maintenance.id, leadAgentId: agentByName["Predictive Maintenance Sentinel"].id, goalId: closeGoal.id, externalId: "proj-2", name: "Finance Auto-Close Q3", description: "Automate remaining manual reconciliation steps in month-end close.", status: "active", color: "#2c9d8f", targetDate: new Date("2026-08-15"), progress: 74 },
+    { companyId: company.id, businessUnitId: quality.id, leadAgentId: agentByName["Supplier Risk Sentinel"].id, goalId: aiCostGoal.id, externalId: "proj-3", name: "Supplier Risk Consolidation", description: "Consolidate Tier-1 supplier risk scoring into a continuously updated model.", status: "planning", color: "#c0617f", targetDate: new Date("2026-11-30"), progress: 18 },
+    { companyId: company.id, businessUnitId: safety.id, leadAgentId: agentByName["Incident Compliance Monitor"].id, goalId: enterpriseGoal.id, externalId: "proj-4", name: "APAC Pipeline Recovery", description: "Reverse the APAC pipeline conversion decline via targeted outreach automation.", status: "active", color: "#8169b8", targetDate: new Date("2026-09-15"), progress: 41 },
+  ]);
+
+  await db.insert(unitsOfWorkTable).values([
+    {
+      companyId: company.id,
+      businessUnitId: production.id,
+      departmentId: dept["predictive-maint"].id,
+      externalId: "uow-1",
+      name: "Pull Line Sensor Telemetry",
+      description: "Streams vibration, temperature, and load telemetry for a production line from the SCADA gateway.",
+      endpointBaseUrl: "https://scada.internal",
+      endpointPath: "/v2/lines/{lineId}/telemetry",
+      endpointMethod: "GET",
+      authMode: "vault-credential",
+      secretName: "SCADA_GATEWAY_KEY",
+      usedInWorkflows: ["Predictive Maintenance Execution"],
+      raci: { responsible: "Predictive Maintenance", accountable: "Maintenance Supervisor", consulted: "OEE Optimizer", informed: "Plant Manager" },
+      mapping: { manualMinutes: 25, automatedMinutes: 1, manualCostUsd: 22, automatedCostUsd: 1.2, runsPerMonth: 620 },
+    },
+    {
+      companyId: company.id,
+      businessUnitId: production.id,
+      departmentId: dept["predictive-maint"].id,
+      externalId: "uow-2",
+      name: "Create CMMS Work Order",
+      description: "Opens a maintenance work order in the CMMS when a failure-risk threshold is crossed.",
+      endpointBaseUrl: "https://cmms.internal",
+      endpointPath: "/v1/work-orders",
+      endpointMethod: "POST",
+      authMode: "vault-credential",
+      secretName: "CMMS_OAUTH",
+      usedInWorkflows: ["Predictive Maintenance Execution"],
+      raci: { responsible: "Predictive Maintenance", accountable: "Maintenance Supervisor", consulted: "Parts Manager", informed: "Line Supervisor" },
+      mapping: { manualMinutes: 40, automatedMinutes: 3, manualCostUsd: 34, automatedCostUsd: 2.4, runsPerMonth: 84 },
+    },
+    {
+      companyId: company.id,
+      businessUnitId: supplyChain.id,
+      departmentId: dept["logistics"].id,
+      externalId: "uow-6",
+      name: "Pull Inventory Levels",
+      description: "Reads current on-hand inventory by SKU and warehouse from the WMS.",
+      endpointBaseUrl: "https://wms.internal",
+      endpointPath: "/v1/inventory",
+      endpointMethod: "GET",
+      authMode: "vault-credential",
+      secretName: "WMS_API_KEY",
+      usedInWorkflows: [],
+      raci: { responsible: "Inventory Optimizer", accountable: "Warehouse Manager", consulted: "Demand Planner", informed: "VP Supply Chain" },
+      mapping: { manualMinutes: 18, automatedMinutes: 1, manualCostUsd: 15, automatedCostUsd: 1, runsPerMonth: 900 },
+    },
+    {
+      companyId: company.id,
+      businessUnitId: safety.id,
+      departmentId: dept["ehs"].id,
+      externalId: "uow-15",
+      name: "Pull CRM Pipeline Snapshot",
+      description: "Retrieves current-quarter opportunity data across stages from Salesforce.",
+      endpointBaseUrl: "https://sfdc.internal",
+      endpointPath: "/v1/opportunities",
+      endpointMethod: "GET",
+      authMode: "vault-credential",
+      secretName: "SALESFORCE_OAUTH",
+      usedInWorkflows: ["Revenue Pipeline Review"],
+      raci: { responsible: "Revenue Scout", accountable: "VP Sales", consulted: "Forecast Agent", informed: "Revenue Manager" },
+      mapping: { manualMinutes: 20, automatedMinutes: 1.5, manualCostUsd: 17, automatedCostUsd: 1.3, runsPerMonth: 260 },
+    },
+  ]);
+
+  await db.insert(modelCostModelsTable).values([
+    { id: "gpt-4o", name: "GPT-4o", ratePerMillionTokens: "8.0000" },
+    { id: "gpt-4o-mini", name: "GPT-4o mini", ratePerMillionTokens: "2.0000" },
+    { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet", ratePerMillionTokens: "6.0000" },
+  ]);
+
+  await db.insert(reasoningLevelsTable).values([
+    { id: "Minimal", label: "Minimal", multiplier: "0.600", note: "Fast, shallow. Routine lookups, status checks." },
+    { id: "Low", label: "Low", multiplier: "0.850", note: "Light reasoning. Standard classification, simple scoring." },
+    { id: "Medium", label: "Medium", multiplier: "1.000", note: "Default depth. Most day-to-day decisions." },
+    { id: "High", label: "High", multiplier: "1.700", note: "Deep reasoning. Audits, complex planning, root-cause analysis." },
   ]);
 
   const approvals = await db.select().from(approvalsTable);

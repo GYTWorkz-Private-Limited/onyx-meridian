@@ -1,4 +1,4 @@
-import { KPI_CATALOG, type KpiEntry } from "@/data/enterprise-data";
+import { type KpiEntry } from "@/data/enterprise-data";
 
 // ─── Forecast Center ────────────────────────────────────────────
 // Deterministic multi-horizon projection derived from a KPI's current
@@ -73,23 +73,6 @@ export const BUSINESS_EVENTS: BusinessEvent[] = [
   { id: "ev8", kind: "holiday", title: "Regional Holiday — APAC Facilities", detail: "Reduced staffing; automated monitoring coverage only.", buId: "supply-chain", date: "2026-07-25", impact: "info" },
   { id: "ev9", kind: "shutdown", title: "Planned Plant Shutdown — Annual Turnaround", detail: "72-hour full-facility maintenance shutdown, all lines.", buId: "manufacturing", date: "2026-09-05", impact: "critical" },
   { id: "ev10", kind: "strike", title: "Logistics Partner Labor Action (Watch)", detail: "Regional carrier labor dispute could affect outbound lead times.", buId: "supply-chain", date: "2026-07-30", impact: "watch" },
-];
-
-// ─── KPI Builder palette ─────────────────────────────────────────
-
-export const BUILDER_METRICS = KPI_CATALOG.map((k) => ({ id: k.id, label: k.abbreviation ?? k.name, sub: k.fullName }));
-export const BUILDER_DIMENSIONS = [
-  { id: "dim-bu", label: "Business Unit" },
-  { id: "dim-category", label: "Category" },
-  { id: "dim-time", label: "Time Period" },
-  { id: "dim-owner", label: "Owner" },
-];
-export const BUILDER_OPERATORS = ["+", "-", "×", "÷", "%", "( )"];
-export const BUILDER_FUNCTIONS = ["SUM", "AVG", "DELTA", "TARGET_GAP", "MOVING_AVG", "YoY"];
-export const BUILDER_TEMPLATES = [
-  { id: "tmpl-ratio", label: "Ratio", formula: "SUM(Metric A) ÷ SUM(Metric B)" },
-  { id: "tmpl-variance", label: "Variance vs Target", formula: "TARGET_GAP(Metric A)" },
-  { id: "tmpl-composite", label: "Weighted Composite", formula: "(Metric A × 0.5) + (Metric B × 0.5)" },
 ];
 
 // ─── Ask AI canned Q&A seeds (keyword-routed, same technique OnyxCopilot

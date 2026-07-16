@@ -4,7 +4,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
-from .routers import agents, auth, business_units, enterprise, governance, intelligence, outcomes, tasks
+from .routers import (
+    agents,
+    auth,
+    business_units,
+    enterprise,
+    governance,
+    intelligence,
+    kpi_chat,
+    kpis,
+    outcomes,
+    tasks,
+)
 
 
 @asynccontextmanager
@@ -37,3 +48,5 @@ app.include_router(tasks.router)
 app.include_router(intelligence.router)
 app.include_router(governance.router)
 app.include_router(outcomes.router)
+app.include_router(kpis.router)
+app.include_router(kpi_chat.router)

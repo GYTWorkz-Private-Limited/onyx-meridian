@@ -12,12 +12,12 @@ import { GraphView } from "@/components/kpi-studio/graph-view";
 import { ForecastCenter } from "@/components/kpi-studio/forecast-center";
 import { AlertsTimeline } from "@/components/kpi-studio/alerts-timeline";
 import { Operations } from "@/components/kpi-studio/operations";
-import { KpiBuilder } from "@/components/kpi-studio/kpi-builder";
-import { AskAi } from "@/components/kpi-studio/ask-ai";
+import { AiChatPanel } from "@/components/kpi-studio/ai-chat-panel";
+import { KpiBuilderDashboard } from "@/components/kpi-studio/kpi-builder-dashboard";
 import {
   Sparkles, Plus, Upload, FileBarChart, Download, Share2, Settings,
   Search, X, ChevronRight, Target, TrendingUp, TrendingDown, LayoutGrid,
-  Table2, Link2, GitBranch, AlertTriangle, Info, ArrowUpDown, Gauge, Wrench,
+  Table2, Link2, GitBranch, AlertTriangle, Info, ArrowUpDown, Gauge, LayoutDashboard,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -406,15 +406,14 @@ function KpiDetailDrawer({ kpi, onClose }: { kpi: KpiEntry; onClose: () => void 
 
 // ─── Page ─────────────────────────────────────────────────────
 
-type StudioTab = "overview" | "graph" | "forecast" | "alerts" | "operations" | "builder" | "ask-ai";
+type StudioTab = "overview" | "graph" | "forecast" | "alerts" | "operations" | "builder";
 const TABS: { id: StudioTab; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Overview", icon: LayoutGrid },
   { id: "graph", label: "Graph", icon: GitBranch },
   { id: "forecast", label: "Forecast Center", icon: TrendingUp },
   { id: "alerts", label: "Alerts & Events", icon: AlertTriangle },
   { id: "operations", label: "Operations", icon: Gauge },
-  { id: "builder", label: "KPI Builder", icon: Wrench },
-  { id: "ask-ai", label: "Ask AI", icon: Sparkles },
+  { id: "builder", label: "KPI Builder", icon: LayoutDashboard },
 ];
 
 export default function KpiStudio() {
@@ -500,6 +499,8 @@ export default function KpiStudio() {
         })}
       </div>
 
+      <div className="flex flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {tab === "overview" && (
         <div className="flex-1 overflow-y-auto">
           <HealthOverviewRow />
@@ -560,8 +561,10 @@ export default function KpiStudio() {
       {tab === "forecast" && <div className="flex-1 min-h-0"><ForecastCenter onOpenKpi={openKpi} /></div>}
       {tab === "alerts" && <div className="flex-1 min-h-0"><AlertsTimeline onOpenKpi={openKpi} /></div>}
       {tab === "operations" && <div className="flex-1 min-h-0"><Operations /></div>}
-      {tab === "builder" && <div className="flex-1 min-h-0"><KpiBuilder /></div>}
-      {tab === "ask-ai" && <div className="flex-1 min-h-0"><AskAi /></div>}
+      {tab === "builder" && <div className="flex-1 min-h-0 flex flex-col"><KpiBuilderDashboard /></div>}
+      </div>
+      {tab === "builder" && <AiChatPanel />}
+      </div>
 
       {selected && <KpiDetailDrawer kpi={selected} onClose={closeKpi} />}
     </div>
