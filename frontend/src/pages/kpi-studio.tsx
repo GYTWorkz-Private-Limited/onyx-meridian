@@ -1,23 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
-import { KpiCard } from "@/components/shared/KpiCard";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { KPI_CATALOG, ENTERPRISE_HEALTH_CARDS, BU_LIST, type KpiEntry } from "@/data/enterprise-data";
-import { GOAL_TREE } from "@/data/goals-data";
+import { useKpis, type KpiRecord } from "@/lib/api";
 import { useAppContext } from "@/context/AppContext";
 import { canEdit } from "@/lib/rbac";
-import { GraphView } from "@/components/kpi-studio/graph-view";
-import { ForecastCenter } from "@/components/kpi-studio/forecast-center";
-import { AlertsTimeline } from "@/components/kpi-studio/alerts-timeline";
-import { Operations } from "@/components/kpi-studio/operations";
 import { AiChatPanel } from "@/components/kpi-studio/ai-chat-panel";
 import { KpiBuilderDashboard } from "@/components/kpi-studio/kpi-builder-dashboard";
 import {
   Sparkles, Plus, Upload, FileBarChart, Download, Share2, Settings,
-  Search, X, ChevronRight, Target, TrendingUp, TrendingDown, LayoutGrid,
-  Table2, Link2, GitBranch, AlertTriangle, Info, ArrowUpDown, Gauge, LayoutDashboard,
+  Search, X, ChevronRight, TrendingUp, TrendingDown, Minus, LayoutGrid,
+  Table2, GitBranch, AlertTriangle, Info, ArrowUpDown, LayoutDashboard, Loader2,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -39,24 +33,30 @@ function healthBar(score: number) {
   return "bg-red-500";
 }
 
-function kpiById(id: string) {
-  return KPI_CATALOG.find((k) => k.id === id);
-}
-function buName(id: string) {
-  return BU_LIST.find((b) => b.id === id)?.name ?? id;
+function buLabel(slug: string) {
+  return slug.split("-").map((w) => w[0]?.toUpperCase() + w.slice(1)).join(" ");
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Manufacturing: "bg-blue-50 text-blue-700 border-blue-200",
-  "Supply Chain": "bg-amber-50 text-amber-700 border-amber-200",
-  Procurement: "bg-orange-50 text-orange-700 border-orange-200",
-  Finance: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  Revenue: "bg-violet-50 text-violet-700 border-violet-200",
-  Sustainability: "bg-teal-50 text-teal-700 border-teal-200",
+  Production: "bg-blue-50 text-blue-700 border-blue-200",
+  Quality: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Maintenance: "bg-amber-50 text-amber-700 border-amber-200",
   Safety: "bg-rose-50 text-rose-700 border-rose-200",
-  Enterprise: "bg-primary/10 text-primary border-primary/20",
+  "Supply Chain": "bg-violet-50 text-violet-700 border-violet-200",
 };
 const categoryCls = (c: string) => CATEGORY_COLORS[c] ?? "bg-muted text-muted-foreground border-border";
+
+function TrendIndicator({ trend, delta }: { trend: KpiRecord["trend"]; delta: string }) {
+  if (trend === "flat" || !delta) {
+    return <span className="flex items-center gap-0.5 text-[10px] font-mono font-semibold text-muted-foreground"><Minus size={11} />{delta}</span>;
+  }
+  return (
+    <span className={cn("flex items-center gap-0.5 text-[10px] font-mono font-semibold", trend === "up" ? "text-emerald-600" : "text-red-600")}>
+      {trend === "up" ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+      {delta}
+    </span>
+  );
+}
 
 // ─── Hero action row ────────────────────────────────────────────
 
@@ -92,41 +92,9 @@ function HeroActions({ canManage }: { canManage: boolean }) {
   );
 }
 
-// ─── Enterprise Health Overview ─────────────────────────────────
-
-function HealthOverviewRow() {
-  return (
-    <div className="px-6 py-4 border-b border-border bg-[#FBFBFC]">
-      <div className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2.5">
-        Enterprise Health Overview
-      </div>
-      <div className="grid grid-cols-5 gap-3">
-        {ENTERPRISE_HEALTH_CARDS.map((h) => (
-          <div key={h.id} className="relative group" title={h.summary}>
-            <KpiCard
-              label={h.label}
-              value={h.score}
-              target={h.target}
-              status={statusFor(h.score)}
-              trendValue={h.trend[h.trend.length - 1] - h.trend[0]}
-              history={h.trend.map((v) => ({ value: v }))}
-            />
-            <div className="absolute top-2 right-2 text-[8px] font-mono text-muted-foreground/60">{h.confidence}% conf</div>
-            <div className="absolute inset-x-0 bottom-0 translate-y-full pt-1 opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none">
-              <div className="bg-foreground text-white text-[9px] leading-snug rounded-sm shadow-lg px-2.5 py-2 mx-1">
-                {h.summary}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Live KPI Wall ───────────────────────────────────────────────
 
-function KpiWallCard({ k, onOpen }: { k: KpiEntry; onOpen: () => void }) {
+function KpiWallCard({ k, onOpen }: { k: KpiRecord; onOpen: () => void }) {
   const st = statusFor(k.healthScore);
   return (
     <button
@@ -150,23 +118,20 @@ function KpiWallCard({ k, onOpen }: { k: KpiEntry; onOpen: () => void }) {
 
       <div className="flex items-baseline gap-1.5 mb-1">
         <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">{k.value}</span>
-        <span className={cn("flex items-center gap-0.5 text-[10px] font-mono font-semibold", k.trend === "up" ? "text-emerald-600" : "text-red-600")}>
-          {k.trend === "up" ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-          {k.delta}
-        </span>
+        <TrendIndicator trend={k.trend} delta={k.delta} />
       </div>
 
-      <div className="text-[9px] text-muted-foreground font-mono mb-2">TGT {k.target} · {k.variance}</div>
+      <div className="text-[9px] text-muted-foreground font-mono mb-2">TGT {k.target}{k.variance ? ` · ${k.variance}` : ""}</div>
 
       <div className="w-full h-1 bg-border rounded-full overflow-hidden mb-2">
         <div className={cn("h-full rounded-full", healthBar(k.healthScore))} style={{ width: `${k.healthScore}%` }} />
       </div>
 
-      <div className="text-[9px] text-muted-foreground leading-snug line-clamp-2 mb-2 flex-1">{k.aiSummary}</div>
+      {k.aiSummary && <div className="text-[9px] text-muted-foreground leading-snug line-clamp-2 mb-2 flex-1">{k.aiSummary}</div>}
 
-      <div className="flex items-center justify-between text-[8px] text-muted-foreground uppercase tracking-widest pt-2 border-t border-border/60">
+      <div className="flex items-center justify-between text-[8px] text-muted-foreground uppercase tracking-widest pt-2 border-t border-border/60 mt-auto">
         <span className="truncate">{k.owner}</span>
-        <span className="font-mono shrink-0">{k.forecastNext}</span>
+        {k.forecastNext && <span className="font-mono shrink-0">{k.forecastNext}</span>}
       </div>
     </button>
   );
@@ -176,7 +141,7 @@ function KpiWallCard({ k, onOpen }: { k: KpiEntry; onOpen: () => void }) {
 
 type SortKey = "name" | "category" | "healthScore" | "owner" | "buIds";
 
-function KpiExplorerTable({ kpis, onOpen }: { kpis: KpiEntry[]; onOpen: (id: string) => void }) {
+function KpiExplorerTable({ kpis, onOpen }: { kpis: KpiRecord[]; onOpen: (id: string) => void }) {
   const [sortKey, setSortKey] = useState<SortKey>("healthScore");
   const [sortDir, setSortDir] = useState<1 | -1>(1);
 
@@ -185,7 +150,7 @@ function KpiExplorerTable({ kpis, onOpen }: { kpis: KpiEntry[]; onOpen: (id: str
     arr.sort((a, b) => {
       let av: string | number = "", bv: string | number = "";
       if (sortKey === "buIds") { av = a.buIds[0] ?? ""; bv = b.buIds[0] ?? ""; }
-      else { av = (a as any)[sortKey]; bv = (b as any)[sortKey]; }
+      else { av = a[sortKey]; bv = b[sortKey]; }
       if (typeof av === "number" && typeof bv === "number") return (av - bv) * sortDir;
       return String(av).localeCompare(String(bv)) * sortDir;
     });
@@ -237,7 +202,7 @@ function KpiExplorerTable({ kpis, onOpen }: { kpis: KpiEntry[]; onOpen: (id: str
               <td className="py-2.5 px-3 font-mono text-muted-foreground">{k.variance}</td>
               <td className="py-2.5 px-3 font-mono text-muted-foreground">{k.forecastNext}</td>
               <td className="py-2.5 px-3 text-muted-foreground">{k.owner}</td>
-              <td className="py-2.5 px-3 text-muted-foreground">{k.buIds.map(buName).join(", ")}</td>
+              <td className="py-2.5 px-3 text-muted-foreground">{k.buIds.map(buLabel).join(", ")}</td>
               <td className="py-2.5 px-3">
                 <span className={cn("font-mono font-bold", healthColor(k.healthScore))}>{k.healthScore}</span>
               </td>
@@ -255,10 +220,10 @@ function KpiExplorerTable({ kpis, onOpen }: { kpis: KpiEntry[]; onOpen: (id: str
 
 // ─── KPI Details drawer ──────────────────────────────────────────
 
-function KpiDetailDrawer({ kpi, onClose }: { kpi: KpiEntry; onClose: () => void }) {
-  const goals = GOAL_TREE.filter((g) => kpi.goalIds.includes(g.id));
-  const dependsOn = kpi.dependsOn.map(kpiById).filter(Boolean) as KpiEntry[];
-  const feeds = kpi.feeds.map(kpiById).filter(Boolean) as KpiEntry[];
+function KpiDetailDrawer({ kpi, allKpis, onClose }: { kpi: KpiRecord; allKpis: KpiRecord[]; onClose: () => void }) {
+  const kpiById = (id: string) => allKpis.find((k) => k.id === id);
+  const dependsOn = kpi.dependsOn.map(kpiById).filter(Boolean) as KpiRecord[];
+  const feeds = kpi.feeds.map(kpiById).filter(Boolean) as KpiRecord[];
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
@@ -291,19 +256,21 @@ function KpiDetailDrawer({ kpi, onClose }: { kpi: KpiEntry; onClose: () => void 
             </div>
             <div className="bg-muted/30 rounded-sm px-2 py-2 border border-border/40">
               <div className="text-[8px] uppercase tracking-widest text-muted-foreground mb-0.5">Forecast</div>
-              <div className="text-[10px] font-bold font-mono text-foreground leading-tight">{kpi.forecastNext}</div>
+              <div className="text-[10px] font-bold font-mono text-foreground leading-tight">{kpi.forecastNext || "—"}</div>
             </div>
           </div>
-          <div className="text-[10px] text-muted-foreground font-mono">{kpi.variance}</div>
+          {kpi.variance && <div className="text-[10px] text-muted-foreground font-mono">{kpi.variance}</div>}
 
           {/* AI Executive Summary */}
-          <div className="border border-primary/20 bg-primary/5 rounded-sm p-3">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Sparkles size={11} className="text-primary" />
-              <span className="text-[9px] uppercase tracking-widest font-bold text-primary">AI Executive Summary</span>
+          {kpi.aiSummary && (
+            <div className="border border-primary/20 bg-primary/5 rounded-sm p-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Sparkles size={11} className="text-primary" />
+                <span className="text-[9px] uppercase tracking-widest font-bold text-primary">AI Executive Summary</span>
+              </div>
+              <p className="text-[11px] text-foreground leading-relaxed">{kpi.aiSummary}</p>
             </div>
-            <p className="text-[11px] text-foreground leading-relaxed">{kpi.aiSummary}</p>
-          </div>
+          )}
 
           {/* Root cause */}
           {kpi.rootCauses.length > 0 && (
@@ -327,29 +294,6 @@ function KpiDetailDrawer({ kpi, onClose }: { kpi: KpiEntry; onClose: () => void 
               </div>
             </div>
           )}
-
-          {/* Goal Alignment */}
-          <div className="border border-border rounded-sm p-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Target size={11} className="text-muted-foreground" />
-              <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">Aligned Strategic Goals</span>
-            </div>
-            {goals.length === 0 ? (
-              <div className="text-[10px] text-muted-foreground">Not yet mapped to a strategic goal.</div>
-            ) : (
-              <div className="space-y-1.5">
-                {goals.map((g) => (
-                  <div key={g.id} className="flex items-start gap-2 bg-muted/30 rounded-sm px-2 py-1.5">
-                    <span className="text-emerald-600 text-[10px] mt-0.5">✓</span>
-                    <div className="min-w-0">
-                      <div className="text-[10px] font-semibold text-foreground leading-snug">{g.title}</div>
-                      <div className="text-[9px] text-muted-foreground">{g.status} · due {g.targetDate}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Dependencies / Related KPIs */}
           {(dependsOn.length > 0 || feeds.length > 0) && (
@@ -392,7 +336,7 @@ function KpiDetailDrawer({ kpi, onClose }: { kpi: KpiEntry; onClose: () => void 
               <div className="flex justify-between gap-2"><span className="text-muted-foreground shrink-0">Data Source</span><span className="text-foreground text-right">{kpi.dataSource}</span></div>
               <div className="flex justify-between gap-2"><span className="text-muted-foreground shrink-0">Update Frequency</span><span className="text-foreground text-right">{kpi.updateFrequency}</span></div>
               <div className="flex justify-between gap-2"><span className="text-muted-foreground shrink-0">Owner</span><span className="text-foreground text-right">{kpi.owner}</span></div>
-              <div className="flex justify-between gap-2"><span className="text-muted-foreground shrink-0">Business Unit</span><span className="text-foreground text-right">{kpi.buIds.map(buName).join(", ")}</span></div>
+              <div className="flex justify-between gap-2"><span className="text-muted-foreground shrink-0">Business Unit</span><span className="text-foreground text-right">{kpi.buIds.map(buLabel).join(", ")}</span></div>
               {kpi.linked.length > 0 && (
                 <div className="flex justify-between gap-2"><span className="text-muted-foreground shrink-0">Linked AI Agents</span><span className="text-foreground text-right">{kpi.linked.length}</span></div>
               )}
@@ -406,20 +350,16 @@ function KpiDetailDrawer({ kpi, onClose }: { kpi: KpiEntry; onClose: () => void 
 
 // ─── Page ─────────────────────────────────────────────────────
 
-type StudioTab = "overview" | "graph" | "forecast" | "alerts" | "operations" | "builder";
+type StudioTab = "overview" | "builder";
 const TABS: { id: StudioTab; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Overview", icon: LayoutGrid },
-  { id: "graph", label: "Graph", icon: GitBranch },
-  { id: "forecast", label: "Forecast Center", icon: TrendingUp },
-  { id: "alerts", label: "Alerts & Events", icon: AlertTriangle },
-  { id: "operations", label: "Operations", icon: Gauge },
   { id: "builder", label: "KPI Builder", icon: LayoutDashboard },
 ];
 
 export default function KpiStudio() {
   const [, navigate] = useLocation();
   const search = useSearch();
-  const { role, currentBuId } = useAppContext();
+  const { role } = useAppContext();
   const [tab, setTab] = useState<StudioTab>("overview");
   const [view, setView] = useState<"wall" | "explorer">("wall");
   const [q, setQ] = useState("");
@@ -427,34 +367,31 @@ export default function KpiStudio() {
   const [buFilter, setBuFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  const { data: kpis = [], isLoading, isError } = useKpis();
+
   useEffect(() => {
     const params = new URLSearchParams(search);
     const kpi = params.get("kpi");
-    if (kpi && kpiById(kpi)) setSelectedId(kpi);
+    if (kpi) setSelectedId(kpi);
   }, [search]);
 
-  // Employee/Manager/ABU Head each see only their own BU's KPIs; Developer
-  // (enterprise-wide, view-only per the access matrix) sees everything.
-  const scopedCatalog = useMemo(() => {
-    if (role === "developer" || !currentBuId) return KPI_CATALOG;
-    return KPI_CATALOG.filter((k) => k.buIds.includes(currentBuId));
-  }, [role, currentBuId]);
   const canManage = canEdit(role, "kpi-studio");
 
-  const categories = useMemo(() => ["all", ...Array.from(new Set(scopedCatalog.map((k) => k.category)))], [scopedCatalog]);
+  const categories = useMemo(() => ["all", ...Array.from(new Set(kpis.map((k) => k.category)))], [kpis]);
+  const businessUnits = useMemo(() => Array.from(new Set(kpis.flatMap((k) => k.buIds))).sort(), [kpis]);
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
-    return scopedCatalog.filter((k) =>
+    return kpis.filter((k) =>
       (category === "all" || k.category === category) &&
       (buFilter === "all" || k.buIds.includes(buFilter)) &&
       (qq === "" || k.fullName.toLowerCase().includes(qq) || k.name.toLowerCase().includes(qq) || (k.abbreviation ?? "").toLowerCase().includes(qq))
     );
-  }, [scopedCatalog, q, category, buFilter]);
+  }, [kpis, q, category, buFilter]);
 
-  const selected = selectedId ? kpiById(selectedId) : null;
-  const avgHealth = Math.round(scopedCatalog.reduce((s, k) => s + k.healthScore, 0) / scopedCatalog.length);
-  const critical = scopedCatalog.filter((k) => k.healthScore < 70).length;
+  const selected = selectedId ? kpis.find((k) => k.id === selectedId) ?? null : null;
+  const avgHealth = kpis.length ? Math.round(kpis.reduce((s, k) => s + k.healthScore, 0) / kpis.length) : 0;
+  const critical = kpis.filter((k) => k.healthScore < 70).length;
 
   const openKpi = (id: string) => {
     setSelectedId(id);
@@ -470,7 +407,7 @@ export default function KpiStudio() {
       <HeaderBar
         moduleName="KPI STUDIO"
         metrics={[
-          { label: "TRACKED KPIS", value: KPI_CATALOG.length },
+          { label: "TRACKED KPIS", value: kpis.length },
           { label: "AVG HEALTH", value: avgHealth },
           { label: "CRITICAL", value: critical },
         ]}
@@ -503,8 +440,6 @@ export default function KpiStudio() {
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {tab === "overview" && (
         <div className="flex-1 overflow-y-auto">
-          <HealthOverviewRow />
-
           {/* Toolbar */}
           <div className="px-6 py-3 border-b border-border bg-white flex flex-wrap items-center gap-2 sticky top-0 z-10">
             <div className="relative">
@@ -520,7 +455,7 @@ export default function KpiStudio() {
             </select>
             <select value={buFilter} onChange={(e) => setBuFilter(e.target.value)} className="text-[10px] border border-border rounded-sm px-2 py-1.5 bg-white text-muted-foreground">
               <option value="all">All Business Units</option>
-              {BU_LIST.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              {businessUnits.map((slug) => <option key={slug} value={slug}>{buLabel(slug)}</option>)}
             </select>
 
             <div className="flex-1" />
@@ -535,38 +470,45 @@ export default function KpiStudio() {
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
-                {view === "wall" ? "Live KPI Wall" : "KPI Explorer"}
-              </div>
-              <div className="text-[10px] text-muted-foreground">{filtered.length} of {KPI_CATALOG.length} KPIs</div>
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground text-[12px] py-16">
+              <Loader2 size={16} className="animate-spin" /> Loading KPIs…
             </div>
+          )}
+          {isError && (
+            <div className="text-center text-red-600 text-[12px] py-16">Couldn't load KPIs from the server.</div>
+          )}
 
-            {view === "wall" ? (
-              <div className="grid grid-cols-4 gap-3">
-                {filtered.map((k) => <KpiWallCard key={k.id} k={k} onOpen={() => openKpi(k.id)} />)}
-                {filtered.length === 0 && (
-                  <div className="col-span-4 text-center text-muted-foreground text-sm py-12">No KPIs match the current filters.</div>
-                )}
+          {!isLoading && !isError && (
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
+                  {view === "wall" ? "Live KPI Wall" : "KPI Explorer"}
+                </div>
+                <div className="text-[10px] text-muted-foreground">{filtered.length} of {kpis.length} KPIs</div>
               </div>
-            ) : (
-              <KpiExplorerTable kpis={filtered} onOpen={openKpi} />
-            )}
-          </div>
+
+              {view === "wall" ? (
+                <div className="grid grid-cols-4 gap-3">
+                  {filtered.map((k) => <KpiWallCard key={k.id} k={k} onOpen={() => openKpi(k.id)} />)}
+                  {filtered.length === 0 && (
+                    <div className="col-span-4 text-center text-muted-foreground text-sm py-12">No KPIs match the current filters.</div>
+                  )}
+                </div>
+              ) : (
+                <KpiExplorerTable kpis={filtered} onOpen={openKpi} />
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      {tab === "graph" && <div className="flex-1 min-h-0"><GraphView onOpenKpi={openKpi} /></div>}
-      {tab === "forecast" && <div className="flex-1 min-h-0"><ForecastCenter onOpenKpi={openKpi} /></div>}
-      {tab === "alerts" && <div className="flex-1 min-h-0"><AlertsTimeline onOpenKpi={openKpi} /></div>}
-      {tab === "operations" && <div className="flex-1 min-h-0"><Operations /></div>}
       {tab === "builder" && <div className="flex-1 min-h-0 flex flex-col"><KpiBuilderDashboard /></div>}
       </div>
       {tab === "builder" && <AiChatPanel />}
       </div>
 
-      {selected && <KpiDetailDrawer kpi={selected} onClose={closeKpi} />}
+      {selected && <KpiDetailDrawer kpi={selected} allKpis={kpis} onClose={closeKpi} />}
     </div>
   );
 }

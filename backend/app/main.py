@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import db
+from .kpi_calc.engine import recompute_all
 from .routers import (
     agents,
     auth,
@@ -21,6 +22,7 @@ from .routers import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.connect()
+    await recompute_all()
     yield
     await db.disconnect()
 

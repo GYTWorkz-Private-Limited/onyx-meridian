@@ -649,6 +649,9 @@ export const businessResultsTable = pgTable("business_results", {
   companyId: uuid("company_id").notNull().references(() => companiesTable.id, { onDelete: "cascade" }),
   businessUnitId: uuid("business_unit_id").references(() => businessUnitsTable.id, { onDelete: "set null" }),
   metric: text("metric").notNull(),
+  // Stable machine-readable key (e.g. "units_passed") that kpi_definitions aggregates
+  // reference — `metric` stays the free-text display label.
+  metricKey: text("metric_key"),
   value: numeric("value", { precision: 14, scale: 2 }).notNull(),
   unit: text("unit"),
   change: numeric("change", { precision: 10, scale: 2 }),
@@ -660,6 +663,34 @@ export const businessResultsTable = pgTable("business_results", {
 export const insertBusinessResultSchema = createInsertSchema(businessResultsTable).omit({ id: true, createdAt: true });
 export type InsertBusinessResult = z.infer<typeof insertBusinessResultSchema>;
 export type BusinessResult = typeof businessResultsTable.$inferSelect;
+
+// ─── kpi definitions ─────────────────────────────────────────────
+// The structured "how to compute this KPI" spec. Every placeholder assumption
+// (which metric_key, which aggregation, which scale) lives here and in the
+// business_results data it aggregates — see backend/kpi_calc_seed.py and
+// backend/app/kpi_calc/engine.py.
+
+export const kpiMetricTypeEnum = pgEnum("kpi_metric_type", ["simple", "ratio", "composite"]);
+export const kpiAggEnum = pgEnum("kpi_agg", ["sum", "avg", "count", "latest"]);
+export const kpiCompositeOperatorEnum = pgEnum("kpi_composite_operator", ["multiply", "sum"]);
+
+export const kpiDefinitionsTable = pgTable("kpi_definitions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  kpiId: uuid("kpi_id").notNull().unique().references(() => kpisTable.id, { onDelete: "cascade" }),
+  metricType: kpiMetricTypeEnum("metric_type").notNull(),
+  numeratorMetricKey: text("numerator_metric_key"),
+  numeratorAgg: kpiAggEnum("numerator_agg"),
+  denominatorMetricKey: text("denominator_metric_key"),
+  denominatorAgg: kpiAggEnum("denominator_agg"),
+  compositeOperator: kpiCompositeOperatorEnum("composite_operator"),
+  scale: numeric("scale", { precision: 14, scale: 6 }).notNull().default("1"),
+  periodWindow: text("period_window").notNull().default("last_3_months"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const insertKpiDefinitionSchema = createInsertSchema(kpiDefinitionsTable).omit({ id: true, createdAt: true });
+export type InsertKpiDefinition = z.infer<typeof insertKpiDefinitionSchema>;
+export type KpiDefinition = typeof kpiDefinitionsTable.$inferSelect;
 
 // ─── connectors ──────────────────────────────────────────────────
 

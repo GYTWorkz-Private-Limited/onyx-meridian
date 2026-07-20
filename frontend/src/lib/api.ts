@@ -14,6 +14,37 @@ export function useGetAuditLogs<T = unknown[]>() {
   return useQuery({ queryKey: ["audit-logs"], queryFn: () => fetchJson<T>("/governance/audit-logs") });
 }
 
+export interface KpiRecord {
+  id: string;
+  name: string;
+  abbreviation: string | null;
+  fullName: string;
+  category: string;
+  value: string;
+  target: string;
+  trend: "up" | "down" | "flat";
+  delta: string;
+  variance: string;
+  healthScore: number;
+  status: "on-track" | "watch" | "critical";
+  owner: string;
+  buIds: string[];
+  linked: string[];
+  formula: string;
+  dataSource: string;
+  updateFrequency: string;
+  forecastNext: string;
+  dependsOn: string[];
+  feeds: string[];
+  goalIds: string[];
+  rootCauses: { cause: string; confidence: number }[];
+  aiSummary: string;
+}
+
+export function useKpis() {
+  return useQuery({ queryKey: ["kpis"], queryFn: () => fetchJson<KpiRecord[]>("/kpis") });
+}
+
 export interface KpiChartSpec {
   type: "bar" | "line" | "pie";
   xKey: string;

@@ -1,6 +1,6 @@
 {
   "database": "onyx_meridian",
-  "generated_at": "2026-07-16T10:41:51.045323+00:00",
+  "generated_at": "2026-07-16T12:34:32.080328+00:00",
   "tables": [
     {
       "table_name": "agents",
@@ -700,10 +700,16 @@
           "is_nullable": false,
           "description": null,
           "unique_values": [
-            "Scrap Rate",
-            "Units Produced",
-            "Freight Cost per Unit",
-            "Recordable Incidents"
+            "Total Units Produced",
+            "Recordable Safety Incidents",
+            "Equipment Availability",
+            "Equipment Uptime Hours",
+            "Total Hours Worked",
+            "Production Performance",
+            "On-Time Shipments",
+            "Units Passed Without Rework",
+            "Equipment Failure Count",
+            "Total Shipments"
           ]
         },
         {
@@ -718,10 +724,11 @@
           "is_nullable": true,
           "description": null,
           "unique_values": [
-            "$",
             "count",
+            "hrs",
             "%",
-            "units"
+            "units",
+            "shipments"
           ]
         },
         {
@@ -736,7 +743,9 @@
           "is_nullable": false,
           "description": null,
           "unique_values": [
-            "2026-06"
+            "2026-06",
+            "2026-05",
+            "2026-04"
           ]
         },
         {
@@ -747,8 +756,7 @@
           "unique_values": [
             "safety",
             "quality",
-            "efficiency",
-            "cost"
+            "efficiency"
           ]
         },
         {
@@ -756,6 +764,24 @@
           "data_type": "timestamp with time zone",
           "is_nullable": false,
           "description": null
+        },
+        {
+          "column_name": "metric_key",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "failure_count",
+            "total_units",
+            "units_passed",
+            "recordable_incidents",
+            "hours_worked",
+            "on_time_shipments",
+            "performance_pct",
+            "total_shipments",
+            "uptime_hours",
+            "availability_pct"
+          ]
         }
       ],
       "indexes": []
@@ -1460,6 +1486,170 @@
       "indexes": []
     },
     {
+      "table_name": "kpi_business_unit_links",
+      "description": null,
+      "primary_key": [
+        "kpi_id",
+        "business_unit_id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        },
+        {
+          "column": "business_unit_id",
+          "references": {
+            "table": "business_units",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "business_unit_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "table_name": "kpi_definitions",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "metric_type",
+          "data_type": "kpi_metric_type",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "composite",
+            "simple",
+            "ratio"
+          ]
+        },
+        {
+          "column_name": "numerator_metric_key",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "units_passed",
+            "recordable_incidents",
+            "on_time_shipments",
+            "performance_pct",
+            "uptime_hours",
+            "availability_pct"
+          ]
+        },
+        {
+          "column_name": "numerator_agg",
+          "data_type": "kpi_agg",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "avg",
+            "sum"
+          ]
+        },
+        {
+          "column_name": "denominator_metric_key",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "failure_count",
+            "total_units",
+            "hours_worked",
+            "total_shipments"
+          ]
+        },
+        {
+          "column_name": "denominator_agg",
+          "data_type": "kpi_agg",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "sum"
+          ]
+        },
+        {
+          "column_name": "composite_operator",
+          "data_type": "kpi_composite_operator",
+          "is_nullable": true,
+          "description": null,
+          "unique_values": [
+            "multiply"
+          ]
+        },
+        {
+          "column_name": "scale",
+          "data_type": "numeric",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "period_window",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null,
+          "unique_values": [
+            "last_3_months"
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "kpi_definitions_kpi_id_key",
+          "columns": [
+            "kpi_id"
+          ],
+          "is_unique": true
+        }
+      ]
+    },
+    {
       "table_name": "kpi_dependencies",
       "description": null,
       "primary_key": [
@@ -1538,6 +1728,55 @@
       "indexes": []
     },
     {
+      "table_name": "kpi_root_causes",
+      "description": null,
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "column": "kpi_id",
+          "references": {
+            "table": "kpis",
+            "column": "id"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "kpi_id",
+          "data_type": "uuid",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "cause",
+          "data_type": "text",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "confidence",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "sort_order",
+          "data_type": "integer",
+          "is_nullable": false,
+          "description": null
+        }
+      ],
+      "indexes": []
+    },
+    {
       "table_name": "kpis",
       "description": null,
       "primary_key": [
@@ -1591,7 +1830,9 @@
           "is_nullable": false,
           "description": null,
           "unique_values": [
+            "equipment-availability",
             "first-pass-yield",
+            "production-performance",
             "trir",
             "otd",
             "oee",
@@ -1605,7 +1846,9 @@
           "description": null,
           "unique_values": [
             "Total Recordable Incident Rate",
+            "Equipment Availability",
             "Mean Time Between Failures",
+            "Production Performance",
             "On-Time Delivery",
             "First Pass Yield",
             "Overall Equipment Effectiveness"
@@ -1621,7 +1864,9 @@
             "MTBF",
             "OTD",
             "OEE",
-            "FPY"
+            "AVAIL",
+            "FPY",
+            "PERF"
           ]
         },
         {
@@ -1666,6 +1911,7 @@
           "is_nullable": false,
           "description": null,
           "unique_values": [
+            "flat",
             "up",
             "down"
           ]
@@ -1713,6 +1959,8 @@
           "unique_values": [
             "Total uptime / number of failures",
             "On-time shipments / total shipments",
+            "Actual output rate as a % of designed/ideal rate",
+            "Equipment uptime as a % of scheduled production time",
             "Availability x Performance x Quality",
             "(Recordable incidents x 200,000) / hours worked",
             "Units passed without rework / total units"
@@ -1725,6 +1973,8 @@
           "description": null,
           "unique_values": [
             "LIMS",
+            "business_results (availability_pct)",
+            "business_results (performance_pct)",
             "TMS",
             "CMMS",
             "EHS Platform",
@@ -1753,6 +2003,18 @@
           "column_name": "created_at",
           "data_type": "timestamp with time zone",
           "is_nullable": false,
+          "description": null
+        },
+        {
+          "column_name": "external_id",
+          "data_type": "text",
+          "is_nullable": true,
+          "description": null
+        },
+        {
+          "column_name": "ai_summary",
+          "data_type": "text",
+          "is_nullable": true,
           "description": null
         }
       ],

@@ -1,8 +1,11 @@
 from fastapi import APIRouter, HTTPException
 
 from ..db import pool
+from ..kpi_calc.engine import compute_kpi, recompute_all
 
 router = APIRouter(prefix="/api/kpis", tags=["kpis"])
+
+RESOLVE_ID_QUERY = "SELECT id FROM kpis WHERE id::text = $1 OR external_id = $1 OR slug = $1"
 
 LIST_QUERY = """
     SELECT k.id, k.external_id, k.slug, k.name, k.abbreviation, k.category, k.value, k.unit, k.target,
@@ -80,12 +83,18 @@ async def _link_maps():
     goal_rows = await p.fetch(GOAL_LINKS_QUERY)
     bu_rows = await p.fetch(BU_LINKS_QUERY)
     root_rows = await p.fetch(ROOT_CAUSES_QUERY)
+    id_rows = await p.fetch("SELECT id, external_id, slug FROM kpis")
+
+    # dependsOn/feeds must carry the same public id (external_id || slug || db id)
+    # that every KPI is addressed by elsewhere in this API, not the raw internal uuid.
+    public_id = {str(r["id"]): (r["external_id"] or r["slug"] or str(r["id"])) for r in id_rows}
 
     deps_on: dict[str, list] = {}
     feeds: dict[str, list] = {}
     for r in dep_rows:
-        deps_on.setdefault(str(r["kpi_id"]), []).append(r["depends_on_kpi_id"])
-        feeds.setdefault(str(r["depends_on_kpi_id"]), []).append(r["kpi_id"])
+        kpi_id, dep_id = str(r["kpi_id"]), str(r["depends_on_kpi_id"])
+        deps_on.setdefault(kpi_id, []).append(public_id.get(dep_id, dep_id))
+        feeds.setdefault(dep_id, []).append(public_id.get(kpi_id, kpi_id))
 
     agents: dict[str, list] = {}
     for r in agent_rows:
@@ -121,5 +130,24 @@ async def get_kpi(kpi_id: str):
     row = await pool().fetchrow(DETAIL_QUERY, kpi_id)
     if row is None:
         raise HTTPException(status_code=404, detail="Not found")
+    deps_on, feeds, goals, agents, bu_links, root_causes = await _link_maps()
+    return _shape(row, deps_on, feeds, goals, agents, bu_links, root_causes)
+
+
+@router.post("/recompute-all")
+async def recompute_all_kpis():
+    results = await recompute_all()
+    return {"recomputed": len(results), "values": results}
+
+
+@router.post("/{kpi_id}/recompute")
+async def recompute_one_kpi(kpi_id: str):
+    real_id = await pool().fetchval(RESOLVE_ID_QUERY, kpi_id)
+    if real_id is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    value = await compute_kpi(str(real_id))
+    if value is None:
+        raise HTTPException(status_code=400, detail="This KPI has no definition or insufficient data to compute.")
+    row = await pool().fetchrow(DETAIL_QUERY, kpi_id)
     deps_on, feeds, goals, agents, bu_links, root_causes = await _link_maps()
     return _shape(row, deps_on, feeds, goals, agents, bu_links, root_causes)
