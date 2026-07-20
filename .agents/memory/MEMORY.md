@@ -1,1 +1,0 @@
-- [Onyx Meridian Architecture](onyx-meridian-arch.md) — manufacturing OS; sidebar: Agent Harness (/agent-studio), Mission Creator (/workflow-studio), Risk Center (/governance); Policy Studio has 14-tab left nav; Business Impact has 3-tab view (Overview/Agents/Cost); HeaderBar accepts string|number for metrics
