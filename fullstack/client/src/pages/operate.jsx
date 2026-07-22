@@ -3,7 +3,7 @@ import { Card, SectionTitle, Pill, statusTone, priTone, Modal, Avatar, AgentAvat
 import { useStore } from '../data/StoreContext.jsx';
 import {
   DEPARTMENTS, ARCHETYPES, MODELS, REASONING_LEVELS, UNITS_OF_WORK, WORKFLOWS, USERS,
-  empById, uowById, wfById, modelById, reasoningById, monthlyCost, effectiveness,
+  empById, uowById, wfById, modelById, reasoningById, monthlyCost, budgetStatus, effectiveness,
   uowsForEmployee, employeeWorkflows, employeeActivity,
   kpisForDept, kpisForEmployee, kpiImpact
 } from '../data/store.js';
@@ -13,7 +13,7 @@ import {
   Activity as ActivityIcon, ListChecks, RefreshCw, Calendar,
   Mic, MicOff, ChevronDown, ChevronRight, ArrowUp, DollarSign, Phone, PhoneOff, Network,
   BarChart3, FileText, FileJson, FileSpreadsheet, Folder, FolderOpen, Brain, X, HardDrive,
-  Mail, TrendingUp, Tag, Rocket, Gauge, Target
+  Mail, TrendingUp, Tag, Rocket, Gauge, Target, Power, AlertTriangle
 } from 'lucide-react';
 import { employeeMemory, fileSize, memoryStats } from '../data/memory.js';
 import { AgentDeployPage } from '../components/DeployAgent.jsx';
@@ -430,7 +430,20 @@ export function Employees({ role, user, toast, navParams }) {
                           <div key={e.id} className="org-emp" onClick={() => setChatEmp(e.id)} title={`Open ${e.name}`}>
                             <AgentAvatar id={e.id} name={e.name} size={34} />
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium">{e.name}</div>
+                              <div className="font-medium flex items-center gap-2">
+                                {e.name}
+                                {(() => {
+                                  const b = budgetStatus(e);
+                                  if (b.state !== 'warning' && b.state !== 'over') return null;
+                                  const over = b.state === 'over';
+                                  return (
+                                    <span title={over ? `Over budget — escalating new work` : `At ${b.pct}% of budget`}
+                                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: '1px 7px', borderRadius: 999, color: over ? 'var(--red-600)' : 'var(--orange-500)', background: over ? 'var(--red-50)' : 'color-mix(in srgb, var(--orange-500) 14%, transparent)' }}>
+                                      <ShieldAlert size={11} /> {over ? 'Over budget' : `${b.pct}%`}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                               <div className="text-xs text-muted truncate">{e.title} · {modelById(e.model).name} · {e.tasks_completed.toLocaleString()} tasks</div>
                             </div>
                             <AgentStatus e={e} tasks={tasks} />
@@ -452,7 +465,7 @@ export function Employees({ role, user, toast, navParams }) {
       </Card>
 
       {wizard && <OnboardWizard role={role} user={user} onClose={() => setWizard(false)} toast={toast} />}
-      {callEmp && <CallModal emp={callEmp} user={user} onClose={() => setCallEmp(null)} />}
+      {callEmp && <CallModal emp={callEmp} user={user} onClose={() => setCallEmp(null)} toast={toast} />}
       {memEmp && <MemoryExplorer emp={memEmp} onClose={() => setMemEmp(null)} />}
     </div>
   );
@@ -460,14 +473,39 @@ export function Employees({ role, user, toast, navParams }) {
 
 // ---- Employee console: Conversation + Activity + Profile -------------------
 function EmployeeConsole({ emp, user, onBack, toast, onOpenMemory }) {
-  const { addApproval, tasks, createTask } = useStore();
+  const { addApproval, tasks, createTask, updateEmployee } = useStore();
   const [tab, setTab] = useState('chat');
   const [assignOpen, setAssignOpen] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
   const [deployOpen, setDeployOpen] = useState(false);
+  const [decommOpen, setDecommOpen] = useState(false);
+  const [decommBusy, setDecommBusy] = useState(false);
   if (!emp) return null;
 
+  const decommissioned = emp.status === 'decommissioned';
   const callable = emp.status === 'active';
+
+  // Open tasks still assigned to this employee — surfaced in the confirm dialog
+  // so an admin knows what will be left unowned before pulling the plug.
+  const openTasks = tasks.filter(t => t.assigneeType === 'ai' && t.assignee === emp.id && t.status !== 'done');
+
+  const decommission = async () => {
+    setDecommBusy(true);
+    try {
+      await updateEmployee(emp.id, { status: 'decommissioned' });
+      toast?.(`${emp.name} has been decommissioned`);
+      setDecommOpen(false);
+      onBack?.();
+    } catch (err) {
+      toast?.(`Could not decommission ${emp.name}`);
+      setDecommBusy(false);
+    }
+  };
+
+  const recommission = async () => {
+    await updateEmployee(emp.id, { status: 'paused' });
+    toast?.(`${emp.name} reinstated (paused) — resume when ready`);
+  };
 
   // Deploy opens a dedicated full-page view (not a dialog).
   if (deployOpen) {
@@ -485,8 +523,11 @@ function EmployeeConsole({ emp, user, onBack, toast, onOpenMemory }) {
         </div>
         <button className="btn btn-call" disabled={!callable} title={callable ? `Call ${emp.name}` : `${emp.name} is ${emp.status}`} onClick={() => setCallOpen(true)}><Phone size={16} /> Call</button>
         <button className="btn btn-outline" onClick={() => onOpenMemory?.()}><Brain size={16} /> Memory</button>
-        <button className="btn btn-outline" onClick={() => setDeployOpen(true)}><Rocket size={16} /> Deploy</button>
-        <button className="btn btn-primary" onClick={() => setAssignOpen(true)}><ListChecks size={16} /> Assign Task</button>
+        <button className="btn btn-outline" disabled={decommissioned} onClick={() => setDeployOpen(true)}><Rocket size={16} /> Deploy</button>
+        <button className="btn btn-primary" disabled={decommissioned} onClick={() => setAssignOpen(true)}><ListChecks size={16} /> Assign Task</button>
+        {decommissioned && (
+          <button className="btn btn-outline" onClick={recommission}><Power size={16} /> Reinstate</button>
+        )}
         <div className="seg">
           <button className={tab === 'activity' ? 'on' : ''} onClick={() => setTab(t => t === 'activity' ? 'chat' : 'activity')}>Activity</button>
           <button className={tab === 'performance' ? 'on' : ''} onClick={() => setTab(t => t === 'performance' ? 'chat' : 'performance')}>Performance</button>
@@ -494,40 +535,188 @@ function EmployeeConsole({ emp, user, onBack, toast, onOpenMemory }) {
         </div>
       </div>
 
+      {decommissioned && (
+        <Note icon={Power}>
+          <strong>{emp.name} is decommissioned.</strong> It no longer picks up work, runs workflows, or accepts calls. Reinstate it to bring it back (paused).
+        </Note>
+      )}
+
       {tab === 'chat' && <EmployeeChat emp={emp} user={user} addApproval={addApproval} toast={toast} />}
       {tab === 'activity' && <EmployeeActivity emp={emp} tasks={tasks} />}
       {tab === 'performance' && <EmployeePerformance emp={emp} />}
-      {tab === 'profile' && <EmployeeProfile emp={emp} onOpenMemory={onOpenMemory} />}
+      {tab === 'profile' && (
+        <EmployeeProfile emp={emp} onOpenMemory={onOpenMemory}
+          decommissioned={decommissioned}
+          onDecommission={() => setDecommOpen(true)} onReinstate={recommission} />
+      )}
 
       {assignOpen && (
         <AssignToEmployeeModal emp={emp} user={user} onClose={() => setAssignOpen(false)}
           createTask={createTask} toast={toast} onAssigned={() => setTab('activity')} />
       )}
-      {callOpen && <CallModal emp={emp} user={user} onClose={() => setCallOpen(false)} />}
+      {callOpen && <CallModal emp={emp} user={user} onClose={() => setCallOpen(false)} toast={toast} />}
+
+      <Modal open={decommOpen} onClose={() => !decommBusy && setDecommOpen(false)} title={`Decommission ${emp.name}?`}>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <div style={{ flex: '0 0 auto', width: 36, height: 36, borderRadius: 8, display: 'grid', placeItems: 'center', color: 'var(--red-600)', background: 'var(--red-50)' }}>
+              <AlertTriangle size={18} />
+            </div>
+            <div className="text-sm">
+              Decommissioning <strong>{emp.name}</strong> ({emp.title}) takes it out of service. It will stop
+              picking up new work, running its {employeeWorkflows(emp).length} workflow{employeeWorkflows(emp).length === 1 ? '' : 's'},
+              and answering calls or messages. Its memory and history are preserved, and you can reinstate it later.
+            </div>
+          </div>
+          {openTasks.length > 0 && (
+            <Note icon={AlertTriangle}>
+              {openTasks.length} open task{openTasks.length === 1 ? '' : 's'} assigned to {emp.name} will be left unowned — reassign {openTasks.length === 1 ? 'it' : 'them'} after decommissioning.
+            </Note>
+          )}
+          <div className="flex justify-end gap-2 mt-1">
+            <button className="btn btn-outline" disabled={decommBusy} onClick={() => setDecommOpen(false)}>Cancel</button>
+            <button className="btn btn-danger" disabled={decommBusy} onClick={decommission}>
+              <Power size={16} /> {decommBusy ? 'Decommissioning…' : 'Decommission'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
 
-// Synchronous audio call with an AI employee — a believable live-call overlay
-// to complement the asynchronous Inbox/chat.
-const CALL_SCRIPT = [
-  { who: 'ai', text: 'Hi {firstName}, {name} here — I’m on. What do you need?' },
-  { who: 'me', text: 'Give me a quick status on the rent roll sweep.' },
-  { who: 'ai', text: 'Running it now… last night’s sweep cleared 318 units. Two delinquencies need your sign-off.' },
-  { who: 'me', text: 'Go ahead and open work orders for the maintenance backlog.' },
-  { who: 'ai', text: 'On it — I’ll route those through the Meridian Proxy and send approvals to your Inbox.' },
+// Synchronous audio call with an AI employee. This is a REAL voice channel in
+// the browser: it listens through the Web Speech API (SpeechRecognition → STT),
+// interprets what you say with the same intent engine as the chat, speaks back
+// with speech synthesis (TTS), and takes a relevant action — routing an
+// approval to your Inbox when you ask it to actually do work.
+
+// Suggested things to ask — surfaced as tappable chips so the call still works
+// (and demos cleanly) when the mic is muted or the browser has no STT.
+const CALL_SUGGESTIONS = [
+  'Give me a quick status update',
+  'What needs my approval right now?',
+  'Open work orders for the maintenance backlog',
+  'Summarize what you did today',
 ];
 
-export function CallModal({ emp, user, onClose }) {
+// Map a spoken/typed utterance to a spoken reply and an optional side-effect.
+// Reuses detectKind / conversationalReply / synthesizeAnswer so the voice channel
+// stays consistent with the chat.
+function interpretCall(emp, user, text, { addApproval, toast }) {
+  const firstName = (user?.name || '').split(' ')[0];
+  const kind = detectKind(text);
+  if (kind === 'greeting' || kind === 'thanks' || kind === 'ack' || kind === 'reply') {
+    return { reply: conversationalReply(emp, kind, text, firstName), action: null };
+  }
+  // A work request — synthesize a real answer from the employee's workflows/UoW.
+  const wf = employeeWorkflows(emp)[0];
+  const uows = uowsForEmployee(emp);
+  const needsApproval = uows.length > 0 &&
+    /\b(open|dispatch|run|execute|approve|create|file|update|escalate|send|process|reconcile|generate|draft|schedule|resolve|fix|handle|kick off)\b/.test(text.toLowerCase());
+  const approval = needsApproval ? { uow: uows[0] } : null;
+  const ans = synthesizeAnswer(emp, text, { wf, uows, peer: null, approval });
+  let action = null;
+  if (approval) {
+    const apId = `app-call-${Date.now()}`;
+    action = () => {
+      addApproval?.({
+        id: apId,
+        title: `${emp.name}: action on “${approval.uow.name}”`,
+        type: 'config', risk: 'medium', dept: emp.dept, requestedBy: emp.id, ownerId: user.id,
+        detail: `${emp.name} needs approval to call the “${approval.uow.name}” Unit of Work — requested during your voice call.`,
+      });
+      toast?.('Approval routed to your Inbox from the call', 'info');
+    };
+  }
+  return { reply: ans.summary, action };
+}
+
+export function CallModal({ emp, user, onClose, toast }) {
+  const { addApproval } = useStore();
   const firstName = (user?.name || '').split(' ')[0];
   const [state, setState] = useState('connecting'); // connecting → live → ended
   const [secs, setSecs] = useState(0);
   const [muted, setMuted] = useState(false);
-  const [turn, setTurn] = useState(0);
+  const [turns, setTurns] = useState([]);           // {who:'ai'|'me', text}
+  const [interim, setInterim] = useState('');       // live partial transcript
+  const [speaking, setSpeaking] = useState(false);  // TTS in progress
+  const [thinking, setThinking] = useState(false);
 
+  const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+  const hasTTS = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const recRef = useRef(null);
+  const stateRef = useRef(state);
+  const mutedRef = useRef(muted);
+  const speakingRef = useRef(false);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+  const stopListening = () => { const r = recRef.current; recRef.current = null; try { r?.stop(); } catch {} };
+
+  const startListening = () => {
+    if (!SR) return;
+    if (stateRef.current !== 'live' || mutedRef.current || speakingRef.current || recRef.current) return;
+    const rec = new SR();
+    rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false;
+    rec.onresult = (e) => {
+      let partial = '', finalTxt = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalTxt += r[0].transcript; else partial += r[0].transcript;
+      }
+      if (partial) setInterim(partial);
+      if (finalTxt.trim()) { setInterim(''); handleUtterance(finalTxt.trim()); }
+    };
+    rec.onerror = () => {};
+    rec.onend = () => {
+      recRef.current = null; setInterim('');
+      // SpeechRecognition auto-stops after a phrase — resume the mic unless we're
+      // muted, ended, or the agent is currently speaking (avoids echo capture).
+      if (stateRef.current === 'live' && !mutedRef.current && !speakingRef.current) startListening();
+    };
+    recRef.current = rec;
+    try { rec.start(); } catch { recRef.current = null; }
+  };
+
+  const speak = (text) => {
+    if (!hasTTS) { setSpeaking(true); setTimeout(() => { setSpeaking(false); startListening(); }, 900); return; }
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.03; u.pitch = 1;
+      u.onstart = () => { speakingRef.current = true; setSpeaking(true); stopListening(); };
+      u.onend = () => { speakingRef.current = false; setSpeaking(false); startListening(); };
+      window.speechSynthesis.speak(u);
+    } catch { startListening(); }
+  };
+
+  // A user turn (from the mic or a tapped suggestion) → reply + optional action.
+  const handleUtterance = (text) => {
+    if (!text || stateRef.current !== 'live') return;
+    stopListening();
+    setInterim('');
+    setTurns(t => [...t, { who: 'me', text }]);
+    setThinking(true);
+    setTimeout(() => {
+      const { reply, action } = interpretCall(emp, user, text, { addApproval, toast });
+      setThinking(false);
+      setTurns(t => [...t, { who: 'ai', text: reply }]);
+      action?.();
+      speak(reply);
+    }, 550);
+  };
+
+  // connecting → live: greet, then open the mic.
   useEffect(() => {
-    const t = setTimeout(() => setState('live'), 1600);
+    const t = setTimeout(() => {
+      setState('live'); stateRef.current = 'live';
+      const greeting = `Hi ${firstName}, ${emp.name} here — I'm on. What do you need?`;
+      setTurns([{ who: 'ai', text: greeting }]);
+      speak(greeting);
+    }, 1400);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -536,18 +725,25 @@ export function CallModal({ emp, user, onClose }) {
     return () => clearInterval(id);
   }, [state]);
 
-  useEffect(() => {
-    if (state !== 'live') return;
-    if (turn >= CALL_SCRIPT.length) return;
-    const id = setTimeout(() => setTurn(t => t + 1), turn === 0 ? 600 : 2600);
-    return () => clearTimeout(id);
-  }, [state, turn]);
+  // Cleanup on unmount — stop the mic and any speech.
+  useEffect(() => () => { stopListening(); try { window.speechSynthesis?.cancel(); } catch {} }, []);
+
+  const toggleMute = () => {
+    setMuted(m => {
+      const next = !m; mutedRef.current = next;
+      if (next) stopListening(); else if (!speakingRef.current) setTimeout(startListening, 0);
+      return next;
+    });
+  };
+
+  const end = () => {
+    stateRef.current = 'ended'; setState('ended');
+    stopListening(); try { window.speechSynthesis?.cancel(); } catch {}
+    setTimeout(onClose, 700);
+  };
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  const transcript = CALL_SCRIPT.slice(0, turn).map((l, i) => ({ ...l, text: l.text.replace('{firstName}', firstName).replace('{name}', emp.name), key: i }));
-  const speaking = state === 'live' && turn > 0 && turn <= CALL_SCRIPT.length && CALL_SCRIPT[turn - 1]?.who === 'ai';
-
-  const end = () => { setState('ended'); setTimeout(onClose, 700); };
+  const listening = state === 'live' && !muted && !speaking && !thinking;
 
   return (
     <div className="call-overlay">
@@ -568,27 +764,45 @@ export function CallModal({ emp, user, onClose }) {
 
         <div className="call-wave">
           {Array.from({ length: 9 }).map((_, i) => (
-            <span key={i} className={`call-bar ${speaking && !muted ? 'on' : ''}`} style={{ animationDelay: `${i * 0.08}s` }} />
+            <span key={i} className={`call-bar ${(speaking || listening) && !muted ? 'on' : ''}`} style={{ animationDelay: `${i * 0.08}s` }} />
           ))}
         </div>
 
         <div className="call-transcript">
-          {transcript.length === 0 && state === 'live' && <div className="text-xs text-muted text-center">Listening…</div>}
-          {transcript.map(l => (
-            <div key={l.key} className={`call-line ${l.who}`}>
+          {turns.length === 0 && state === 'live' && <div className="text-xs text-muted text-center">Connecting audio…</div>}
+          {turns.map((l, i) => (
+            <div key={i} className={`call-line ${l.who}`}>
               <span className="call-line-who">{l.who === 'ai' ? emp.name : firstName}</span>
               <span>{l.text}</span>
             </div>
           ))}
+          {thinking && <div className="call-line ai"><span className="call-line-who">{emp.name}</span><span className="call-typing"><span /><span /><span /></span></div>}
+          {interim && <div className="call-line me" style={{ opacity: 0.6 }}><span className="call-line-who">{firstName}</span><span>{interim}…</span></div>}
         </div>
 
+        {state === 'live' && (
+          <>
+            <div className="call-status-line">
+              {muted ? 'Muted — tap a question below or unmute'
+                : speaking ? `${emp.name} is speaking…`
+                : thinking ? 'Thinking…'
+                : SR ? 'Listening — just speak' : 'Voice input not supported — tap a question'}
+            </div>
+            <div className="call-suggests">
+              {CALL_SUGGESTIONS.map(q => (
+                <button key={q} className="call-suggest" disabled={speaking || thinking} onClick={() => handleUtterance(q)}>{q}</button>
+              ))}
+            </div>
+          </>
+        )}
+
         <div className="call-controls">
-          <button className={`call-btn ${muted ? 'active' : ''}`} onClick={() => setMuted(m => !m)} title={muted ? 'Unmute' : 'Mute'}>
+          <button className={`call-btn ${muted ? 'active' : ''}`} onClick={toggleMute} title={muted ? 'Unmute' : 'Mute'} disabled={!SR}>
             {muted ? <MicOff size={20} /> : <Mic size={20} />}
           </button>
           <button className="call-btn end" onClick={end} title="End call"><PhoneOff size={22} /></button>
         </div>
-        <div className="text-[11px] text-muted text-center">Synchronous voice channel · simulated for the prototype</div>
+        <div className="text-[11px] text-muted text-center">Synchronous voice channel · live speech-to-text in your browser</div>
       </div>
     </div>
   );
@@ -1349,7 +1563,8 @@ function EmployeePerformance({ emp }) {
   }).filter(c => c.sharedUows.length > 0 || c.sharedWf.length > 0).sort((a, b) => b.overlap - a.overlap);
 
   return (
-    <div className="perf-view flex flex-col gap-4 overflow-y-auto">
+    <div className="perf-view flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+      <div className="flex flex-col gap-4">
       <div className="grid-cols-4">
         <Stat2 label="Task success rate" value={`${taskSuccess}%`} />
         <Stat2 label="Tool-selection accuracy" value={`${toolAccuracy}%`} />
@@ -1409,6 +1624,7 @@ function EmployeePerformance({ emp }) {
       </Card>
 
       <KpiImpactSection emp={emp} />
+      </div>
     </div>
   );
 }
@@ -1449,19 +1665,63 @@ function KpiImpactSection({ emp }) {
   );
 }
 
-function EmployeeProfile({ emp, onOpenMemory }) {
+function EmployeeProfile({ emp, onOpenMemory, decommissioned, onDecommission, onReinstate }) {
   const m = modelById(emp.model), r = reasoningById(emp.reasoning);
   const wfs = employeeWorkflows(emp);
   const eff = effectiveness(emp);
   const mem = React.useMemo(() => memoryStats(employeeMemory(emp)), [emp]);
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+      <div className="flex flex-col gap-4">
       <div className="grid-cols-4">
         <Stat2 label="Model" value={m.name} icon={Bot} accent="var(--blue-600)" />
         <Stat2 label="Reasoning" value={r.label} icon={Gauge} accent="#a78bfa" />
         <Stat2 label="Tasks Done" value={emp.tasks_completed.toLocaleString()} icon={CheckCircle} accent="var(--green-600)" />
         <Stat2 label="Monthly Cost" value={`$${monthlyCost(emp).toLocaleString()}`} icon={DollarSign} accent="#d98a5c" />
       </div>
+
+      {(() => {
+        const b = budgetStatus(emp);
+        const tone = b.state === 'over' ? 'red' : b.state === 'warning' ? 'orange' : 'green';
+        const meta = {
+          over: { color: 'var(--red-600)', bg: 'var(--red-50)', label: 'Over budget' },
+          warning: { color: 'var(--orange-500)', bg: 'color-mix(in srgb, var(--orange-500) 14%, transparent)', label: 'Near limit' },
+          ok: { color: 'var(--green-600)', bg: 'var(--green-50)', label: 'On track' },
+          none: { color: 'var(--gray-500)', bg: 'var(--surface-2)', label: 'No cap set' },
+        }[b.state];
+        return (
+          <Card>
+            <div className="card-header flex items-center justify-between">
+              <h3>Budget</h3>
+              <span style={{ fontSize: 12, fontWeight: 600, color: meta.color, background: meta.bg, padding: '3px 10px', borderRadius: 999 }}>{meta.label}</span>
+            </div>
+            <div className="card-body flex flex-col gap-2">
+              {b.budget > 0 ? (<>
+                <div className="flex items-end justify-between">
+                  <div className="text-sm"><strong style={{ fontSize: 16 }}>${b.usage.toLocaleString()}</strong> <span className="text-muted">used of ${b.budget.toLocaleString()}/mo</span></div>
+                  <div className="text-sm font-semibold" style={{ color: meta.color }}>{b.pct}%</div>
+                </div>
+                <Bar value={b.usage} max={b.budget} tone={tone} />
+                <div className="text-xs text-muted">
+                  {b.state === 'over'
+                    ? `$${(b.usage - b.budget).toLocaleString()} over cap`
+                    : `$${b.remaining.toLocaleString()} remaining`} · alerts at {b.alertPct}%
+                </div>
+                {(b.state === 'warning' || b.state === 'over') && (
+                  <Note icon={ShieldAlert}>
+                    {b.state === 'over'
+                      ? <>{emp.name} has crossed its <strong>${b.budget.toLocaleString()}/mo</strong> budget. Autonomous runs are paused and new work is escalated to the {emp.dept} owner for approval.</>
+                      : <>{emp.name} is at <strong>{b.pct}%</strong> of budget — past the {b.alertPct}% alert threshold. The department owner has been notified; high-cost runs will be escalated for approval.</>}
+                  </Note>
+                )}
+              </>) : (
+                <div className="text-sm text-muted">No budget cap set for {emp.name}. Set one from Cost Control to enable spend alerts and escalation.</div>
+              )}
+            </div>
+          </Card>
+        );
+      })()}
+
       <Card>
         <div className="card-body flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -1508,6 +1768,25 @@ function EmployeeProfile({ emp, onOpenMemory }) {
           <strong> ${eff.costSaved.toLocaleString()}</strong> avoided this period vs. the manual baseline mapped on its Units of Work.
         </Note>
       )}
+
+      {/* Danger zone — decommission takes the employee fully out of service. */}
+      <Card style={{ borderColor: 'var(--red-500)' }}>
+        <div className="card-header"><h3 style={{ color: 'var(--red-600)' }}>Danger Zone</h3></div>
+        <div className="card-body flex items-center justify-between gap-4 flex-wrap">
+          <div className="min-w-0">
+            <div className="font-semibold">{decommissioned ? 'Reinstate this AI employee' : 'Decommission this AI employee'}</div>
+            <div className="text-xs text-muted">
+              {decommissioned
+                ? `${emp.name} is out of service. Reinstating brings it back paused so you can review it before resuming work.`
+                : `Takes ${emp.name} out of service — it stops picking up work, running workflows and answering calls. Memory and history are kept, and you can reinstate it later.`}
+            </div>
+          </div>
+          {decommissioned
+            ? <button className="btn btn-outline" onClick={onReinstate}><Power size={16} /> Reinstate</button>
+            : <button className="btn btn-danger" onClick={onDecommission}><Power size={16} /> Decommission</button>}
+        </div>
+      </Card>
+      </div>
     </div>
   );
 }
@@ -1683,8 +1962,9 @@ function OnboardWizard({ role, user, onClose, toast }) {
   const deptDefault = role === 'admin' ? DEPT_DEFAULT : user.dept;
   const [form, setForm] = useState({
     name: '', title: '', archetype: 'Coordinator', dept: deptDefault, description: '',
-    model: 'sonnet-4-6', reasoning: 'medium',
+    model: 'sonnet-4-6', reasoning: 'medium', budget: 750, budgetAlertPct: 80,
   });
+  const [budgetTouched, setBudgetTouched] = useState(false);
   const [derived, setDerived] = useState(null);
   const [analyzeIdx, setAnalyzeIdx] = useState(-1);
   const [mappedKpis, setMappedKpis] = useState([]); // kpi ids mapped to this employee
@@ -1693,6 +1973,14 @@ function OnboardWizard({ role, user, onClose, toast }) {
 
   // changing dept invalidates the derived workflows + KPI mapping
   useEffect(() => { setDerived(null); setAnalyzeIdx(-1); setMappedKpis([]); setKpiInit(false); }, [form.dept]);
+
+  // Estimated monthly spend at a nominal ~8M tokens/mo — drives the suggested
+  // budget cap (≈1.5× headroom) until the owner sets one manually.
+  const estMonthlyCost = monthlyCost({ model: form.model, reasoning: form.reasoning, tokensMonth: 8_000_000 });
+  useEffect(() => {
+    if (budgetTouched) return;
+    setForm(f => ({ ...f, budget: Math.max(500, Math.ceil(estMonthlyCost * 1.5 / 50) * 50) }));
+  }, [estMonthlyCost, budgetTouched]);
 
   // auto-map the most relevant KPIs on first arrival at the Map KPIs step
   useEffect(() => {
@@ -1751,6 +2039,7 @@ function OnboardWizard({ role, user, onClose, toast }) {
     createEmployee({
       name: form.name, title: form.title, archetype: form.archetype, dept: form.dept,
       status: 'active', model: form.model, reasoning: form.reasoning, tokensMonth: 8_000_000,
+      budgetMonthlyUsd: Number(form.budget) || 500, budgetAlertPct: form.budgetAlertPct,
       tasks_completed: 0, workflowIds: [], description: form.description || `${form.title} for ${form.dept}.`,
       composedWorkflows: derived || [], kpiIds: mappedKpis,
     });
@@ -1801,6 +2090,28 @@ function OnboardWizard({ role, user, onClose, toast }) {
               </div>
             </Field>
             <Note>Higher reasoning means deeper thinking but higher cost. <strong>{reasoningById(form.reasoning).note}</strong> You can change this anytime from Cost Control.</Note>
+
+            <div className="p-4 border rounded-lg flex flex-col gap-3" style={{ borderColor: 'var(--border)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-sm"><DollarSign size={15} className="text-muted" /> Monthly budget</div>
+                <span className="text-xs text-muted">Est. spend ≈ <strong style={{ color: 'var(--gray-800)' }}>${estMonthlyCost.toLocaleString()}</strong>/mo</span>
+              </div>
+              <div className="grid-cols-2" style={{ gap: 16 }}>
+                <Field label="Budget cap (USD / month)">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted">$</span>
+                    <input type="number" min={0} step={50} className="search-input" value={form.budget}
+                      onChange={e => { setBudgetTouched(true); set('budget', e.target.value === '' ? '' : Number(e.target.value)); }} />
+                  </div>
+                </Field>
+                <Field label="Alert threshold">
+                  <div className="seg" style={{ display: 'flex' }}>
+                    {[70, 80, 90].map(p => <button key={p} className={form.budgetAlertPct === p ? 'on' : ''} onClick={() => set('budgetAlertPct', p)} style={{ flex: 1 }}>{p}%</button>)}
+                  </div>
+                </Field>
+              </div>
+              <Note icon={ShieldAlert}>When spend crosses <strong>{form.budgetAlertPct}%</strong> of ${Number(form.budget || 0).toLocaleString()}, {form.name || 'this employee'} notifies the department owner. At <strong>100%</strong> it pauses autonomous runs and escalates new work for approval.</Note>
+            </div>
           </div>
         )}
 
@@ -1901,6 +2212,7 @@ function OnboardWizard({ role, user, onClose, toast }) {
               <Stat2 label="Department" value={form.dept} />
               <Stat2 label="Model" value={modelById(form.model).name} />
               <Stat2 label="Reasoning" value={reasoningById(form.reasoning).label} />
+              <Stat2 label="Monthly budget" value={`$${Number(form.budget || 0).toLocaleString()} · alert ${form.budgetAlertPct}%`} />
               <Stat2 label="Workflows" value={`${(derived || []).length} derived`} />
             </div>
             <div className="flex flex-col gap-2">

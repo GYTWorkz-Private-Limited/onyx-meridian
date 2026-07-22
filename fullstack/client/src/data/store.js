@@ -391,6 +391,19 @@ export function monthlyCost(emp) {
   return Math.round((emp.tokensMonth / 1_000_000) * m.rate * r.mult);
 }
 
+// Budget vs. actual spend for an employee. `budgetMonthlyUsd` is the cap set at
+// onboarding; `budgetAlertPct` (default 80) is when we warn. Once spend crosses
+// the cap the employee escalates new work instead of running autonomously.
+//   state: 'none' (no cap) | 'ok' | 'warning' (≥ alert%) | 'over' (≥ 100%)
+export function budgetStatus(emp) {
+  const usage = monthlyCost(emp);
+  const budget = emp.budgetMonthlyUsd || 0;
+  const alertPct = emp.budgetAlertPct ?? 80;
+  const pct = budget > 0 ? Math.round((usage / budget) * 100) : 0;
+  const state = !budget ? 'none' : usage >= budget ? 'over' : pct >= alertPct ? 'warning' : 'ok';
+  return { usage, budget, alertPct, pct, state, remaining: Math.max(0, budget - usage) };
+}
+
 export function employeeWorkflows(emp) {
   if (emp.composedWorkflows?.length) return emp.composedWorkflows;
   return (emp.workflowIds || []).map(wfById).filter(Boolean);

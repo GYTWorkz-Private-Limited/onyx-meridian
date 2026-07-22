@@ -622,7 +622,7 @@ export function Inbox({ user, role, toast, navParams }) {
           </div>
         </Card>
       )}
-      {callEmp && <CallModal emp={callEmp} user={user} onClose={() => setCallEmp(null)} />}
+      {callEmp && <CallModal emp={callEmp} user={user} onClose={() => setCallEmp(null)} toast={toast} />}
 
       <Modal open={groupModal} onClose={() => setGroupModal(false)} title="New group chat">
         <div className="flex flex-col gap-4">

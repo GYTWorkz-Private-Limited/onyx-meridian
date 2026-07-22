@@ -3,7 +3,7 @@ import { Card, SectionTitle, Stat, Bar, Pill, Avatar, AgentAvatar, Note, Field, 
 import { useStore } from '../data/StoreContext.jsx';
 import {
   DEPARTMENTS, MODELS, REASONING_LEVELS, VAULT_SECRETS,
-  modelById, reasoningById, monthlyCost, effectiveness, empById
+  modelById, reasoningById, monthlyCost, budgetStatus, effectiveness, empById
 } from '../data/store.js';
 import { DollarSign, TrendingUp, Sparkles, Lock, Plus, Clock, Info, SlidersHorizontal, Save } from 'lucide-react';
 
@@ -51,6 +51,9 @@ export function Cost({ toast }) {
           <Note>Cost is driven by how hard each employee thinks. Dial reasoning down where deep analysis isn’t needed — this is the primary lever, not just watching the bill. Changes recompute cost live.</Note>
           {employees.map(e => {
             const m = modelById(e.model);
+            const b = budgetStatus(e);
+            const tone = b.state === 'over' ? 'red' : b.state === 'warning' ? 'orange' : 'green';
+            const color = b.state === 'over' ? 'var(--red-600)' : b.state === 'warning' ? 'var(--orange-500)' : 'var(--green-600)';
             return (
               <div key={e.id} className="flex items-center gap-3 p-3 border rounded-lg">
                 <AgentAvatar id={e.id} name={e.name} size={28} />
@@ -63,9 +66,21 @@ export function Cost({ toast }) {
                     <button key={r.id} className={e.reasoning === r.id ? 'on' : ''} onClick={() => changeReasoning(e.id, r.id)}>{r.label}</button>
                   ))}
                 </div>
-                <div className="ml-auto text-right">
-                  <div className="font-bold">${monthlyCost(e).toLocaleString()}/mo</div>
-                  <div className="text-xs text-muted">{reasoningById(e.reasoning).note}</div>
+                <div className="ml-auto text-right" style={{ minWidth: 190 }}>
+                  <div className="font-bold">
+                    ${b.usage.toLocaleString()}
+                    {b.budget > 0
+                      ? <span className="text-muted" style={{ fontWeight: 400, fontSize: 12 }}> / ${b.budget.toLocaleString()} mo</span>
+                      : <span className="text-muted" style={{ fontWeight: 400, fontSize: 12 }}>/mo</span>}
+                  </div>
+                  {b.budget > 0 && (
+                    <div style={{ marginTop: 5 }}><Bar value={b.usage} max={b.budget} tone={tone} /></div>
+                  )}
+                  <div className="text-xs" style={{ marginTop: 3, color: b.budget > 0 ? color : 'var(--gray-500)' }}>
+                    {b.budget > 0
+                      ? `${b.pct}% of budget · ${b.state === 'over' ? `$${(b.usage - b.budget).toLocaleString()} over` : `$${b.remaining.toLocaleString()} left`}`
+                      : 'No budget cap set'}
+                  </div>
                 </div>
               </div>
             );

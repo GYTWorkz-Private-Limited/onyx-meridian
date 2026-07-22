@@ -208,6 +208,7 @@ export function statusTone(status) {
     'todo': 'neutral',
     'draft': 'neutral',
     'paused': 'neutral',
+    'decommissioned': 'error',
     'invited': 'warning',
     'error': 'error',
   };
