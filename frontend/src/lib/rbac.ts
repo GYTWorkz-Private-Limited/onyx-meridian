@@ -95,9 +95,9 @@ export const FEATURE_ACCESS: Record<string, Partial<Record<Role, AccessLevel>>> 
   "goals":              { employee: "view", dept_manager: "scoped", abu_head: "scoped", cxo: "full" },
   "workforce":          { employee: "scoped", dept_manager: "view", developer: "full" },
   "people":             { dept_manager: "scoped", abu_head: "scoped", cxo: "full" },
-  // Deeper workforce analytics — not one of the matrix's 23 named rows;
-  // keeps the manager/exec-tier access it already had pre-rename.
-  "workforce-intelligence": { dept_manager: "scoped", abu_head: "scoped", cxo: "full" },
+  // Deeper workforce analytics — not one of the matrix's 23 named rows.
+  // Removed for CXO per explicit request; kept for Manager/ABU Head.
+  "workforce-intelligence": { dept_manager: "scoped", abu_head: "scoped" },
   "governance":         { employee: "scoped", dept_manager: "scoped" },
   "cost-control":       { employee: "scoped", dept_manager: "scoped", developer: "full" },
   "intelligence":       { employee: "view", dept_manager: "scoped", abu_head: "full", cxo: "full" },

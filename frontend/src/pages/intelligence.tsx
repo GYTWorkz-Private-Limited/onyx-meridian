@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import {
   ArrowUp, ArrowDown, CheckCircle2, Clock, AlertTriangle, TrendingUp,
   DollarSign, BarChart2, Users, Bot, FileText, Shield, ChevronRight,
   Play, Bookmark, UserPlus, XCircle, FlaskConical, Cpu, GitBranch,
-  Target, ExternalLink, Eye,
+  Target, ExternalLink, Eye, Zap, ShieldAlert, Gauge, Percent,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppContext } from "@/context/AppContext";
@@ -652,17 +652,135 @@ function RecommendationCard({ rec, onDismiss }: { rec: Recommendation; onDismiss
   );
 }
 
+// ─── Execution Overview (CXO-only curated business-impact rollup) ─────────────
+// Business-outcome tiles only — no agent/tool-call/audit-trail detail, unlike
+// the full mission-replay.tsx "Execution Intel" this stands in for on the CXO nav.
+const EXECUTION_OVERVIEW_TILES = [
+  { label: "Money Saved", value: "$1.9M", icon: DollarSign, color: "text-emerald-600" },
+  { label: "Downtime Prevented", value: "142 hrs", icon: Clock, color: "text-blue-600" },
+  { label: "Mission Score", value: "94/100", icon: Gauge, color: "text-primary" },
+  { label: "Lead Time Reduction", value: "-18%", icon: TrendingUp, color: "text-emerald-600" },
+  { label: "Supplier Risk", value: "Low", icon: ShieldAlert, color: "text-emerald-600" },
+  { label: "Revenue Protected", value: "$3.2M", icon: DollarSign, color: "text-emerald-600" },
+  { label: "Automation Rate", value: "87%", icon: Zap, color: "text-amber-600" },
+  { label: "AI Cost Ratio", value: "0.6%", icon: Percent, color: "text-primary" },
+];
+
+function ExecutionOverviewSection() {
+  return (
+    <div>
+      <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Execution Overview</h2>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-5">
+        Enterprise-wide rollup of mission execution outcomes — business impact, not agent/tool detail.
+      </p>
+      <div className="grid grid-cols-4 gap-3">
+        {EXECUTION_OVERVIEW_TILES.map((t) => {
+          const Icon = t.icon;
+          return (
+            <div key={t.label} className="bg-white border border-border rounded-sm px-4 py-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Icon size={11} className="text-muted-foreground" />
+                <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{t.label}</span>
+              </div>
+              <div className={cn("text-xl font-bold font-mono", t.color)}>{t.value}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
+const CXO_NAV_SECTIONS = [
+  { id: "section-recommendations", label: "Recommendations" },
+  { id: "section-execution", label: "Execution Overview" },
+];
+
+function EnterpriseIntelligenceCxo({ visible, onDismiss }: { visible: Recommendation[]; onDismiss: (id: string) => void }) {
+  const [active, setActive] = useState(CXO_NAV_SECTIONS[0].id);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries.find((e) => e.isIntersecting);
+        if (visibleEntry) setActive(visibleEntry.target.id);
+      },
+      { rootMargin: "-10% 0px -70% 0px" }
+    );
+    CXO_NAV_SECTIONS.forEach((s) => {
+      const el = sectionRefs.current[s.id];
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollTo = (id: string) => {
+    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div className="flex-1 flex overflow-hidden">
+      {/* Quick nav */}
+      <div className="w-[240px] shrink-0 bg-white border-r border-border overflow-y-auto">
+        <div className="px-4 py-3 text-[8px] uppercase tracking-widest font-bold text-muted-foreground/70">
+          Quick Nav
+        </div>
+        {CXO_NAV_SECTIONS.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => scrollTo(s.id)}
+            className={cn(
+              "w-full text-left px-4 py-2.5 text-[11px] font-semibold border-l-2 transition-colors",
+              active === s.id ? "border-l-primary bg-primary/5 text-primary" : "border-l-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto p-6 max-w-[1200px] space-y-10">
+        <div id="section-recommendations" ref={(el) => { sectionRefs.current["section-recommendations"] = el; }}>
+          <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Recommendations</h2>
+          <p className="text-xs text-muted-foreground mt-0.5 mb-5">
+            {visible.length} active AI-generated executive recommendations · Sorted by priority
+          </p>
+          <div className="space-y-4">
+            {visible.map(rec => (
+              <RecommendationCard key={rec.id} rec={rec} onDismiss={onDismiss} />
+            ))}
+            {visible.length === 0 && (
+              <div className="p-16 text-center bg-white border border-border rounded-sm">
+                <CheckCircle2 size={32} className="text-emerald-500 mx-auto mb-3" />
+                <p className="text-sm font-semibold text-foreground">All recommendations reviewed</p>
+                <p className="text-xs text-muted-foreground mt-1">No active recommendations at this time.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div id="section-execution" ref={(el) => { sectionRefs.current["section-execution"] = el; }}>
+          <ExecutionOverviewSection />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Intelligence() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const { workflows } = useAppContext();
+  const { workflows, role } = useAppContext();
   const runningWorkflows = workflows.filter(w => w.status === "running" || w.status === "pending");
 
   const visible = RECOMMENDATIONS.filter(r => !dismissed.has(r.id));
+  const dismiss = (id: string) => setDismissed(prev => { const n = new Set(prev); n.add(id); return n; });
 
   return (
-    <div className="flex flex-col h-full bg-[#F8F9FA] overflow-auto">
+    <div className="flex flex-col h-full bg-[#F8F9FA] overflow-hidden">
       <HeaderBar
         moduleName="ENTERPRISE INTELLIGENCE"
         metrics={[
@@ -672,39 +790,41 @@ export default function Intelligence() {
         ]}
       />
 
-      <div className="p-6 max-w-[1200px] mx-auto w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Recommendations</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {visible.length} active AI-generated executive recommendations · Sorted by priority
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            DeepSights Engine v3.2 · Live
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {visible.map(rec => (
-            <RecommendationCard
-              key={rec.id}
-              rec={rec}
-              onDismiss={id => setDismissed(prev => { const n = new Set(prev); n.add(id); return n; })}
-            />
-          ))}
-
-          {visible.length === 0 && (
-            <div className="p-16 text-center bg-white border border-border rounded-sm">
-              <CheckCircle2 size={32} className="text-emerald-500 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-foreground">All recommendations reviewed</p>
-              <p className="text-xs text-muted-foreground mt-1">No active recommendations at this time.</p>
+      {role === "cxo" ? (
+        <EnterpriseIntelligenceCxo visible={visible} onDismiss={dismiss} />
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-[1200px] mx-auto w-full">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-bold text-foreground uppercase tracking-widest">Recommendations</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {visible.length} active AI-generated executive recommendations · Sorted by priority
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                DeepSights Engine v3.2 · Live
+              </div>
             </div>
-          )}
+
+            <div className="space-y-4">
+              {visible.map(rec => (
+                <RecommendationCard key={rec.id} rec={rec} onDismiss={dismiss} />
+              ))}
+
+              {visible.length === 0 && (
+                <div className="p-16 text-center bg-white border border-border rounded-sm">
+                  <CheckCircle2 size={32} className="text-emerald-500 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-foreground">All recommendations reviewed</p>
+                  <p className="text-xs text-muted-foreground mt-1">No active recommendations at this time.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

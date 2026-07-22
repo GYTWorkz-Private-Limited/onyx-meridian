@@ -1,12 +1,22 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAppContext } from "@/context/AppContext";
 import { PEOPLE, type Person } from "@/data/people-data";
 import { BU_LIST, resolveDeptTwin } from "@/data/enterprise-data";
+import { ROLE_LABEL, landingRouteFor, type Role } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
-import { Users, Plus, X, Trash2, Layers } from "lucide-react";
+import { Users, Plus, X, Trash2, Layers, Eye } from "lucide-react";
+
+function previewRoleFor(p: Person): Role {
+  return p.roleTier === "abu_head" ? "abu_head" : p.roleTier === "cxo" ? "cxo" : "employee";
+}
 
 const STATUS_CLS: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -23,12 +33,21 @@ const ROLE_TIER_CLS: Record<string, string> = {
 const initials = (name: string) => name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
 
 export default function People() {
-  const { role, currentBuId, persona } = useAppContext();
+  const { role, currentBuId, persona, startPreview } = useAppContext();
+  const [, navigate] = useLocation();
   const [people, setPeople] = useState<Person[]>(PEOPLE);
   const [buFilter, setBuFilter] = useState<string>("all");
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", title: "", buId: currentBuId ?? BU_LIST[0].id });
+  const [previewTarget, setPreviewTarget] = useState<Person | null>(null);
   const { toast } = useToast();
+
+  const confirmPreview = () => {
+    if (!previewTarget) return;
+    startPreview(previewTarget);
+    navigate(landingRouteFor(previewRoleFor(previewTarget)));
+    setPreviewTarget(null);
+  };
 
   const deptTwin = role === "dept_manager" ? resolveDeptTwin(persona.deptId, persona.buId) : null;
 
@@ -121,7 +140,7 @@ export default function People() {
               {scoped.map((p) => {
                 const bu = BU_LIST.find((b: any) => b.id === p.buId);
                 return (
-                  <tr key={p.id} className="hover:bg-muted/20 transition-colors">
+                  <tr key={p.id} onClick={() => setPreviewTarget(p)} className="hover:bg-muted/20 transition-colors cursor-pointer">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
@@ -144,11 +163,16 @@ export default function People() {
                       <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", STATUS_CLS[p.status])}>{p.status}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {p.roleTier === "member" && (
-                        <button onClick={() => remove(p.id)} className="text-muted-foreground hover:text-destructive transition-colors" title="Remove">
-                          <Trash2 size={14} />
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); setPreviewTarget(p); }} className="text-muted-foreground hover:text-primary transition-colors" title="Preview their view of Onyx">
+                          <Eye size={14} />
                         </button>
-                      )}
+                        {p.roleTier === "member" && (
+                          <button onClick={(e) => { e.stopPropagation(); remove(p.id); }} className="text-muted-foreground hover:text-destructive transition-colors" title="Remove">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -197,6 +221,23 @@ export default function People() {
           </div>
         </div>
       )}
+
+      <AlertDialog open={previewTarget !== null} onOpenChange={(open) => !open && setPreviewTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Preview {previewTarget?.name}'s view of Onyx?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The whole app will switch to show what {previewTarget?.name} sees as {previewTarget ? ROLE_LABEL[previewRoleFor(previewTarget)] : ""} —
+              their nav, My Work, and scoped data. Ask the Onyx agent if you have questions while previewing, or click
+              "Exit Preview" in the banner at any time to come back.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPreviewTarget(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPreview}>Preview</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

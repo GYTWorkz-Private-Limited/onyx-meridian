@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { FolderKanban, Plus, X, Calendar, Target } from "lucide-react";
 import { useAppContext } from "@/context/AppContext";
 import { canEdit } from "@/lib/rbac";
+import { CxoProjectWizard } from "@/pages/projects-wizard-cxo";
 
 const STATUS_CLS: Record<string, string> = {
   planning: "bg-gray-50 text-gray-600 border-gray-200",
@@ -23,6 +24,7 @@ export default function Projects() {
   const { toast } = useToast();
   const { role } = useAppContext();
   const canManage = canEdit(role, "projects");
+  const isCxo = role === "cxo";
 
   const submit = () => {
     if (!form.name.trim()) {
@@ -85,7 +87,17 @@ export default function Projects() {
         )}
       </div>
 
-      {showModal && (
+      {showModal && isCxo && (
+        <CxoProjectWizard
+          onClose={() => setShowModal(false)}
+          onCreate={(project) => {
+            setProjects((prev) => [project, ...prev]);
+            setShowModal(false);
+          }}
+        />
+      )}
+
+      {showModal && !isCxo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white border border-border rounded-sm shadow-xl w-[480px] p-6">
             <div className="flex items-center justify-between mb-4">

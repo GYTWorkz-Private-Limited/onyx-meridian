@@ -5,6 +5,8 @@ export interface Project {
   leadAgentId: string;
   goalId: string;
   buId: string;
+  buIds?: string[]; // set by the CXO creation wizard — multiple ABUs involved
+  keyDocuments?: { type: string; title: string; summary: string }[]; // PRD / PR-FAQ / HLD, collected at creation
   status: "planning" | "active" | "done";
   color: string;
   targetDate: string;

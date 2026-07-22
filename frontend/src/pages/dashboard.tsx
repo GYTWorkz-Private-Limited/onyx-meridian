@@ -18,6 +18,9 @@ import {
   KNOWLEDGE_SUMMARY, TOOL_SUMMARY, SECURITY, EXEC_INSIGHTS,
 } from "@/data/dashboard-data";
 import { useLocation } from "wouter";
+import { useAppContext } from "@/context/AppContext";
+import ExecutiveCommandCxo from "@/pages/dashboard-cxo";
+import ExecutiveCommandAbu from "@/pages/dashboard-abu";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 type Range = "7d" | "30d";
@@ -160,7 +163,11 @@ const KPI_ROW3 = [
 
 // ─── Main Component ────────────────────────────────────────────────────────
 export default function Dashboard() {
+  const { role, currentBuId } = useAppContext();
   const [, navigate] = useLocation();
+
+  if (role === "cxo") return <ExecutiveCommandCxo />;
+  if (role === "abu_head" && currentBuId) return <ExecutiveCommandAbu buId={currentBuId} />;
 
   // time ranges per chart
   const [costRange,       setCostRange]       = useState<Range>("30d");

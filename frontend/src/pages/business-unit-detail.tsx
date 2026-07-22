@@ -1,92 +1,19 @@
-import { useState } from "react";
-import { useParams, useLocation, useSearch, Redirect } from "wouter";
+import { useRef } from "react";
+import { useParams, useLocation, Redirect } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useAppContext } from "@/context/AppContext";
-import { BU_LIST, MFG_AGENTS, KPI_CATALOG, SOP_CATALOG, ANOMALIES, BU_INTELLIGENCE, ENTERPRISE_METRICS } from "@/data/enterprise-data";
+import { BU_LIST, MFG_AGENTS, SOP_CATALOG, ANOMALIES, BU_INTELLIGENCE, ENTERPRISE_METRICS } from "@/data/enterprise-data";
 import {
   Bot, Shield, TrendingUp, TrendingDown, ArrowRight, CheckCircle2,
-  AlertTriangle, XCircle, Clock, FileText, ChevronRight, Play,
-  Users, DollarSign, ThumbsUp, ThumbsDown, Calendar, BookOpen,
-  Activity, BarChart3, Zap, Target, Cpu, Network, Lock,
-  GitBranch, Star, ArrowUp, ArrowDown, Settings, RefreshCw,
-  Layers, Gauge,
+  AlertTriangle, XCircle, Clock, ChevronRight,
+  DollarSign, Target, Cpu, Lock,
+  Star, Play, RefreshCw,
+  Layers, Gauge, ClipboardCheck, Workflow,
 } from "lucide-react";
 
 // ─── Per-BU rich data ─────────────────────────────────────────
-
-const BU_KNOWLEDGE: Record<string, Array<{ title: string; type: string; updated: string; size: string; agents: string[] }>> = {
-  manufacturing: [
-    { title: "MES Production Standard Operating Procedures", type: "SOP", updated: "2 days ago", size: "4.2 MB", agents: ["Production Planner", "OEE Optimizer"] },
-    { title: "SCADA Alarm Thresholds & Response Matrix", type: "Reference", updated: "1 week ago", size: "1.8 MB", agents: ["OEE Optimizer", "Line Monitor"] },
-    { title: "Equipment Maintenance Manuals", type: "Manual", updated: "3 weeks ago", size: "28.4 MB", agents: ["Production Planner"] },
-    { title: "Production Scheduling Rules & Constraints", type: "Policy", updated: "4 days ago", size: "2.1 MB", agents: ["Production Planner", "OEE Optimizer"] },
-  ],
-  "supply-chain": [
-    { title: "Demand Planning Model Documentation", type: "Technical", updated: "2 days ago", size: "4.8 MB", agents: ["Demand Planner", "Inventory Optimizer"] },
-    { title: "Inventory Policy & Reorder Points", type: "Policy", updated: "1 week ago", size: "1.6 MB", agents: ["Inventory Optimizer", "WMS Agent"] },
-    { title: "Supplier Lead Time Database", type: "Reference", updated: "4 days ago", size: "2.3 MB", agents: ["Demand Planner"] },
-    { title: "WMS Operating Procedures", type: "SOP", updated: "2 weeks ago", size: "5.4 MB", agents: ["WMS Agent", "Inventory Optimizer"] },
-  ],
-  procurement: [
-    { title: "Approved Supplier List & Qualification Criteria", type: "Reference", updated: "1 day ago", size: "3.4 MB", agents: ["Supplier Risk", "Sourcing Agent"] },
-    { title: "Contract Templates & Approval Thresholds", type: "Template", updated: "3 days ago", size: "2.1 MB", agents: ["Contract Bot", "Sourcing Agent"] },
-    { title: "Sourcing Strategy Guide (Tier 1 & 2)", type: "Guide", updated: "1 week ago", size: "4.2 MB", agents: ["Sourcing Agent"] },
-    { title: "Supplier Risk Scoring Methodology", type: "Technical", updated: "5 days ago", size: "1.8 MB", agents: ["Supplier Risk"] },
-  ],
-  finance: [
-    { title: "Chart of Accounts & Cost Center Mapping", type: "Reference", updated: "1 day ago", size: "2.8 MB", agents: ["Finance Analyst", "Cost Controller"] },
-    { title: "Month-end Close Checklist v8", type: "SOP", updated: "3 days ago", size: "1.2 MB", agents: ["Finance Analyst", "Audit Agent"] },
-    { title: "Budget Allocation Rules & Variance Thresholds", type: "Policy", updated: "1 week ago", size: "1.9 MB", agents: ["Cost Controller"] },
-    { title: "Audit Compliance Procedures (SOX)", type: "Compliance", updated: "2 weeks ago", size: "6.1 MB", agents: ["Audit Agent", "Finance Analyst"] },
-  ],
-  revenue: [
-    { title: "Sales Playbook v6 (Enterprise & Mid-Market)", type: "Playbook", updated: "1 day ago", size: "4.8 MB", agents: ["Revenue Scout", "Deal Closer AI"] },
-    { title: "Customer Account Intelligence Framework", type: "Reference", updated: "2 days ago", size: "2.4 MB", agents: ["Revenue Scout", "Customer Intel"] },
-    { title: "Pricing Policy & Discount Authorization Matrix", type: "Policy", updated: "1 week ago", size: "1.6 MB", agents: ["Deal Closer AI"] },
-    { title: "CRM Integration Guide & Pipeline Definitions", type: "Technical", updated: "3 days ago", size: "3.1 MB", agents: ["Revenue Scout", "Forecast Agent"] },
-  ],
-};
-
-const BU_TASKS: Record<string, Array<{ id: string; title: string; agent: string; status: "open"|"in-progress"|"done"|"blocked"; priority: "critical"|"high"|"medium"|"low"; due: string; type: string }>> = {
-  manufacturing: [
-    { id: "t1", title: "Schedule bearing replacement for MX-0441", agent: "Predictive Maintenance", status: "in-progress", priority: "critical", due: "Today 12:00", type: "Maintenance" },
-    { id: "t2", title: "Investigate batch QD-229 scrap rate (3 units flagged)", agent: "Quality Inspector", status: "open", priority: "high", due: "Today 14:00", type: "Quality" },
-    { id: "t3", title: "Line 7 micro-stoppage analysis", agent: "OEE Optimizer", status: "in-progress", priority: "high", due: "Today 16:00", type: "OEE" },
-    { id: "t4", title: "Optimize Day shift schedule for APAC surge", agent: "Production Planner", status: "done", priority: "medium", due: "Today 06:00", type: "Scheduling" },
-    { id: "t5", title: "Update SCADA alarm thresholds post-bearing incident", agent: "OEE Optimizer", status: "blocked", priority: "medium", due: "Tomorrow", type: "Configuration" },
-  ],
-  "supply-chain": [
-    { id: "t1", title: "Emergency reorder SKU-8841 (stockout risk in 11 days)", agent: "Inventory Optimizer", status: "in-progress", priority: "critical", due: "Today 15:00", type: "Inventory" },
-    { id: "t2", title: "APAC forecast variance analysis (18% above threshold)", agent: "Demand Planner", status: "open", priority: "high", due: "Today", type: "Forecasting" },
-    { id: "t3", title: "WH-3 capacity optimization (backlog clearing)", agent: "WMS Agent", status: "in-progress", priority: "high", due: "Tomorrow", type: "Warehouse" },
-    { id: "t4", title: "Carrier delay mitigation (6 impacted shipments)", agent: "Route Optimizer", status: "open", priority: "medium", due: "Today", type: "Logistics" },
-    { id: "t5", title: "Renegotiate lead time with Supplier #14", agent: "Demand Planner", status: "open", priority: "medium", due: "This week", type: "Procurement" },
-  ],
-  procurement: [
-    { id: "t1", title: "Activate alternate supplier protocol (3 Tier-1 vendors)", agent: "Supplier Risk", status: "in-progress", priority: "critical", due: "Today", type: "Risk" },
-    { id: "t2", title: "Clear PO approval backlog (29 items, 4 SLA breaches)", agent: "Contract Bot", status: "open", priority: "high", due: "Today", type: "Approval" },
-    { id: "t3", title: "Emergency RFQ for Tier-1 material substitution", agent: "Sourcing Agent", status: "in-progress", priority: "high", due: "Today 18:00", type: "Sourcing" },
-    { id: "t4", title: "Supplier #084 financial health assessment", agent: "Supplier Risk", status: "open", priority: "medium", due: "Tomorrow", type: "Risk" },
-    { id: "t5", title: "Contract renewal Supplier #042 (expiry in 30 days)", agent: "Contract Bot", status: "open", priority: "medium", due: "This week", type: "Contract" },
-  ],
-  finance: [
-    { id: "t1", title: "Q3 cost variance report (4 items above materiality)", agent: "Finance Analyst", status: "in-progress", priority: "high", due: "Today", type: "Reporting" },
-    { id: "t2", title: "Month-end close reconciliation (inter-company items)", agent: "Finance Analyst", status: "done", priority: "high", due: "Yesterday", type: "Close" },
-    { id: "t3", title: "CFO budget reallocation review ($65K Engineering to Sales)", agent: "Cost Controller", status: "open", priority: "medium", due: "Tomorrow", type: "Approval" },
-    { id: "t4", title: "Audit exception resolution (FIN-001 materiality breach)", agent: "Audit Agent", status: "open", priority: "medium", due: "This week", type: "Compliance" },
-    { id: "t5", title: "Upgrade Audit Agent to v3.1 (18% coverage expansion)", agent: "Audit Agent", status: "open", priority: "low", due: "Next week", type: "Upgrade" },
-  ],
-  revenue: [
-    { id: "t1", title: "APAC pipeline intervention (3 accounts at 70% churn)", agent: "Revenue Scout", status: "in-progress", priority: "critical", due: "Today", type: "Pipeline" },
-    { id: "t2", title: "Enable Deal Closer AI for tier-2 deals under $50K", agent: "Deal Closer AI", status: "open", priority: "high", due: "This week", type: "Expansion" },
-    { id: "t3", title: "EMEA Revenue Scout deployment scoping", agent: "Revenue Scout", status: "open", priority: "medium", due: "Next week", type: "Expansion" },
-    { id: "t4", title: "Q3 pipeline forecast update (4 deals with slip risk)", agent: "Forecast Agent", status: "in-progress", priority: "high", due: "Today", type: "Forecasting" },
-    { id: "t5", title: "CRM hygiene pass (stale opportunities older than 90d)", agent: "Customer Intel", status: "open", priority: "low", due: "This week", type: "Data Quality" },
-  ],
-};
 
 const BU_TIMELINE: Record<string, Array<{ time: string; event: string; actor: string; type: "agent"|"human"|"system"|"alert" }>> = {
   manufacturing: [
@@ -359,24 +286,36 @@ function HealthBar({ value }: { value: number }) {
   );
 }
 
-function MetricBadge({ value, label, color }: { value: string; label: string; color?: string }) {
+function MetricBadge({ value, label, color, onClick }: { value: string; label: string; color?: string; onClick?: () => void }) {
   return (
-    <div className="bg-muted/30 border border-border/40 rounded-sm px-3 py-2">
+    <div
+      onClick={onClick}
+      className={cn("bg-muted/30 border border-border/40 rounded-sm px-3 py-2", onClick && "cursor-pointer hover:border-primary/30 hover:bg-primary/5 transition-colors")}
+    >
       <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-0.5">{label}</div>
       <div className={cn("text-sm font-bold font-mono", color || "text-foreground")}>{value}</div>
     </div>
   );
 }
 
-function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
+// A single big number — used for Missions/Workflows/Approvals, which are
+// deliberately NOT full sections anymore, just a count with a link out to
+// the real page that owns that content.
+function CountCard({ value, label, icon: Icon, color, onClick }: { value: string | number; label: string; icon: React.ElementType; color?: string; onClick?: () => void }) {
   return (
-    <div className="flex items-end gap-0.5 h-10">
-      {Array.from({ length: 8 }, (_, i) => {
-        const h = Math.max(4, Math.round((value / max) * 40));
-        return <div key={i} className={cn("w-2 rounded-sm opacity-30", color)} style={{ height: h * 0.8 }} />;
-      })}
-      <div className={cn("w-2 rounded-sm", color)} style={{ height: Math.max(4, Math.round((value / max) * 40)) }} />
-    </div>
+    <button
+      onClick={onClick}
+      disabled={!onClick}
+      className={cn("bg-white border border-border rounded-sm p-3 shadow-sm text-left flex items-center gap-3", onClick && "hover:border-primary/40 transition-colors")}
+    >
+      <div className={cn("w-8 h-8 rounded-sm flex items-center justify-center shrink-0 bg-muted/40", color)}>
+        <Icon size={14} />
+      </div>
+      <div>
+        <div className="text-lg font-bold font-mono tabular-nums text-foreground leading-none">{value}</div>
+        <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">{label}</div>
+      </div>
+    </button>
   );
 }
 
@@ -397,20 +336,6 @@ function TrendChart({ data, labels, color, max }: { data: number[]; labels: stri
   );
 }
 
-const priorityStyle: Record<string, string> = {
-  critical: "text-red-700 bg-red-50 border-red-200",
-  high: "text-amber-700 bg-amber-50 border-amber-200",
-  medium: "text-blue-700 bg-blue-50 border-blue-200",
-  low: "text-muted-foreground bg-muted/40 border-border",
-};
-
-const taskStatusStyle: Record<string, string> = {
-  "open": "text-blue-700 bg-blue-50 border-blue-200",
-  "in-progress": "text-amber-700 bg-amber-50 border-amber-200",
-  "done": "text-emerald-700 bg-emerald-50 border-emerald-200",
-  "blocked": "text-red-700 bg-red-50 border-red-200",
-};
-
 const riskSeverityStyle: Record<string, string> = {
   critical: "border-red-200 bg-red-50/30",
   high: "border-amber-200 bg-amber-50/20",
@@ -425,33 +350,24 @@ const timelineTypeStyle: Record<string, { dot: string; label: string }> = {
   system: { dot: "bg-muted-foreground", label: "text-muted-foreground" },
 };
 
-const missionStatusStyle: Record<string, string> = {
-  active: "text-primary bg-primary/5 border-primary/20",
-  paused: "text-amber-700 bg-amber-50 border-amber-200",
-  completed: "text-emerald-700 bg-emerald-50 border-emerald-200",
-  failed: "text-red-700 bg-red-50 border-red-200",
-};
-
-const slaStyle: Record<string, string> = {
-  "On Track": "text-emerald-700 bg-emerald-50 border-emerald-200",
-  "At Risk": "text-amber-700 bg-amber-50 border-amber-200",
-  "Critical": "text-red-700 bg-red-50 border-red-200",
-  "Delayed": "text-orange-700 bg-orange-50 border-orange-200",
-};
-
 // ─── Main Page ─────────────────────────────────────────────────
+// One continuously scrollable page (same idea as the CXO Executive Command
+// redesign) instead of 16 separate tabs — nothing here requires clicking
+// into a different view to see it. Sections that duplicated the real
+// SOP Library / Knowledge / Documents / full Agent Inventory pages were
+// removed outright (not the real pages, just the redundant embeds here);
+// Missions, Workflows, and Approvals were too small to earn a whole section
+// so they're just count cards linking out to their real home page.
 
 export default function BusinessUnitDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const search = useSearch();
   const { toast } = useToast();
   const { role, currentBuId } = useAppContext();
 
-  const searchParams = new URLSearchParams(search);
-  const tabFromUrl = searchParams.get("tab") || "overview";
-
-  const [activeTab, setActiveTab] = useState(tabFromUrl);
+  const healthRef = useRef<HTMLDivElement>(null);
+  const impactRef = useRef<HTMLDivElement>(null);
+  const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   // ABU Head is scoped to his own ABU — block direct-URL access to another ABU's detail page.
   if (role === "abu_head" && id !== currentBuId) {
@@ -472,11 +388,8 @@ export default function BusinessUnitDetail() {
   }
 
   const buAgents = MFG_AGENTS.filter((a) => a.bu === id);
-  const buKpis = KPI_CATALOG.filter((k) => k.buIds.includes(id!));
   const buSops = SOP_CATALOG.filter((s) => s.owner === bu.name);
   const intel = BU_INTELLIGENCE[id!] || BU_INTELLIGENCE.manufacturing;
-  const knowledge = BU_KNOWLEDGE[id!] || BU_KNOWLEDGE.manufacturing;
-  const tasks = BU_TASKS[id!] || BU_TASKS.manufacturing;
   const timeline = BU_TIMELINE[id!] || BU_TIMELINE.manufacturing;
   const risks = BU_RISKS[id!] || BU_RISKS.manufacturing;
   const approvals = BU_APPROVALS[id!] || BU_APPROVALS.manufacturing;
@@ -485,32 +398,7 @@ export default function BusinessUnitDetail() {
   const systems = BU_SYSTEMS[id!] || BU_SYSTEMS.manufacturing;
   const analytics = BU_ANALYTICS[id!] || BU_ANALYTICS.manufacturing;
   const buAnomalies = ANOMALIES.filter((a) => a.buId === id);
-
-  const tabs = [
-    "overview", "business-impact", "kpis", "health",
-    "agents", "missions", "workflows", "sops",
-    "knowledge", "documents", "policies", "risks",
-    "approvals", "recommendations", "timeline", "analytics",
-  ];
-
-  const tabLabels: Record<string, string> = {
-    "overview": "Executive Overview",
-    "business-impact": "Business Impact",
-    "kpis": "Live KPIs",
-    "health": "Dept Health",
-    "agents": "Agent Inventory",
-    "missions": "Active Missions",
-    "workflows": "Workflows",
-    "sops": "SOPs",
-    "knowledge": "Knowledge",
-    "documents": "Documents",
-    "policies": "Policies",
-    "risks": "Risks",
-    "approvals": "Human Approvals",
-    "recommendations": "Recommendations",
-    "timeline": "Timeline",
-    "analytics": "Analytics",
-  };
+  const openTasksCount = 0; // per-task table removed — see My Work for the live, role-scoped task list
 
   return (
     <div className="flex flex-col h-full bg-[#F8F9FA] overflow-auto">
@@ -520,8 +408,6 @@ export default function BusinessUnitDetail() {
           { label: "EEI SCORE", value: bu.eei },
           { label: "UNIT HEALTH", value: `${bu.health}%` },
           { label: "AGENTS", value: bu.agents },
-          { label: "ACTIVE MISSIONS", value: missions.filter(m => m.status === "active").length },
-          { label: "OPEN TASKS", value: tasks.filter(t => t.status !== "done").length },
           { label: "AUTOMATION", value: `${bu.automationPct}%` },
         ]}
       />
@@ -547,19 +433,17 @@ export default function BusinessUnitDetail() {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            {Object.entries(bu.kpis).map(([k, v]) => (
-              <button key={k} onClick={() => setActiveTab("kpis")} className="text-right hover:opacity-80 transition-opacity">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-0.5">{k.replace(/([A-Z])/g, ' $1').trim()}</div>
-                <div className="text-sm font-bold font-mono text-foreground">{v as string}</div>
-              </button>
-            ))}
-            <button onClick={() => setActiveTab("health")} className="text-right hover:opacity-80 transition-opacity">
+            <button onClick={() => navigate("/kpi-studio")} className="text-right hover:opacity-80 transition-opacity">
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-0.5">KPIs</div>
+              <div className="text-sm font-bold font-mono text-foreground">Open</div>
+            </button>
+            <button onClick={() => scrollTo(healthRef)} className="text-right hover:opacity-80 transition-opacity">
               <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-0.5">Health</div>
               <div className={cn("text-2xl font-bold font-mono tabular-nums",
                 bu.health >= 85 ? "text-emerald-600" : bu.health >= 70 ? "text-amber-600" : "text-red-600"
               )}>{bu.health}%</div>
             </button>
-            <button onClick={() => setActiveTab("business-impact")} className="text-right hover:opacity-80 transition-opacity">
+            <button onClick={() => scrollTo(impactRef)} className="text-right hover:opacity-80 transition-opacity">
               <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-0.5">EEI</div>
               <div className="text-3xl font-bold font-mono text-primary tabular-nums">{bu.eei}</div>
             </button>
@@ -567,1210 +451,463 @@ export default function BusinessUnitDetail() {
         </div>
       </div>
 
-      <div className="flex-1 px-6 pt-4 pb-6 min-h-0">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-          <TabsList className="w-full justify-start bg-white border border-border rounded-sm p-1 h-auto gap-0 mb-4 flex-wrap shrink-0">
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab} value={tab}
-                className="rounded-sm px-3 py-1.5 text-[9px] uppercase tracking-widest font-semibold data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
-                {tabLabels[tab]}
-              </TabsTrigger>
+      <div className="flex-1 px-6 pt-4 pb-6 space-y-6">
+
+        {/* ── Core stats ── */}
+        <div className="grid grid-cols-6 gap-3">
+          <MetricBadge value={String(bu.eei)} label="EEI Score" color="text-primary" />
+          <MetricBadge value={`${bu.health}%`} label="Unit Health" color={bu.health >= 85 ? "text-emerald-600" : "text-amber-600"} />
+          <MetricBadge value={String(bu.agents)} label="AI Agents" color="text-primary" />
+          <MetricBadge value={bu.revenueProtected} label="Rev. Protected" color="text-emerald-600" />
+          <MetricBadge value={bu.costSaved} label="Cost Saved" />
+          <MetricBadge value={`${bu.automationPct}%`} label="Automation" color="text-primary" />
+        </div>
+
+        {/* ── Ops counts — Missions/Workflows/Approvals are just a number
+             each, linking out to the real page instead of embedding a list ── */}
+        <div className="grid grid-cols-4 gap-3">
+          <CountCard value={missions.filter(m => m.status === "active").length} label="Active Missions" icon={Target} color="text-primary" onClick={() => navigate("/workflow-studio")} />
+          <CountCard value={bu.workflows} label="Workflows" icon={Workflow} color="text-violet-600" onClick={() => navigate("/workflow-studio")} />
+          <CountCard value={approvals.filter(a => a.status === "pending").length} label="Pending Approvals" icon={ClipboardCheck} color="text-amber-600" onClick={() => navigate("/approvals")} />
+          <CountCard value={openTasksCount || "—"} label="Open Tasks" icon={CheckCircle2} color="text-blue-600" onClick={() => navigate("/my-work")} />
+        </div>
+
+        {/* ── Anomalies + AI Workforce + Recent Activity ── */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
+              <AlertTriangle size={10} />Active Anomalies
+            </div>
+            {buAnomalies.length === 0 ? (
+              <div className="flex items-center gap-1.5 text-[10px] text-emerald-600">
+                <CheckCircle2 size={10} />All systems nominal
+              </div>
+            ) : buAnomalies.map((a) => (
+              <button key={a.id} onClick={() => navigate(`/incident/${a.id}`)}
+                className={cn("w-full border-l-2 pl-3 py-2 mb-2 last:mb-0 rounded-r-sm text-left hover:opacity-80 transition-opacity", {
+                  "border-red-500 bg-red-50/40": a.severity === "critical",
+                  "border-amber-500 bg-amber-50/40": a.severity === "warning",
+                  "border-blue-400 bg-blue-50/40": a.severity === "watch",
+                })}>
+                <div className="text-[10px] font-semibold text-foreground leading-snug mb-0.5">{a.title}</div>
+                <div className="text-[9px] text-muted-foreground">{a.impact}</div>
+              </button>
             ))}
-          </TabsList>
+          </div>
 
-          {/* ── EXECUTIVE OVERVIEW ── */}
-          <TabsContent value="overview" className="m-0 space-y-4">
-            <div className="grid grid-cols-6 gap-3">
-              <MetricBadge value={String(bu.eei)} label="EEI Score" color="text-primary" />
-              <MetricBadge value={`${bu.health}%`} label="Unit Health" color={bu.health >= 85 ? "text-emerald-600" : "text-amber-600"} />
-              <MetricBadge value={String(bu.agents)} label="AI Agents" color="text-primary" />
-              <MetricBadge value={bu.revenueProtected} label="Rev. Protected" color="text-emerald-600" />
-              <MetricBadge value={bu.costSaved} label="Cost Saved" />
-              <MetricBadge value={`${bu.automationPct}%`} label="Automation" color="text-primary" />
+          <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
+              <Bot size={10} />AI Workforce
             </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              {/* Anomalies */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
-                  <AlertTriangle size={10} />Active Anomalies
-                </div>
-                {buAnomalies.length === 0 ? (
-                  <div className="flex items-center gap-1.5 text-[10px] text-emerald-600">
-                    <CheckCircle2 size={10} />All systems nominal
+            <div className="space-y-2">
+              {bu.employees.map((emp) => (
+                <button key={emp.name}
+                  onClick={() => { const agent = MFG_AGENTS.find(a => a.name === emp.name || a.name.startsWith(emp.name.split(" ")[0])); if (agent) navigate(`/agents/${agent.id}`); }}
+                  className="w-full flex items-center gap-2 py-1.5 px-2 rounded-sm hover:bg-muted/40 transition-colors text-left">
+                  <StatusDot status={emp.status} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] font-semibold text-foreground truncate">{emp.name}</div>
+                    <div className="text-[9px] text-muted-foreground truncate">{emp.role}</div>
                   </div>
-                ) : buAnomalies.map((a) => (
-                  <button key={a.id} onClick={() => navigate(`/incident/${a.id}`)}
-                    className={cn("w-full border-l-2 pl-3 py-2 mb-2 last:mb-0 rounded-r-sm text-left hover:opacity-80 transition-opacity", {
-                      "border-red-500 bg-red-50/40": a.severity === "critical",
-                      "border-amber-500 bg-amber-50/40": a.severity === "warning",
-                      "border-blue-400 bg-blue-50/40": a.severity === "watch",
-                    })}>
-                    <div className="text-[10px] font-semibold text-foreground leading-snug mb-0.5">{a.title}</div>
-                    <div className="text-[9px] text-muted-foreground">{a.impact}</div>
-                  </button>
-                ))}
-              </div>
-
-              {/* AI Workforce */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
-                  <Bot size={10} />AI Workforce
-                </div>
-                <div className="space-y-2">
-                  {bu.employees.map((emp) => (
-                    <button key={emp.name}
-                      onClick={() => { const agent = MFG_AGENTS.find(a => a.name === emp.name || a.name.startsWith(emp.name.split(" ")[0])); if (agent) navigate(`/agents/${agent.id}`); }}
-                      className="w-full flex items-center gap-2 py-1.5 px-2 rounded-sm hover:bg-muted/40 transition-colors text-left">
-                      <StatusDot status={emp.status} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-[10px] font-semibold text-foreground truncate">{emp.name}</div>
-                        <div className="text-[9px] text-muted-foreground truncate">{emp.role}</div>
-                      </div>
-                      <ChevronRight size={10} className="text-muted-foreground shrink-0" />
-                    </button>
-                  ))}
-                </div>
-                <button onClick={() => setActiveTab("agents")}
-                  className="mt-3 w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-1.5 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-                  <Users size={9} />View Agent Inventory
+                  <ChevronRight size={10} className="text-muted-foreground shrink-0" />
                 </button>
-              </div>
-
-              {/* Active Missions Summary */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
-                  <Target size={10} />Active Missions
-                </div>
-                <div className="space-y-2">
-                  {missions.filter(m => m.status === "active").slice(0, 3).map(m => (
-                    <div key={m.id} className="border border-border rounded-sm p-2.5 bg-[#FCFCFD]">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-[10px] font-semibold text-foreground leading-snug truncate pr-1">{m.name}</div>
-                        <span className={cn("text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border shrink-0", slaStyle[m.sla])}>{m.sla}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1 bg-border rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${m.progress}%` }} />
-                        </div>
-                        <span className="text-[9px] font-mono text-muted-foreground shrink-0">{m.progress}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button onClick={() => setActiveTab("missions")}
-                  className="mt-3 w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-1.5 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-                  <Zap size={9} />All Missions
-                </button>
-              </div>
+              ))}
             </div>
+          </div>
 
-            {/* Recent activity */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Recent Activity</div>
-                <div className="space-y-2">
-                  {timeline.slice(0, 5).map((e, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <span className="font-mono text-[9px] text-muted-foreground shrink-0 w-10 mt-0.5">{e.time}</span>
-                      <div className={cn("w-1.5 h-1.5 rounded-full shrink-0 mt-1.5", timelineTypeStyle[e.type].dot)} />
-                      <div className="flex-1">
-                        <span className={cn("text-[10px] font-semibold mr-1", timelineTypeStyle[e.type].label)}>{e.actor}</span>
-                        <span className="text-[10px] text-foreground">{e.event}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* EEI Impact Chain */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">EEI Impact Chain</div>
-                <div className="flex items-center gap-2 flex-wrap mb-4">
-                  {[
-                    { label: bu.name, value: `Health ${bu.health}%`, color: "bg-primary/10 text-primary border-primary/30" },
-                    { label: "EEI Contribution", value: bu.eeiContrib, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-                    { label: "Enterprise EEI", value: `${ENTERPRISE_METRICS.eeiScore} / 100`, color: "bg-muted/40 text-foreground border-border" },
-                    { label: "Revenue Impact", value: bu.revenueProtected, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={cn("text-[9px] rounded-sm px-3 py-2 border font-semibold text-center", item.color)}>
-                        <div className="font-bold">{item.value}</div>
-                        <div className="opacity-70">{item.label}</div>
-                      </div>
-                      {i < 3 && <ArrowRight size={12} className="text-muted-foreground shrink-0" />}
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-3 gap-2 border-t border-border/40 pt-3">
-                  <button onClick={() => setActiveTab("risks")} className="text-center p-2 rounded-sm hover:bg-muted/40 transition-colors">
-                    <div className="text-sm font-bold text-red-600">{risks.filter(r => r.status === "open").length}</div>
-                    <div className="text-[9px] text-muted-foreground">Open Risks</div>
-                  </button>
-                  <button onClick={() => setActiveTab("approvals")} className="text-center p-2 rounded-sm hover:bg-muted/40 transition-colors">
-                    <div className="text-sm font-bold text-amber-600">{approvals.filter(a => a.status === "pending").length}</div>
-                    <div className="text-[9px] text-muted-foreground">Pending Approvals</div>
-                  </button>
-                  <button onClick={() => setActiveTab("policies")} className="text-center p-2 rounded-sm hover:bg-muted/40 transition-colors">
-                    <div className="text-sm font-bold text-primary">{policies.filter(p => p.status === "active").length}</div>
-                    <div className="text-[9px] text-muted-foreground">Active Policies</div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ── BUSINESS IMPACT ── */}
-          <TabsContent value="business-impact" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3">
-              <MetricBadge value={bu.roi} label="ROI" color="text-primary" />
-              <MetricBadge value={bu.revenueProtected} label="Revenue Protected" color="text-emerald-600" />
-              <MetricBadge value={bu.costSaved} label="Cost Saved" color="text-foreground" />
-              <MetricBadge value={`${bu.hoursSaved.toLocaleString()} hrs`} label="Hours Saved" />
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              <MetricBadge value={bu.downtimePrevented} label="Downtime Prevented" color="text-emerald-600" />
-              <MetricBadge value={`${bu.automationPct}%`} label="Automation Rate" color="text-primary" />
-              <MetricBadge value={`+${bu.productivityImprovement}%`} label="Productivity Gain" color="text-emerald-600" />
-              <MetricBadge value={`+${bu.eeiContribution}`} label="EEI Contribution" color="text-primary" />
-            </div>
-
-            {/* Enterprise metric contribution */}
-            <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Contribution to Enterprise Metrics</div>
-              <div className="space-y-3">
-                {[
-                  { label: "Revenue Protected", bu: bu.revenueProtected, enterprise: ENTERPRISE_METRICS.revenueProtected, pct: Math.round((bu.hoursSaved / ENTERPRISE_METRICS.hoursSaved) * 100) },
-                  { label: "Cost Saved", bu: bu.costSaved, enterprise: ENTERPRISE_METRICS.costSaved, pct: Math.round((bu.automationPct / ENTERPRISE_METRICS.automationPct) * 100) },
-                  { label: "Hours Saved", bu: `${bu.hoursSaved.toLocaleString()} hrs`, enterprise: `${ENTERPRISE_METRICS.hoursSaved.toLocaleString()} hrs`, pct: Math.round((bu.hoursSaved / ENTERPRISE_METRICS.hoursSaved) * 100) },
-                  { label: "EEI Contribution", bu: `+${bu.eeiContribution}`, enterprise: `+${ENTERPRISE_METRICS.eeiContribution}`, pct: Math.round((bu.eeiContribution / ENTERPRISE_METRICS.eeiContribution) * 100) },
-                ].map((m, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <div className="w-32 text-[9px] uppercase tracking-widest text-muted-foreground shrink-0">{m.label}</div>
-                    <div className="flex-1 flex items-center gap-3">
-                      <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${m.pct}%` }} />
-                      </div>
-                      <span className="text-[9px] font-mono font-bold text-primary w-8 shrink-0">{m.pct}%</span>
-                    </div>
-                    <div className="text-[9px] font-mono font-bold text-foreground w-20 text-right shrink-0">{m.bu}</div>
-                    <div className="text-[9px] text-muted-foreground shrink-0">/ {m.enterprise}</div>
+          <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Recent Activity</div>
+            <div className="space-y-2">
+              {timeline.slice(0, 5).map((e, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="font-mono text-[9px] text-muted-foreground shrink-0 w-10 mt-0.5">{e.time}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full shrink-0 mt-1.5", timelineTypeStyle[e.type].dot)} />
+                  <div className="flex-1">
+                    <span className={cn("text-[10px] font-semibold mr-1", timelineTypeStyle[e.type].label)}>{e.actor}</span>
+                    <span className="text-[10px] text-foreground">{e.event}</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
+          </div>
+        </div>
 
-            {/* KPI Forecast */}
-            <div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-2">30-Day KPI Forecast</div>
-              <div className="grid grid-cols-3 gap-3">
-                {intel.forecast.map((f, i) => (
-                  <button key={i} onClick={() => setActiveTab("kpis")}
-                    className="bg-white border border-border rounded-sm p-4 shadow-sm text-left hover:border-primary/40 transition-colors">
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-2">{f.metric}</div>
-                    <div className="flex items-end gap-3">
-                      <div>
-                        <div className="text-[9px] text-muted-foreground">Current</div>
-                        <div className="text-sm font-bold font-mono text-foreground">{f.current}</div>
-                      </div>
-                      <ArrowRight size={12} className="text-muted-foreground mb-1" />
-                      <div>
-                        <div className="text-[9px] text-muted-foreground">Predicted</div>
-                        <div className={cn("text-sm font-bold font-mono", f.dir === "up" ? "text-emerald-600" : "text-blue-600")}>{f.predicted}</div>
-                      </div>
-                      {f.dir === "up" ? <TrendingUp size={14} className="text-emerald-500 mb-1" /> : <TrendingDown size={14} className="text-blue-500 mb-1" />}
+        {/* ── Business Impact ── */}
+        <div ref={impactRef} className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Business Impact</h2>
+          <div className="grid grid-cols-4 gap-3">
+            <MetricBadge value={bu.roi} label="ROI" color="text-primary" />
+            <MetricBadge value={bu.downtimePrevented} label="Downtime Prevented" color="text-emerald-600" />
+            <MetricBadge value={`+${bu.productivityImprovement}%`} label="Productivity Gain" color="text-emerald-600" />
+            <MetricBadge value={`+${bu.eeiContribution}`} label="EEI Contribution" color="text-primary" />
+          </div>
+
+          <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Contribution to Enterprise Metrics</div>
+            <div className="space-y-3">
+              {[
+                { label: "Revenue Protected", bu: bu.revenueProtected, enterprise: ENTERPRISE_METRICS.revenueProtected, pct: Math.round((bu.hoursSaved / ENTERPRISE_METRICS.hoursSaved) * 100) },
+                { label: "Cost Saved", bu: bu.costSaved, enterprise: ENTERPRISE_METRICS.costSaved, pct: Math.round((bu.automationPct / ENTERPRISE_METRICS.automationPct) * 100) },
+                { label: "Hours Saved", bu: `${bu.hoursSaved.toLocaleString()} hrs`, enterprise: `${ENTERPRISE_METRICS.hoursSaved.toLocaleString()} hrs`, pct: Math.round((bu.hoursSaved / ENTERPRISE_METRICS.hoursSaved) * 100) },
+                { label: "EEI Contribution", bu: `+${bu.eeiContribution}`, enterprise: `+${ENTERPRISE_METRICS.eeiContribution}`, pct: Math.round((bu.eeiContribution / ENTERPRISE_METRICS.eeiContribution) * 100) },
+              ].map((m, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="w-32 text-[9px] uppercase tracking-widest text-muted-foreground shrink-0">{m.label}</div>
+                  <div className="flex-1 flex items-center gap-3">
+                    <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${m.pct}%` }} />
                     </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button onClick={() => navigate("/business-impact")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <DollarSign size={9} />Full Enterprise Business Impact Dashboard
-            </button>
-          </TabsContent>
-
-          {/* ── LIVE KPIs ── */}
-          <TabsContent value="kpis" className="m-0 space-y-4">
-            <div className="grid grid-cols-3 gap-3 mb-2">
-              <MetricBadge value={String(buKpis.length)} label="Tracked KPIs" color="text-primary" />
-              <MetricBadge value={String(buKpis.filter(k => k.trend === "up").length)} label="Trending Up" color="text-emerald-600" />
-              <MetricBadge value={String(buKpis.filter(k => k.trend === "down").length)} label="Trending Down" color="text-amber-600" />
-            </div>
-
-            {buKpis.length > 0 ? (
-              <div className="space-y-2">
-                {buKpis.map((kpi) => (
-                  <div key={kpi.id} className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-xs font-bold text-foreground">{kpi.name}</span>
-                          <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{kpi.category}</span>
-                          {kpi.trend === "up" ? <TrendingUp size={12} className="text-emerald-500" /> : <TrendingDown size={12} className="text-amber-500" />}
-                          <span className={cn("text-[9px] font-mono font-bold", kpi.delta.startsWith("+") ? "text-emerald-600" : "text-red-600")}>{kpi.delta}</span>
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                          <div>
-                            <div className="text-[9px] text-muted-foreground">Current</div>
-                            <div className="text-base font-bold font-mono text-foreground">{kpi.value}</div>
-                          </div>
-                          <ArrowRight size={12} className="text-muted-foreground" />
-                          <div>
-                            <div className="text-[9px] text-muted-foreground">Target</div>
-                            <div className="text-base font-bold font-mono text-primary">{kpi.target}</div>
-                          </div>
-                        </div>
-                        <div className="h-1.5 bg-border rounded-full overflow-hidden w-64">
-                          <div className={cn("h-full rounded-full", kpi.trend === "up" ? "bg-emerald-500" : "bg-amber-500")} style={{ width: "72%" }} />
-                        </div>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">Linked Agents</div>
-                        <div className="flex gap-1 flex-wrap justify-end">
-                          {kpi.linked.map(aid => {
-                            const ag = MFG_AGENTS.find(a => a.id === aid);
-                            return ag ? (
-                              <button key={aid} onClick={() => navigate(`/agents/${ag.id}`)}
-                                className="text-[9px] bg-primary/5 border border-primary/20 text-primary rounded-sm px-1.5 py-0.5 hover:bg-primary/10 transition-colors">{ag.name}</button>
-                            ) : null;
-                          })}
-                        </div>
-                      </div>
-                    </div>
+                    <span className="text-[9px] font-mono font-bold text-primary w-8 shrink-0">{m.pct}%</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white border border-border rounded-sm p-6 text-center text-[11px] text-muted-foreground">
-                No KPIs tracked for {bu.name} yet.
-              </div>
-            )}
-
-            {/* Enterprise KPI */}
-            <div className="bg-muted/30 border border-border/40 rounded-sm p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Enterprise EEI</div>
-                  <div className="text-lg font-bold font-mono text-primary">{ENTERPRISE_METRICS.eeiScore} / 100</div>
+                  <div className="text-[9px] font-mono font-bold text-foreground w-20 text-right shrink-0">{m.bu}</div>
+                  <div className="text-[9px] text-muted-foreground shrink-0">/ {m.enterprise}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{bu.name} Contribution</div>
-                  <div className="text-sm font-bold font-mono text-emerald-600">{bu.eeiContrib}</div>
-                </div>
-                <button onClick={() => navigate("/kpi-studio")}
-                  className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors flex items-center gap-1">
-                  <BarChart3 size={8} />Full KPI Dashboard
-                </button>
-              </div>
+              ))}
             </div>
-          </TabsContent>
+          </div>
 
-          {/* ── DEPARTMENT HEALTH ── */}
-          <TabsContent value="health" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3">
-              <MetricBadge value={`${bu.health}%`} label="Overall Health" color={bu.health >= 85 ? "text-emerald-600" : "text-amber-600"} />
-              <MetricBadge value={String(buAgents.filter(a => a.status === "active").length)} label="Agents Healthy" color="text-emerald-600" />
-              <MetricBadge value={String(systems.filter(s => s.status === "healthy").length)} label="Systems Online" color="text-emerald-600" />
-              <MetricBadge value={String(systems.filter(s => s.status !== "healthy").length)} label="Systems Degraded" color="text-amber-600" />
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            {intel.forecast.map((f, i) => (
+              <button key={i} onClick={() => navigate("/kpi-studio")}
+                className="bg-white border border-border rounded-sm p-4 shadow-sm text-left hover:border-primary/40 transition-colors">
+                <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-2">{f.metric}</div>
+                <div className="flex items-end gap-3">
+                  <div>
+                    <div className="text-[9px] text-muted-foreground">Current</div>
+                    <div className="text-sm font-bold font-mono text-foreground">{f.current}</div>
+                  </div>
+                  <ArrowRight size={12} className="text-muted-foreground mb-1" />
+                  <div>
+                    <div className="text-[9px] text-muted-foreground">Predicted</div>
+                    <div className={cn("text-sm font-bold font-mono", f.dir === "up" ? "text-emerald-600" : "text-blue-600")}>{f.predicted}</div>
+                  </div>
+                  {f.dir === "up" ? <TrendingUp size={14} className="text-emerald-500 mb-1" /> : <TrendingDown size={14} className="text-blue-500 mb-1" />}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Agent Health Breakdown */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
-                  <Bot size={10} />Agent Health Breakdown
-                </div>
-                <div className="space-y-3">
-                  {buAgents.length > 0 ? buAgents.map(agent => (
-                    <button key={agent.id} onClick={() => navigate(`/agents/${agent.id}`)} className="w-full text-left">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <StatusDot status={agent.status} />
-                          <span className="text-[10px] font-semibold text-foreground">{agent.name}</span>
-                        </div>
-                        <span className="text-[9px] font-mono font-bold text-foreground">{agent.health}/100</span>
-                      </div>
-                      <HealthBar value={agent.health} />
-                      <div className="flex justify-between mt-1">
-                        <span className="text-[8px] text-muted-foreground">SLA: {agent.sla}%</span>
-                        <span className="text-[8px] text-muted-foreground">Util: {agent.utilization}%</span>
-                        <span className="text-[8px] text-muted-foreground">Accuracy: {agent.accuracy}%</span>
-                      </div>
-                    </button>
-                  )) : bu.employees.map((emp, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <StatusDot status={emp.status} />
-                        <span className="text-[10px] font-semibold">{emp.name}</span>
-                      </div>
-                      <HealthBar value={emp.status === "active" ? 92 : 74} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+        {/* ── Department Health ── */}
+        <div ref={healthRef} className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Department Health</h2>
+          <div className="grid grid-cols-4 gap-3">
+            <MetricBadge value={`${bu.health}%`} label="Overall Health" color={bu.health >= 85 ? "text-emerald-600" : "text-amber-600"} />
+            <MetricBadge value={String(buAgents.filter(a => a.status === "active").length)} label="Agents Healthy" color="text-emerald-600" />
+            <MetricBadge value={String(systems.filter(s => s.status === "healthy").length)} label="Systems Online" color="text-emerald-600" />
+            <MetricBadge value={String(systems.filter(s => s.status !== "healthy").length)} label="Systems Degraded" color="text-amber-600" />
+          </div>
 
-              {/* System Health */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
-                  <Layers size={10} />Connected Systems
-                </div>
-                <div className="space-y-2">
-                  {systems.map((sys, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
-                      <div className="flex items-center gap-2">
-                        <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", {
-                          "bg-emerald-500": sys.status === "healthy",
-                          "bg-amber-500 animate-pulse": sys.status === "degraded",
-                          "bg-red-500 animate-pulse": sys.status === "down",
-                        })} />
-                        <span className="text-[10px] font-semibold text-foreground">{sys.name}</span>
-                      </div>
-                      <div className="flex items-center gap-4 text-right">
-                        <div>
-                          <div className="text-[8px] text-muted-foreground">Uptime</div>
-                          <div className={cn("text-[10px] font-mono font-bold", sys.uptime === "100%" ? "text-emerald-600" : sys.status === "degraded" ? "text-amber-600" : "text-foreground")}>{sys.uptime}</div>
-                        </div>
-                        <div>
-                          <div className="text-[8px] text-muted-foreground">Last Sync</div>
-                          <div className="text-[10px] font-mono text-muted-foreground">{sys.lastSync}</div>
-                        </div>
-                        <span className={cn("text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                          "text-emerald-700 bg-emerald-50 border-emerald-200": sys.status === "healthy",
-                          "text-amber-700 bg-amber-50 border-amber-200": sys.status === "degraded",
-                          "text-red-700 bg-red-50 border-red-200": sys.status === "down",
-                        })}>{sys.status}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Health Scorecard */}
+          <div className="grid grid-cols-2 gap-4">
             <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
               <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
-                <Gauge size={10} />Department Health Scorecard
+                <Bot size={10} />Agent Health
               </div>
-              <div className="grid grid-cols-5 gap-4">
-                {[
-                  { label: "AI Workforce", value: bu.health, max: 100, color: "bg-primary" },
-                  { label: "Automation Rate", value: bu.automationPct, max: 100, color: "bg-emerald-500" },
-                  { label: "Policy Compliance", value: policies.reduce((s, p) => s + p.compliance, 0) / policies.length, max: 100, color: "bg-blue-500" },
-                  { label: "SOP Coverage", value: buSops.length > 0 ? 84 : 20, max: 100, color: "bg-violet-500" },
-                  { label: "Risk Mitigation", value: Math.round((risks.filter(r => r.status !== "open").length / risks.length) * 100), max: 100, color: "bg-amber-500" },
-                ].map((m, i) => (
-                  <div key={i} className="text-center">
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-2">{m.label}</div>
-                    <div className="relative w-16 h-16 mx-auto mb-1">
-                      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3" />
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" strokeWidth="3"
-                          strokeDasharray={`${(m.value / m.max) * 100} 100`}
-                          strokeLinecap="round"
-                          className={m.color.replace("bg-", "text-")} />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[10px] font-bold tabular-nums">{Math.round(m.value)}%</span>
+              <div className="space-y-3">
+                {buAgents.length > 0 ? buAgents.map(agent => (
+                  <button key={agent.id} onClick={() => navigate(`/agents/${agent.id}`)} className="w-full text-left">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <StatusDot status={agent.status} />
+                        <span className="text-[10px] font-semibold text-foreground">{agent.name}</span>
                       </div>
+                      <span className="text-[9px] font-mono font-bold text-foreground">{agent.health}/100</span>
+                    </div>
+                    <HealthBar value={agent.health} />
+                  </button>
+                )) : bu.employees.map((emp, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <StatusDot status={emp.status} />
+                      <span className="text-[10px] font-semibold">{emp.name}</span>
+                    </div>
+                    <HealthBar value={emp.status === "active" ? 92 : 74} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
+                <Layers size={10} />Connected Systems
+              </div>
+              <div className="space-y-2">
+                {systems.map((sys, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", {
+                        "bg-emerald-500": sys.status === "healthy",
+                        "bg-amber-500 animate-pulse": sys.status === "degraded",
+                        "bg-red-500 animate-pulse": sys.status === "down",
+                      })} />
+                      <span className="text-[10px] font-semibold text-foreground">{sys.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-right">
+                      <span className={cn("text-[10px] font-mono font-bold", sys.uptime === "100%" ? "text-emerald-600" : sys.status === "degraded" ? "text-amber-600" : "text-foreground")}>{sys.uptime}</span>
+                      <span className={cn("text-[8px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
+                        "text-emerald-700 bg-emerald-50 border-emerald-200": sys.status === "healthy",
+                        "text-amber-700 bg-amber-50 border-amber-200": sys.status === "degraded",
+                        "text-red-700 bg-red-50 border-red-200": sys.status === "down",
+                      })}>{sys.status}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </TabsContent>
+          </div>
 
-          {/* ── AGENT INVENTORY ── */}
-          <TabsContent value="agents" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(bu.agents)} label="Total AI Agents" color="text-primary" />
-              <MetricBadge value={String(buAgents.filter(a => a.status === "active").length)} label="Active" color="text-emerald-600" />
-              <MetricBadge value={String(buAgents.filter(a => a.status === "watch").length)} label="Under Review" color="text-amber-600" />
-              <MetricBadge value={`${bu.automationPct}%`} label="Avg. Automation" color="text-primary" />
+          <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
+              <Gauge size={10} />Health Scorecard
             </div>
-
-            <div className="space-y-3">
-              {buAgents.length > 0 ? buAgents.map((agent) => (
-                <button key={agent.id} onClick={() => navigate(`/agents/${agent.id}`)}
-                  className="w-full bg-white border border-border rounded-sm p-4 shadow-sm hover:border-primary/40 transition-colors text-left">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <StatusDot status={agent.status} />
-                        <span className="text-sm font-bold text-foreground">{agent.name}</span>
-                        <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded-sm border border-border/40">{agent.employeeId}</span>
-                      </div>
-                      <div className="text-[10px] text-muted-foreground mb-2">{agent.role} · {agent.model} · {agent.version}</div>
-                      <div className="flex gap-1 flex-wrap">
-                        {agent.skills.map((s) => (
-                          <span key={s} className="text-[9px] uppercase tracking-widest text-primary bg-primary/5 border border-primary/20 rounded-sm px-1.5 py-0.5">{s}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-3 shrink-0">
-                      {[
-                        { label: "Health", value: `${agent.health}/100`, color: agent.health >= 90 ? "text-emerald-600" : "text-amber-600" },
-                        { label: "SLA", value: `${agent.sla}%`, color: "text-foreground" },
-                        { label: "Util.", value: `${agent.utilization}%`, color: "text-foreground" },
-                        { label: "ROI", value: agent.roi, color: "text-emerald-600" },
-                      ].map(m => (
-                        <div key={m.label} className="text-center">
-                          <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{m.label}</div>
-                          <div className={cn("text-sm font-bold font-mono", m.color)}>{m.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <ChevronRight size={14} className="text-muted-foreground shrink-0 mt-1" />
-                  </div>
-                  <div className="mt-3 grid grid-cols-4 gap-2 border-t border-border/40 pt-3">
-                    <div><div className="text-[9px] text-muted-foreground">Hours Saved</div><div className="text-[10px] font-mono font-bold">{agent.hoursSaved.toLocaleString()} hrs</div></div>
-                    <div><div className="text-[9px] text-muted-foreground">Rev. Protected</div><div className="text-[10px] font-mono font-bold text-emerald-600">{agent.revenueProtected}</div></div>
-                    <div><div className="text-[9px] text-muted-foreground">Cost Saved</div><div className="text-[10px] font-mono font-bold">{agent.costSaved}</div></div>
-                    <div><div className="text-[9px] text-muted-foreground">EEI Contrib.</div><div className="text-[10px] font-mono font-bold text-primary">{agent.eeiContrib}</div></div>
-                  </div>
-                </button>
-              )) : bu.employees.map((emp, i) => (
-                <div key={i} className="bg-white border border-border rounded-sm p-4 shadow-sm flex items-center gap-3">
-                  <StatusDot status={emp.status} />
-                  <div>
-                    <div className="text-xs font-semibold text-foreground">{emp.name}</div>
-                    <div className="text-[10px] text-muted-foreground">{emp.role}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Open Tasks */}
-            <div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-2 flex items-center gap-2">
-                Open Tasks
-                <span className="bg-amber-100 text-amber-700 border border-amber-200 rounded-sm px-1.5 py-0.5 text-[8px] font-bold">{tasks.filter(t => t.status !== "done").length} active</span>
-              </div>
-              <div className="bg-white border border-border rounded-sm shadow-sm overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#FCFCFD] border-b border-border text-[9px] uppercase tracking-widest text-muted-foreground">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-semibold">Task</th>
-                      <th className="px-4 py-3 text-left font-semibold">Agent</th>
-                      <th className="px-4 py-3 text-left font-semibold">Priority</th>
-                      <th className="px-4 py-3 text-left font-semibold">Status</th>
-                      <th className="px-4 py-3 text-left font-semibold">Due</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {tasks.map((task) => (
-                      <tr key={task.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-3"><div className="text-[11px] font-semibold text-foreground leading-snug">{task.title}</div></td>
-                        <td className="px-4 py-3"><span className="text-[10px] text-primary font-semibold">{task.agent}</span></td>
-                        <td className="px-4 py-3"><span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", priorityStyle[task.priority])}>{task.priority}</span></td>
-                        <td className="px-4 py-3"><span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", taskStatusStyle[task.status])}>{task.status}</span></td>
-                        <td className="px-4 py-3"><span className="text-[10px] text-muted-foreground font-mono">{task.due}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ── ACTIVE MISSIONS ── */}
-          <TabsContent value="missions" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(missions.filter(m => m.status === "active").length)} label="Active" color="text-primary" />
-              <MetricBadge value={String(missions.filter(m => m.sla === "At Risk" || m.sla === "Critical").length)} label="At Risk" color="text-red-600" />
-              <MetricBadge value={String(missions.filter(m => m.status === "paused").length)} label="Paused" color="text-amber-600" />
-              <MetricBadge value={String(missions.filter(m => m.status === "completed").length)} label="Completed" color="text-emerald-600" />
-            </div>
-
-            <div className="space-y-3">
-              {missions.map((mission) => (
-                <div key={mission.id} className={cn("bg-white border rounded-sm p-4 shadow-sm", {
-                  "border-red-200": mission.sla === "Critical",
-                  "border-amber-200": mission.sla === "At Risk",
-                  "border-border": mission.sla === "On Track" || mission.sla === "Delayed",
-                })}>
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-foreground">{mission.name}</span>
-                        <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", missionStatusStyle[mission.status])}>{mission.status}</span>
-                        <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", slaStyle[mission.sla])}>SLA: {mission.sla}</span>
-                      </div>
-                      <div className="text-[10px] text-muted-foreground mb-2">{mission.objective}</div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {mission.agents.map(a => (
-                          <span key={a} className="text-[9px] bg-primary/5 border border-primary/20 text-primary rounded-sm px-1.5 py-0.5">{a}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-[9px] text-muted-foreground mb-1">Started: {mission.startDate}</div>
-                      <div className="text-2xl font-bold font-mono tabular-nums text-primary">{mission.progress}%</div>
-                      <div className="text-[8px] text-muted-foreground">complete</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
-                      <div className={cn("h-full rounded-full transition-all", {
-                        "bg-primary": mission.sla === "On Track",
-                        "bg-amber-500": mission.sla === "At Risk" || mission.sla === "Delayed",
-                        "bg-red-500": mission.sla === "Critical",
-                      })} style={{ width: `${mission.progress}%` }} />
-                    </div>
-                    <div className="flex gap-2 shrink-0">
-                      <button onClick={() => toast({ title: "Mission Paused", description: mission.name })}
-                        className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold border border-border rounded-sm px-2 py-1 hover:bg-muted/40 transition-colors">
-                        Pause
-                      </button>
-                      <button onClick={() => navigate("/workflow-studio")}
-                        className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors flex items-center gap-1">
-                        <Settings size={8} />Configure
-                      </button>
+            <div className="grid grid-cols-5 gap-4">
+              {[
+                { label: "AI Workforce", value: bu.health, max: 100, color: "bg-primary" },
+                { label: "Automation Rate", value: bu.automationPct, max: 100, color: "bg-emerald-500" },
+                { label: "Policy Compliance", value: policies.reduce((s, p) => s + p.compliance, 0) / policies.length, max: 100, color: "bg-blue-500" },
+                { label: "SOP Coverage", value: buSops.length > 0 ? 84 : 20, max: 100, color: "bg-violet-500" },
+                { label: "Risk Mitigation", value: Math.round((risks.filter(r => r.status !== "open").length / risks.length) * 100), max: 100, color: "bg-amber-500" },
+              ].map((m, i) => (
+                <div key={i} className="text-center">
+                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-2">{m.label}</div>
+                  <div className="relative w-16 h-16 mx-auto mb-1">
+                    <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" strokeWidth="3"
+                        strokeDasharray={`${(m.value / m.max) * 100} 100`}
+                        strokeLinecap="round"
+                        className={m.color.replace("bg-", "text-")} />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[10px] font-bold tabular-nums">{Math.round(m.value)}%</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
 
-            <button onClick={() => navigate("/workflow-studio")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <Zap size={9} />Create New Mission in Mission Creator
-            </button>
-          </TabsContent>
-
-          {/* ── WORKFLOWS ── */}
-          <TabsContent value="workflows" className="m-0 space-y-4">
-            <div className="grid grid-cols-3 gap-3 mb-2">
-              <MetricBadge value={String(bu.workflows)} label="Total Workflows" color="text-primary" />
-              <MetricBadge value={String(missions.filter(m => m.status === "active").length)} label="Active Missions" color="text-emerald-600" />
-              <MetricBadge value={String(bu.openTasks)} label="Open Tasks" color="text-amber-600" />
-            </div>
-
-            {buSops.map((sop) => (
-              <div key={sop.id} className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-foreground">{sop.title}</span>
-                      <span className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">{sop.version}</span>
-                      <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                        "text-emerald-700 bg-emerald-50 border-emerald-200": sop.status === "active",
-                        "text-amber-700 bg-amber-50 border-amber-200": sop.status !== "active",
-                      })}>{sop.status}</span>
+        {/* ── Risks ── */}
+        <div className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Risks</h2>
+          <div className="grid grid-cols-4 gap-3">
+            <MetricBadge value={String(risks.filter(r => r.severity === "critical").length)} label="Critical" color="text-red-600" />
+            <MetricBadge value={String(risks.filter(r => r.severity === "high").length)} label="High" color="text-amber-600" />
+            <MetricBadge value={String(risks.filter(r => r.severity === "medium").length)} label="Medium" color="text-blue-600" />
+            <MetricBadge value={String(risks.filter(r => r.status === "resolved").length)} label="Resolved" color="text-emerald-600" />
+          </div>
+          <div className="space-y-2">
+            {risks.map((risk, i) => (
+              <div key={i} className={cn("bg-white border rounded-sm p-4 shadow-sm", riskSeverityStyle[risk.severity])}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className={cn("w-7 h-7 rounded-sm flex items-center justify-center shrink-0 mt-0.5", {
+                      "bg-red-100": risk.severity === "critical",
+                      "bg-amber-100": risk.severity === "high",
+                      "bg-blue-50": risk.severity === "medium",
+                      "bg-muted/40": risk.severity === "low",
+                    })}>
+                      <Shield size={12} className={cn({
+                        "text-red-600": risk.severity === "critical",
+                        "text-amber-600": risk.severity === "high",
+                        "text-blue-600": risk.severity === "medium",
+                        "text-muted-foreground": risk.severity === "low",
+                      })} />
                     </div>
-                    <div className="text-[9px] text-muted-foreground">{sop.automation}% automated · {sop.risk} risk</div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-semibold text-foreground">{risk.title}</span>
+                        <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
+                          "text-red-700 bg-red-50 border-red-200": risk.severity === "critical",
+                          "text-amber-700 bg-amber-50 border-amber-200": risk.severity === "high",
+                          "text-blue-700 bg-blue-50 border-blue-200": risk.severity === "medium",
+                        })}>{risk.severity}</span>
+                      </div>
+                      <div className="text-[9px] text-muted-foreground">Owner: {risk.owner} · Type: {risk.type} · Impact: {risk.impact}</div>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => setActiveTab("sops")}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
+                      "text-emerald-700 bg-emerald-50 border-emerald-200": risk.status === "resolved",
+                      "text-amber-700 bg-amber-50 border-amber-200": risk.status === "mitigating",
+                      "text-blue-700 bg-blue-50 border-blue-200": risk.status === "open",
+                    })}>{risk.status}</span>
+                    <button onClick={() => toast({ description: `Risk mitigation plan for: ${risk.title.slice(0, 40)}` })}
                       className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors">
-                      View SOP
-                    </button>
-                    <button onClick={() => toast({ title: "Workflow Started", description: `${sop.title} initiated.` })}
-                      className="text-[9px] uppercase tracking-widest text-white font-bold bg-primary rounded-sm px-2 py-1 hover:bg-primary/90 transition-colors flex items-center gap-1">
-                      <Play size={8} />Run
+                      Mitigate
                     </button>
                   </div>
-                </div>
-                <div className="flex items-center gap-1 flex-wrap mb-3">
-                  {sop.workflow.map((step, si) => (
-                    <div key={si} className="flex items-center gap-1">
-                      <div className={cn("text-[9px] rounded-sm px-2 py-1 border font-semibold", si < sop.workflow.length - 1 ? "bg-muted/40 border-border/60 text-muted-foreground" : "bg-emerald-50 border-emerald-200 text-emerald-700")}>
-                        {si + 1}. {step}
-                      </div>
-                      {si < sop.workflow.length - 1 && <ArrowRight size={9} className="text-muted-foreground shrink-0" />}
-                    </div>
-                  ))}
                 </div>
               </div>
             ))}
+          </div>
+        </div>
 
-            {buSops.length === 0 && (
-              <div className="bg-white border border-border rounded-sm p-6 text-center text-[10px] text-muted-foreground">
-                No workflows mapped to {bu.name} yet.{" "}
-                <button className="text-primary underline" onClick={() => navigate("/workflow-studio")}>Go to Mission Creator</button>
-              </div>
-            )}
-
-            <button onClick={() => navigate("/workflow-studio")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <GitBranch size={9} />Open Mission Creator
-            </button>
-          </TabsContent>
-
-          {/* ── SOPs ── */}
-          <TabsContent value="sops" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(buSops.length)} label="Total SOPs" color="text-primary" />
-              <MetricBadge value={String(buSops.filter(s => s.status === "active").length)} label="Active" color="text-emerald-600" />
-              <MetricBadge value={`${buSops.length > 0 ? Math.round(buSops.reduce((s, x) => s + x.automation, 0) / buSops.length) : 0}%`} label="Avg. Automation" color="text-primary" />
-              <MetricBadge value={String(buSops.filter(s => s.risk === "low").length)} label="Low Risk" color="text-emerald-600" />
-            </div>
-
-            {buSops.length > 0 ? buSops.map((sop) => (
-              <div key={sop.id} className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <FileText size={12} className="text-primary" />
-                      <span className="text-xs font-bold text-foreground">{sop.title}</span>
-                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{sop.version}</span>
+        {/* ── Policies ── */}
+        <div className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Policies</h2>
+          <div className="grid grid-cols-4 gap-3">
+            <MetricBadge value={String(policies.length)} label="Total Policies" color="text-primary" />
+            <MetricBadge value={String(policies.filter(p => p.status === "active").length)} label="Active" color="text-emerald-600" />
+            <MetricBadge value={String(policies.filter(p => p.status === "under-review").length)} label="Under Review" color="text-amber-600" />
+            <MetricBadge value={`${Math.round(policies.reduce((s, p) => s + p.compliance, 0) / policies.length)}%`} label="Avg Compliance" color="text-primary" />
+          </div>
+          <div className="space-y-2">
+            {policies.map((policy) => (
+              <div key={policy.id} className={cn("bg-white border rounded-sm p-4 shadow-sm", {
+                "border-border": policy.status === "active",
+                "border-amber-200": policy.status === "under-review",
+                "border-muted": policy.status === "draft",
+              })}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-sm bg-violet-50 flex items-center justify-center shrink-0 mt-0.5">
+                      <Lock size={12} className="text-violet-600" />
                     </div>
-                    <div className="text-[9px] text-muted-foreground">Owner: {sop.owner} · Risk: {sop.risk}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className="text-[8px] text-muted-foreground">Automation</div>
-                      <div className="text-sm font-bold font-mono text-primary">{sop.automation}%</div>
-                    </div>
-                    <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                      "text-emerald-700 bg-emerald-50 border-emerald-200": sop.status === "active",
-                      "text-amber-700 bg-amber-50 border-amber-200": sop.status !== "active",
-                    })}>{sop.status}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 flex-wrap mb-3">
-                  {sop.workflow.map((step, si) => (
-                    <div key={si} className="flex items-center gap-1">
-                      <div className={cn("text-[9px] rounded-sm px-2 py-1 border font-semibold", si < sop.workflow.length - 1 ? "bg-muted/40 border-border/60 text-muted-foreground" : "bg-emerald-50 border-emerald-200 text-emerald-700")}>
-                        {si + 1}. {step}
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-semibold text-foreground">{policy.title}</span>
+                        <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
+                          "text-emerald-700 bg-emerald-50 border-emerald-200": policy.status === "active",
+                          "text-amber-700 bg-amber-50 border-amber-200": policy.status === "under-review",
+                          "text-muted-foreground bg-muted/40 border-border": policy.status === "draft",
+                        })}>{policy.status}</span>
                       </div>
-                      {si < sop.workflow.length - 1 && <ArrowRight size={9} className="text-muted-foreground shrink-0" />}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-4 gap-3 border-t border-border/40 pt-3">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">AI Agents</div>
-                    {sop.agents.map((a) => <div key={a} className="text-[10px] font-semibold text-primary">{a}</div>)}
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">Human Roles</div>
-                    {sop.humans.map((h) => <div key={h} className="text-[10px] text-foreground">{h}</div>)}
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">KPIs</div>
-                    {sop.kpis.map((k) => <div key={k} className="text-[10px] text-foreground">{k}</div>)}
-                  </div>
-                  <div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">Systems</div>
-                    <div className="flex gap-1 flex-wrap">
-                      {sop.systems.map(s => <span key={s} className="text-[9px] bg-muted/40 border border-border/40 rounded-sm px-1.5 py-0.5 font-mono">{s}</span>)}
-                    </div>
-                  </div>
-                </div>
-
-                {sop.policies && sop.policies.length > 0 && (
-                  <div className="mt-3 border-t border-border/40 pt-2">
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">Governing Policies</div>
-                    <div className="flex gap-1 flex-wrap">
-                      {sop.policies.map(p => (
-                        <button key={p} onClick={() => setActiveTab("policies")}
-                          className="text-[9px] bg-violet-50 border border-violet-200 text-violet-700 rounded-sm px-1.5 py-0.5 hover:bg-violet-100 transition-colors">{p}</button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )) : (
-              <div className="bg-white border border-border rounded-sm p-6 text-center text-[11px] text-muted-foreground">
-                No SOPs mapped to {bu.name} yet.{" "}
-                <button className="text-primary underline" onClick={() => navigate("/sop")}>Go to SOP Framework</button>
-              </div>
-            )}
-
-            <button onClick={() => navigate("/policy-studio")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <FileText size={9} />Manage in Policy Studio → SOP Library
-            </button>
-          </TabsContent>
-
-          {/* ── KNOWLEDGE ── */}
-          <TabsContent value="knowledge" className="m-0 space-y-4">
-            <div className="grid grid-cols-3 gap-3 mb-2">
-              <MetricBadge value={String(knowledge.length)} label="Knowledge Sources" color="text-primary" />
-              <MetricBadge value={String(bu.employees.length)} label="Consuming Agents" />
-              <MetricBadge value="Auto-sync" label="Update Mode" color="text-emerald-600" />
-            </div>
-
-            <div className="space-y-2">
-              {knowledge.map((doc, i) => (
-                <div key={i} className="bg-white border border-border rounded-sm p-4 shadow-sm hover:border-primary/30 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-sm bg-primary/10 flex items-center justify-center shrink-0">
-                        <BookOpen size={12} className="text-primary" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-foreground mb-0.5">{doc.title}</div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[9px] uppercase tracking-widest text-muted-foreground bg-muted/40 border border-border/40 rounded-sm px-1.5 py-0.5">{doc.type}</span>
-                          <span className="text-[9px] text-muted-foreground">{doc.size}</span>
-                          <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Clock size={8} />{doc.updated}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="shrink-0">
-                      <div className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">Used by</div>
-                      <div className="flex gap-1 flex-wrap justify-end">
-                        {doc.agents.map((a) => (
-                          <span key={a} className="text-[9px] bg-primary/5 border border-primary/20 text-primary rounded-sm px-1.5 py-0.5">{a}</span>
-                        ))}
+                      <div className="text-[9px] text-muted-foreground">
+                        Type: {policy.type} · Scope: {policy.scope} · {policy.version} · Updated {policy.lastUpdated}
                       </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className={cn("text-sm font-bold font-mono", policy.compliance >= 98 ? "text-emerald-600" : policy.compliance >= 90 ? "text-amber-600" : "text-red-600")}>{policy.compliance}%</span>
+                    <button onClick={() => navigate("/policy-studio")}
+                      className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors">
+                      View
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
-
-            <button onClick={() => navigate("/knowledge-studio")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <BookOpen size={9} />Manage in Knowledge Studio
-            </button>
-          </TabsContent>
-
-          {/* ── DOCUMENTS ── */}
-          <TabsContent value="documents" className="m-0 space-y-4">
-            <div className="grid grid-cols-3 gap-3 mb-2">
-              <MetricBadge value={String(knowledge.length + buSops.length)} label="Total Documents" color="text-primary" />
-              <MetricBadge value={String(buSops.length)} label="SOPs" />
-              <MetricBadge value={String(knowledge.length)} label="Knowledge Bases" />
-            </div>
-
-            <div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-2">Standard Operating Procedures</div>
-              <div className="space-y-2">
-                {buSops.map((sop) => (
-                  <button key={sop.id} onClick={() => setActiveTab("sops")}
-                    className="w-full bg-white border border-border rounded-sm p-3 shadow-sm text-left hover:border-primary/40 transition-colors flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-sm bg-blue-50 flex items-center justify-center shrink-0">
-                      <FileText size={12} className="text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-[10px] font-semibold text-foreground">{sop.title}</div>
-                      <div className="text-[9px] text-muted-foreground">{sop.version} · {sop.automation}% automated · {sop.status}</div>
-                    </div>
-                    <ChevronRight size={12} className="text-muted-foreground shrink-0" />
-                  </button>
-                ))}
-                {buSops.length === 0 && <div className="text-[10px] text-muted-foreground italic px-1">No SOPs mapped to this unit.</div>}
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-2">Knowledge Bases & Reference Documents</div>
-              <div className="space-y-2">
-                {knowledge.map((doc, i) => (
-                  <button key={i} onClick={() => navigate("/knowledge-studio")}
-                    className="w-full bg-white border border-border rounded-sm p-3 shadow-sm text-left hover:border-primary/40 transition-colors flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-sm bg-violet-50 flex items-center justify-center shrink-0">
-                      <BookOpen size={12} className="text-violet-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-[10px] font-semibold text-foreground">{doc.title}</div>
-                      <div className="text-[9px] text-muted-foreground">{doc.type} · {doc.size} · Updated {doc.updated}</div>
-                    </div>
-                    <div className="flex gap-1 flex-wrap justify-end shrink-0">
-                      {doc.agents.slice(0, 2).map(a => (
-                        <span key={a} className="text-[8px] bg-primary/5 border border-primary/20 text-primary rounded-sm px-1 py-0.5">{a.split(" ")[0]}</span>
-                      ))}
-                    </div>
-                    <ChevronRight size={12} className="text-muted-foreground shrink-0" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ── POLICIES ── */}
-          <TabsContent value="policies" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(policies.length)} label="Total Policies" color="text-primary" />
-              <MetricBadge value={String(policies.filter(p => p.status === "active").length)} label="Active" color="text-emerald-600" />
-              <MetricBadge value={String(policies.filter(p => p.status === "under-review").length)} label="Under Review" color="text-amber-600" />
-              <MetricBadge value={`${Math.round(policies.reduce((s, p) => s + p.compliance, 0) / policies.length)}%`} label="Avg Compliance" color="text-primary" />
-            </div>
-
-            <div className="space-y-2">
-              {policies.map((policy) => (
-                <div key={policy.id} className={cn("bg-white border rounded-sm p-4 shadow-sm", {
-                  "border-border": policy.status === "active",
-                  "border-amber-200": policy.status === "under-review",
-                  "border-muted": policy.status === "draft",
+        {/* ── Recommendations ── */}
+        <div className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Recommendations</h2>
+          <div className="space-y-2">
+            {intel.insights.filter(i => i.type === "critical" || i.type === "warning").map((ins, i) => (
+              <div key={i} className={cn("bg-white border rounded-sm p-4 shadow-sm flex gap-3", {
+                "border-red-200": ins.type === "critical",
+                "border-amber-200": ins.type === "warning",
+              })}>
+                <div className={cn("w-7 h-7 rounded-sm flex items-center justify-center shrink-0 mt-0.5", {
+                  "bg-red-100": ins.type === "critical",
+                  "bg-amber-100": ins.type === "warning",
                 })}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-7 h-7 rounded-sm bg-violet-50 flex items-center justify-center shrink-0 mt-0.5">
-                        <Lock size={12} className="text-violet-600" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs font-semibold text-foreground">{policy.title}</span>
-                          <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                            "text-emerald-700 bg-emerald-50 border-emerald-200": policy.status === "active",
-                            "text-amber-700 bg-amber-50 border-amber-200": policy.status === "under-review",
-                            "text-muted-foreground bg-muted/40 border-border": policy.status === "draft",
-                          })}>{policy.status}</span>
-                        </div>
-                        <div className="text-[9px] text-muted-foreground">
-                          Type: {policy.type} · Scope: {policy.scope} · {policy.version} · Updated {policy.lastUpdated}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="text-right">
-                        <div className="text-[8px] text-muted-foreground">Compliance</div>
-                        <div className={cn("text-sm font-bold font-mono", policy.compliance >= 98 ? "text-emerald-600" : policy.compliance >= 90 ? "text-amber-600" : "text-red-600")}>{policy.compliance}%</div>
-                      </div>
-                      <button onClick={() => navigate("/policy-studio")}
-                        className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors">
-                        View
-                      </button>
-                    </div>
-                  </div>
+                  {ins.type === "critical" ? <XCircle size={12} className="text-red-600" /> : <AlertTriangle size={12} className="text-amber-600" />}
                 </div>
-              ))}
-            </div>
-
-            <button onClick={() => navigate("/policy-studio")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <Lock size={9} />Manage in Policy Studio
-            </button>
-          </TabsContent>
-
-          {/* ── RISKS ── */}
-          <TabsContent value="risks" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(risks.filter(r => r.severity === "critical").length)} label="Critical" color="text-red-600" />
-              <MetricBadge value={String(risks.filter(r => r.severity === "high").length)} label="High" color="text-amber-600" />
-              <MetricBadge value={String(risks.filter(r => r.severity === "medium").length)} label="Medium" color="text-blue-600" />
-              <MetricBadge value={String(risks.filter(r => r.status === "resolved").length)} label="Resolved" color="text-emerald-600" />
-            </div>
-
-            <div className="space-y-2">
-              {risks.map((risk, i) => (
-                <div key={i} className={cn("bg-white border rounded-sm p-4 shadow-sm", riskSeverityStyle[risk.severity])}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className={cn("w-7 h-7 rounded-sm flex items-center justify-center shrink-0 mt-0.5", {
-                        "bg-red-100": risk.severity === "critical",
-                        "bg-amber-100": risk.severity === "high",
-                        "bg-blue-50": risk.severity === "medium",
-                        "bg-muted/40": risk.severity === "low",
-                      })}>
-                        <Shield size={12} className={cn({
-                          "text-red-600": risk.severity === "critical",
-                          "text-amber-600": risk.severity === "high",
-                          "text-blue-600": risk.severity === "medium",
-                          "text-muted-foreground": risk.severity === "low",
-                        })} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs font-semibold text-foreground">{risk.title}</span>
-                          <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                            "text-red-700 bg-red-50 border-red-200": risk.severity === "critical",
-                            "text-amber-700 bg-amber-50 border-amber-200": risk.severity === "high",
-                            "text-blue-700 bg-blue-50 border-blue-200": risk.severity === "medium",
-                          })}>{risk.severity}</span>
-                        </div>
-                        <div className="text-[9px] text-muted-foreground">Owner: {risk.owner} · Type: {risk.type} · Impact: {risk.impact}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                        "text-emerald-700 bg-emerald-50 border-emerald-200": risk.status === "resolved",
-                        "text-amber-700 bg-amber-50 border-amber-200": risk.status === "mitigating",
-                        "text-blue-700 bg-blue-50 border-blue-200": risk.status === "open",
-                      })}>{risk.status}</span>
-                      <button onClick={() => toast({ description: `Risk mitigation plan for: ${risk.title.slice(0, 40)}` })}
-                        className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors">
-                        Mitigate
-                      </button>
-                    </div>
-                  </div>
+                <div className="flex-1">
+                  <div className="text-xs font-semibold text-foreground mb-0.5">{ins.title}</div>
+                  <div className="text-[10px] text-muted-foreground">{ins.detail}</div>
                 </div>
-              ))}
-            </div>
-
-            <button onClick={() => navigate("/governance")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <Shield size={9} />Full Risk Center
-            </button>
-          </TabsContent>
-
-          {/* ── HUMAN APPROVALS ── */}
-          <TabsContent value="approvals" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(approvals.filter(a => a.status === "pending").length)} label="Pending" color="text-amber-600" />
-              <MetricBadge value={String(approvals.filter(a => a.status === "escalated").length)} label="Escalated" color="text-red-600" />
-              <MetricBadge value={String(approvals.filter(a => a.status === "approved").length)} label="Approved" color="text-emerald-600" />
-              <MetricBadge value={`$${approvals.filter(a => a.value).reduce((s, a) => {
-                const n = parseFloat((a.value || "0").replace(/[$,K]/g, "").replace("K", "000"));
-                return s + (isNaN(n) ? 0 : n);
-              }, 0).toLocaleString()}`} label="Total Value" />
-            </div>
-
-            <div className="space-y-2">
-              {approvals.map((appr, i) => (
-                <div key={i} className={cn("bg-white border rounded-sm p-4 shadow-sm", {
-                  "border-red-200": appr.risk === "high" || appr.status === "escalated",
-                  "border-amber-200": appr.risk === "medium" && appr.status !== "escalated",
-                  "border-border": appr.risk === "low" || appr.status === "approved",
-                })}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="text-xs font-semibold text-foreground mb-1">{appr.action}</div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-[9px] text-muted-foreground">Agent: <span className="font-semibold text-primary">{appr.agent}</span></span>
-                        {appr.value && <span className="text-[9px] font-mono font-bold text-foreground">{appr.value}</span>}
-                        <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><Clock size={8} />{appr.age}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded-sm border", {
-                        "text-amber-700 bg-amber-50 border-amber-200": appr.status === "pending",
-                        "text-red-700 bg-red-50 border-red-200": appr.status === "escalated",
-                        "text-emerald-700 bg-emerald-50 border-emerald-200": appr.status === "approved",
-                        "text-muted-foreground bg-muted/40 border-border": appr.status === "rejected",
-                      })}>{appr.status}</span>
-                      {(appr.status === "pending" || appr.status === "escalated") && (
-                        <>
-                          <button onClick={() => toast({ title: "Approved", description: appr.action.slice(0, 50) })}
-                            className="text-[9px] uppercase tracking-widest text-emerald-700 font-bold border border-emerald-200 bg-emerald-50 rounded-sm px-2 py-1 hover:bg-emerald-100 transition-colors flex items-center gap-1">
-                            <ThumbsUp size={8} />Approve
-                          </button>
-                          <button onClick={() => toast({ title: "Rejected", description: appr.action.slice(0, 50) })}
-                            className="text-[9px] uppercase tracking-widest text-red-700 font-bold border border-red-200 bg-red-50 rounded-sm px-2 py-1 hover:bg-red-100 transition-colors flex items-center gap-1">
-                            <ThumbsDown size={8} />Reject
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button onClick={() => navigate("/governance")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              <Users size={9} />Full Approvals Dashboard
-            </button>
-          </TabsContent>
-
-          {/* ── RECOMMENDATIONS ── */}
-          <TabsContent value="recommendations" className="m-0 space-y-4">
-            <div className="space-y-2">
-              {intel.insights.filter(i => i.type === "critical" || i.type === "warning").map((ins, i) => (
-                <div key={i} className={cn("bg-white border rounded-sm p-4 shadow-sm flex gap-3", {
-                  "border-red-200": ins.type === "critical",
-                  "border-amber-200": ins.type === "warning",
-                })}>
-                  <div className={cn("w-7 h-7 rounded-sm flex items-center justify-center shrink-0 mt-0.5", {
-                    "bg-red-100": ins.type === "critical",
-                    "bg-amber-100": ins.type === "warning",
-                  })}>
-                    {ins.type === "critical" ? <XCircle size={12} className="text-red-600" /> : <AlertTriangle size={12} className="text-amber-600" />}
-                  </div>
+              </div>
+            ))}
+            {intel.recommendations.map((rec, i) => (
+              <div key={i} className="bg-white border border-border rounded-sm p-4 shadow-sm hover:border-primary/30 transition-colors">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <div className="text-xs font-semibold text-foreground mb-0.5">{ins.title}</div>
-                    <div className="text-[10px] text-muted-foreground">{ins.detail}</div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Star size={10} className="text-amber-400" />
+                      <div className="text-xs font-semibold text-foreground">{rec.title}</div>
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-[9px] uppercase tracking-widest text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-sm">{rec.impact}</span>
+                      <span className="text-[9px] text-muted-foreground">Effort: {rec.effort}</span>
+                      <span className="text-[9px] font-mono text-muted-foreground">{rec.confidence}% confidence</span>
+                    </div>
                   </div>
+                  <button onClick={() => toast({ title: "Executing Recommendation", description: rec.title.slice(0, 50) })}
+                    className="text-[9px] uppercase tracking-widest text-white font-bold bg-primary rounded-sm px-2 py-1 hover:bg-primary/90 transition-colors flex items-center gap-1 shrink-0">
+                    <Play size={8} />Execute
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Timeline ── */}
+        <div className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Timeline</h2>
+          <div className="bg-white border border-border rounded-sm shadow-sm overflow-hidden">
+            <div className="divide-y divide-border">
+              {timeline.map((event, i) => {
+                const ts = timelineTypeStyle[event.type];
+                return (
+                  <div key={i} className="flex items-start gap-4 px-4 py-3 hover:bg-muted/20 transition-colors">
+                    <span className="font-mono text-[10px] text-muted-foreground shrink-0 w-10 mt-0.5">{event.time}</span>
+                    <div className={cn("w-2 h-2 rounded-full shrink-0 mt-1.5", ts.dot)} />
+                    <div className="flex-1 pb-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={cn("text-[10px] font-bold", ts.label)}>{event.actor}</span>
+                      </div>
+                      <div className="text-[10px] text-foreground">{event.event}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Analytics ── */}
+        <div className="space-y-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-foreground">Analytics</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-1">EEI Score — 8-Week Trend</div>
+              <div className="text-2xl font-bold tabular-nums font-mono text-primary mb-3">
+                {analytics.eeiTrend[analytics.eeiTrend.length - 1]}
+                <span className={cn("text-sm ml-2", analytics.eeiTrend[analytics.eeiTrend.length - 1] > analytics.eeiTrend[0] ? "text-emerald-500" : "text-red-500")}>
+                  {analytics.eeiTrend[analytics.eeiTrend.length - 1] > analytics.eeiTrend[0] ? "▲" : "▼"} {Math.abs(analytics.eeiTrend[analytics.eeiTrend.length - 1] - analytics.eeiTrend[0])} pts
+                </span>
+              </div>
+              <TrendChart data={analytics.eeiTrend} labels={analytics.labels} color="bg-primary" max={100} />
+            </div>
+            <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-1">Automation Rate — 8-Week Trend</div>
+              <div className="text-2xl font-bold tabular-nums font-mono text-violet-600 mb-3">
+                {analytics.automationTrend[analytics.automationTrend.length - 1]}%
+                <span className="text-sm ml-2 text-violet-500">
+                  ▲ {Math.abs(analytics.automationTrend[analytics.automationTrend.length - 1] - analytics.automationTrend[0])} pts
+                </span>
+              </div>
+              <TrendChart data={analytics.automationTrend} labels={analytics.labels} color="bg-violet-500" max={100} />
+            </div>
+          </div>
+
+          <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Cumulative Business Impact (This Period)</div>
+            <div className="grid grid-cols-6 gap-4">
+              {[
+                { label: "Revenue Protected", value: bu.revenueProtected, icon: DollarSign, color: "text-emerald-600" },
+                { label: "Cost Saved", value: bu.costSaved, icon: Cpu, color: "text-foreground" },
+                { label: "Hours Saved", value: `${bu.hoursSaved.toLocaleString()}h`, icon: Clock, color: "text-foreground" },
+                { label: "Downtime Prevented", value: bu.downtimePrevented, icon: RefreshCw, color: "text-blue-600" },
+                { label: "Productivity", value: `+${bu.productivityImprovement}%`, icon: TrendingUp, color: "text-emerald-600" },
+                { label: "EEI Impact", value: bu.eeiContrib, icon: Gauge, color: "text-primary" },
+              ].map((m, i) => (
+                <div key={i} className="text-center border-r border-border/40 last:border-0 pr-4 last:pr-0">
+                  <m.icon size={16} className={cn("mx-auto mb-2", m.color)} />
+                  <div className={cn("text-sm font-bold font-mono mb-0.5", m.color)}>{m.value}</div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground">{m.label}</div>
                 </div>
               ))}
             </div>
+          </div>
+        </div>
 
-            <div>
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-2">AI Recommendations</div>
-              <div className="space-y-2">
-                {intel.recommendations.map((rec, i) => (
-                  <div key={i} className="bg-white border border-border rounded-sm p-4 shadow-sm hover:border-primary/30 transition-colors">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Star size={10} className="text-amber-400" />
-                          <div className="text-xs font-semibold text-foreground">{rec.title}</div>
-                        </div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-[9px] uppercase tracking-widest text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-sm">{rec.impact}</span>
-                          <span className="text-[9px] text-muted-foreground">Effort: {rec.effort}</span>
-                          <span className="text-[9px] font-mono text-muted-foreground">{rec.confidence}% confidence</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {rec.sop && (
-                          <button onClick={() => setActiveTab("sops")} className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors flex items-center gap-1">
-                            <FileText size={8} />SOP
-                          </button>
-                        )}
-                        {rec.workflow && (
-                          <button onClick={() => navigate("/workflow-studio")} className="text-[9px] uppercase tracking-widest text-primary font-bold border border-primary/20 rounded-sm px-2 py-1 hover:bg-primary/5 transition-colors flex items-center gap-1">
-                            <Activity size={8} />Mission
-                          </button>
-                        )}
-                        <button onClick={() => toast({ title: "Executing Recommendation", description: rec.title.slice(0, 50) })}
-                          className="text-[9px] uppercase tracking-widest text-white font-bold bg-primary rounded-sm px-2 py-1 hover:bg-primary/90 transition-colors flex items-center gap-1">
-                          <Play size={8} />Execute
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button onClick={() => navigate("/intelligence")}
-              className="w-full text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-              View All Enterprise Recommendations
-            </button>
-          </TabsContent>
-
-          {/* ── TIMELINE ── */}
-          <TabsContent value="timeline" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3 mb-2">
-              <MetricBadge value={String(timeline.filter(e => e.type === "agent").length)} label="Agent Actions" color="text-primary" />
-              <MetricBadge value={String(timeline.filter(e => e.type === "human").length)} label="Human Actions" color="text-emerald-600" />
-              <MetricBadge value={String(timeline.filter(e => e.type === "alert").length)} label="Alerts Raised" color="text-red-600" />
-              <MetricBadge value={String(timeline.filter(e => e.type === "system").length)} label="System Events" />
-            </div>
-
-            <div className="bg-white border border-border rounded-sm shadow-sm overflow-hidden">
-              <div className="px-4 py-3 border-b border-border">
-                <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Activity Timeline (Last 8 Hours)</span>
-              </div>
-              <div className="divide-y divide-border">
-                {timeline.map((event, i) => {
-                  const ts = timelineTypeStyle[event.type];
-                  return (
-                    <div key={i} className="flex items-start gap-4 px-4 py-3 hover:bg-muted/20 transition-colors">
-                      <span className="font-mono text-[10px] text-muted-foreground shrink-0 w-10 mt-0.5">{event.time}</span>
-                      <div className="flex flex-col items-center shrink-0 mt-1.5">
-                        <div className={cn("w-2 h-2 rounded-full", ts.dot)} />
-                        {i < timeline.length - 1 && <div className="w-px bg-border mt-1" style={{ minHeight: 16 }} />}
-                      </div>
-                      <div className="flex-1 pb-1">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className={cn("text-[10px] font-bold", ts.label)}>{event.actor}</span>
-                          <span className={cn("text-[8px] uppercase tracking-widest font-bold px-1 py-0.5 rounded-sm border", {
-                            "text-primary bg-primary/5 border-primary/20": event.type === "agent",
-                            "text-emerald-700 bg-emerald-50 border-emerald-200": event.type === "human",
-                            "text-red-700 bg-red-50 border-red-200": event.type === "alert",
-                            "text-muted-foreground bg-muted/40 border-border": event.type === "system",
-                          })}>{event.type}</span>
-                        </div>
-                        <div className="text-[10px] text-foreground">{event.event}</div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* ── ANALYTICS ── */}
-          <TabsContent value="analytics" className="m-0 space-y-4">
-            <div className="grid grid-cols-4 gap-3">
-              <MetricBadge value={String(analytics.eeiTrend[analytics.eeiTrend.length - 1])} label="Current EEI" color="text-primary" />
-              <MetricBadge value={`${analytics.eeiTrend[analytics.eeiTrend.length - 1] > analytics.eeiTrend[0] ? "+" : ""}${analytics.eeiTrend[analytics.eeiTrend.length - 1] - analytics.eeiTrend[0]}`} label="EEI Change (8W)" color="text-emerald-600" />
-              <MetricBadge value={`${analytics.automationTrend[analytics.automationTrend.length - 1]}%`} label="Automation Rate" color="text-primary" />
-              <MetricBadge value={`$${analytics.agentCost[analytics.agentCost.length - 1]}K/mo`} label="Agent Cost MTD" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* EEI Trend */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-1 flex items-center gap-1.5">
-                  <BarChart3 size={10} />EEI Score — 8-Week Trend
-                </div>
-                <div className="text-2xl font-bold tabular-nums font-mono text-primary mb-3">
-                  {analytics.eeiTrend[analytics.eeiTrend.length - 1]}
-                  <span className={cn("text-sm ml-2", analytics.eeiTrend[analytics.eeiTrend.length - 1] > analytics.eeiTrend[0] ? "text-emerald-500" : "text-red-500")}>
-                    {analytics.eeiTrend[analytics.eeiTrend.length - 1] > analytics.eeiTrend[0] ? "▲" : "▼"} {Math.abs(analytics.eeiTrend[analytics.eeiTrend.length - 1] - analytics.eeiTrend[0])} pts
-                  </span>
-                </div>
-                <TrendChart data={analytics.eeiTrend} labels={analytics.labels} color="bg-primary" max={100} />
-              </div>
-
-              {/* Health Trend */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-1 flex items-center gap-1.5">
-                  <Activity size={10} />Unit Health — 8-Week Trend
-                </div>
-                <div className="text-2xl font-bold tabular-nums font-mono text-emerald-600 mb-3">
-                  {analytics.healthTrend[analytics.healthTrend.length - 1]}%
-                  <span className="text-sm ml-2 text-emerald-500">
-                    ▲ {Math.abs(analytics.healthTrend[analytics.healthTrend.length - 1] - analytics.healthTrend[0])} pts
-                  </span>
-                </div>
-                <TrendChart data={analytics.healthTrend} labels={analytics.labels} color="bg-emerald-500" max={100} />
-              </div>
-
-              {/* Automation Trend */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-1 flex items-center gap-1.5">
-                  <Zap size={10} />Automation Rate — 8-Week Trend
-                </div>
-                <div className="text-2xl font-bold tabular-nums font-mono text-violet-600 mb-3">
-                  {analytics.automationTrend[analytics.automationTrend.length - 1]}%
-                  <span className="text-sm ml-2 text-violet-500">
-                    ▲ {Math.abs(analytics.automationTrend[analytics.automationTrend.length - 1] - analytics.automationTrend[0])} pts
-                  </span>
-                </div>
-                <TrendChart data={analytics.automationTrend} labels={analytics.labels} color="bg-violet-500" max={100} />
-              </div>
-
-              {/* Agent Cost Trend */}
-              <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-1 flex items-center gap-1.5">
-                  <DollarSign size={10} />Agent Cost (K$/mo) — 8-Week Trend
-                </div>
-                <div className="text-2xl font-bold tabular-nums font-mono text-foreground mb-3">
-                  ${analytics.agentCost[analytics.agentCost.length - 1]}K
-                  <span className="text-sm ml-2 text-amber-500">
-                    ▲ ${Math.abs(analytics.agentCost[analytics.agentCost.length - 1] - analytics.agentCost[0])}K since W1
-                  </span>
-                </div>
-                <TrendChart data={analytics.agentCost} labels={analytics.labels} color="bg-amber-500" max={200} />
-              </div>
-            </div>
-
-            {/* Business Impact Summary */}
-            <div className="bg-white border border-border rounded-sm p-4 shadow-sm">
-              <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold mb-3">Cumulative Business Impact (This Period)</div>
-              <div className="grid grid-cols-6 gap-4">
-                {[
-                  { label: "Revenue Protected", value: bu.revenueProtected, icon: DollarSign, color: "text-emerald-600" },
-                  { label: "Cost Saved", value: bu.costSaved, icon: Zap, color: "text-foreground" },
-                  { label: "Hours Saved", value: `${bu.hoursSaved.toLocaleString()}h`, icon: Clock, color: "text-foreground" },
-                  { label: "Downtime Prevented", value: bu.downtimePrevented, icon: RefreshCw, color: "text-blue-600" },
-                  { label: "Productivity", value: `+${bu.productivityImprovement}%`, icon: TrendingUp, color: "text-emerald-600" },
-                  { label: "EEI Impact", value: bu.eeiContrib, icon: BarChart3, color: "text-primary" },
-                ].map((m, i) => (
-                  <div key={i} className="text-center border-r border-border/40 last:border-0 pr-4 last:pr-0">
-                    <m.icon size={16} className={cn("mx-auto mb-2", m.color)} />
-                    <div className={cn("text-sm font-bold font-mono mb-0.5", m.color)}>{m.value}</div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground">{m.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => navigate("/business-impact")}
-                className="flex-1 text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-                <DollarSign size={9} />Full Business Impact Dashboard
-              </button>
-              <button onClick={() => navigate("/kpi-studio")}
-                className="flex-1 text-[9px] uppercase tracking-widest text-primary font-bold flex items-center justify-center gap-1 py-2 border border-primary/20 rounded-sm hover:bg-primary/5 transition-colors">
-                <BarChart3 size={9} />Full KPI Dashboard
-              </button>
-            </div>
-          </TabsContent>
-
-        </Tabs>
       </div>
     </div>
   );

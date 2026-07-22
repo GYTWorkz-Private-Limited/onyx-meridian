@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { MFG_AGENTS, BU_LIST, ENTERPRISE_METRICS } from "@/data/enterprise-data";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/context/AppContext";
 import {
   ChevronRight, TrendingUp, DollarSign, Clock, Activity, ArrowUpRight,
   Bot, Filter, Shield, Zap, BarChart3, Target, AlertTriangle,
@@ -26,10 +27,14 @@ const COST_INTELLIGENCE = [
 ];
 
 export default function BusinessImpact() {
+  const { role } = useAppContext();
+  const isCxo = role === "cxo";
   const [selectedBu, setSelectedBu] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"roi" | "costSaved" | "hoursSaved">("roi");
   const [activeTab, setActiveTab] = useState<"overview" | "agents" | "cost">("overview");
   const [, navigate] = useLocation();
+
+  const TABS = (["overview", "agents", "cost"] as const).filter((t) => !isCxo || t !== "agents");
 
   const filtered = MFG_AGENTS
     .filter((a) => selectedBu === "all" || a.bu === selectedBu)
@@ -80,7 +85,7 @@ export default function BusinessImpact() {
           <span className="text-foreground font-semibold">Business Impact</span>
         </div>
         <div className="flex gap-1">
-          {(["overview", "agents", "cost"] as const).map((t) => (
+          {TABS.map((t) => (
             <button
               key={t}
               onClick={() => setActiveTab(t)}
@@ -196,7 +201,7 @@ export default function BusinessImpact() {
           </>
         )}
 
-        {activeTab === "agents" && (
+        {activeTab === "agents" && !isCxo && (
           <div className="bg-white border border-border rounded-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground">Digital Employee Impact Breakdown</div>
@@ -271,57 +276,61 @@ export default function BusinessImpact() {
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white border border-border rounded-sm p-4">
-                <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-3">Cost per Agent (MTD)</div>
-                <div className="space-y-2">
-                  {MFG_AGENTS.slice(0, 6).map((a) => (
-                    <div key={a.id} className="flex items-center gap-3">
-                      <div className="w-32 text-[10px] font-semibold text-foreground truncate shrink-0">{a.name}</div>
-                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary rounded-full" style={{ width: `${(a.costPerDay / 200) * 100}%` }} />
-                      </div>
-                      <div className="text-[9px] font-mono text-muted-foreground w-20 text-right shrink-0">${a.costPerDay}/day</div>
+            {!isCxo && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white border border-border rounded-sm p-4">
+                    <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-3">Cost per Agent (MTD)</div>
+                    <div className="space-y-2">
+                      {MFG_AGENTS.slice(0, 6).map((a) => (
+                        <div key={a.id} className="flex items-center gap-3">
+                          <div className="w-32 text-[10px] font-semibold text-foreground truncate shrink-0">{a.name}</div>
+                          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full" style={{ width: `${(a.costPerDay / 200) * 100}%` }} />
+                          </div>
+                          <div className="text-[9px] font-mono text-muted-foreground w-20 text-right shrink-0">${a.costPerDay}/day</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white border border-border rounded-sm p-4">
+                    <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-3">Token Usage by Agent</div>
+                    <div className="space-y-2">
+                      {MFG_AGENTS.slice(0, 6).map((a) => {
+                        const maxTokens = 3500000;
+                        return (
+                          <div key={a.id} className="flex items-center gap-3">
+                            <div className="w-32 text-[10px] font-semibold text-foreground truncate shrink-0">{a.name}</div>
+                            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(a.tokenUsage / maxTokens) * 100}%` }} />
+                            </div>
+                            <div className="text-[9px] font-mono text-muted-foreground w-20 text-right shrink-0">
+                              {(a.tokenUsage / 1000000).toFixed(1)}M
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 bg-white border border-border rounded-sm p-4">
+                  <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-3">Cost Alerts</div>
+                  {[
+                    { msg: "Finance Analyst token usage +24% this week — review prompt efficiency", sev: "warning" },
+                    { msg: "Predictive Maintenance cost MTD on track — $6.8K of $7.2K budget", sev: "info" },
+                    { msg: "Revenue Scout compute cost spiked +18% — CRM sync volume increase", sev: "warning" },
+                  ].map((a, i) => (
+                    <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-sm mb-1.5 text-[10px]",
+                      a.sev === "warning" ? "bg-amber-50 border border-amber-200 text-amber-800" : "bg-muted/40 border border-border text-muted-foreground"
+                    )}>
+                      {a.sev === "warning" ? <AlertTriangle size={11} className="mt-0.5 shrink-0" /> : <Activity size={11} className="mt-0.5 shrink-0" />}
+                      {a.msg}
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="bg-white border border-border rounded-sm p-4">
-                <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-3">Token Usage by Agent</div>
-                <div className="space-y-2">
-                  {MFG_AGENTS.slice(0, 6).map((a) => {
-                    const maxTokens = 3500000;
-                    return (
-                      <div key={a.id} className="flex items-center gap-3">
-                        <div className="w-32 text-[10px] font-semibold text-foreground truncate shrink-0">{a.name}</div>
-                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(a.tokenUsage / maxTokens) * 100}%` }} />
-                        </div>
-                        <div className="text-[9px] font-mono text-muted-foreground w-20 text-right shrink-0">
-                          {(a.tokenUsage / 1000000).toFixed(1)}M
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 bg-white border border-border rounded-sm p-4">
-              <div className="text-[9px] uppercase tracking-widest font-bold text-muted-foreground mb-3">Cost Alerts</div>
-              {[
-                { msg: "Finance Analyst token usage +24% this week — review prompt efficiency", sev: "warning" },
-                { msg: "Predictive Maintenance cost MTD on track — $6.8K of $7.2K budget", sev: "info" },
-                { msg: "Revenue Scout compute cost spiked +18% — CRM sync volume increase", sev: "warning" },
-              ].map((a, i) => (
-                <div key={i} className={cn("flex items-start gap-2 px-3 py-2 rounded-sm mb-1.5 text-[10px]",
-                  a.sev === "warning" ? "bg-amber-50 border border-amber-200 text-amber-800" : "bg-muted/40 border border-border text-muted-foreground"
-                )}>
-                  {a.sev === "warning" ? <AlertTriangle size={11} className="mt-0.5 shrink-0" /> : <Activity size={11} className="mt-0.5 shrink-0" />}
-                  {a.msg}
-                </div>
-              ))}
-            </div>
+              </>
+            )}
           </>
         )}
       </div>

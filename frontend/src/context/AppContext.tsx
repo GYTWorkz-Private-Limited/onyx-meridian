@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { DEFAULT_PERSONA_ID, getPersona, PERSONAS, type Persona, type Role } from "@/lib/rbac";
 import { login as apiLogin, type AuthUser } from "@/lib/auth";
+import type { Person } from "@/data/people-data";
+import { GOAL_TREE, type Goal } from "@/data/goals-data";
 
 export interface WorkflowInstance {
   id: string;
@@ -35,6 +37,18 @@ interface AppContextType {
   role: Role;
   currentBuId: string | null;
   setActivePersonaId: (id: string) => void;
+  // "Preview as this person" — a temporary, app-wide view override for
+  // CXO's People page. Does not touch authUser/login state; exiting simply
+  // clears it and the real persona/role take back over.
+  previewPerson: Person | null;
+  startPreview: (person: Person) => void;
+  exitPreview: () => void;
+  // Goals — session-lived like `workflows`, so state survives navigation
+  // (e.g. across the "preview as this person" role switch on People).
+  goals: Goal[];
+  addGoal: (goal: Goal) => void;
+  addGoals: (goals: Goal[]) => void;
+  updateGoal: (id: string, patch: Partial<Goal>) => void;
   // Companies (shallow multi-tenancy)
   currentCompanyId: string;
   setCurrentCompanyId: (id: string) => void;
@@ -99,11 +113,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => setAuthUser(null), []);
 
+  const [previewPerson, setPreviewPerson] = useState<Person | null>(null);
+  const startPreview = useCallback((person: Person) => setPreviewPerson(person), []);
+  const exitPreview = useCallback(() => setPreviewPerson(null), []);
+
+  // People-directory roleTiers don't distinguish dept_manager from a plain
+  // employee — "member" maps to "employee" as the closest available preview.
+  const previewPersona: Persona | null = previewPerson
+    ? {
+        id: previewPerson.id,
+        name: previewPerson.name,
+        title: previewPerson.title,
+        role: previewPerson.roleTier === "abu_head" ? "abu_head" : previewPerson.roleTier === "cxo" ? "cxo" : "employee",
+        buId: previewPerson.buId,
+        deptId: previewPerson.deptId,
+      }
+    : null;
+
   // Once logged in, the real user drives persona/role/scope instead of the
-  // manual persona switcher.
-  const persona: Persona = authUser
+  // manual persona switcher — unless a preview is active, which wins over both.
+  const persona: Persona = previewPersona ?? (authUser
     ? { id: authUser.id, name: authUser.name, title: authUser.title, role: authUser.role, buId: authUser.buId, deptId: authUser.deptId ?? undefined }
-    : getPersona(activePersonaId);
+    : getPersona(activePersonaId));
   const setActivePersonaId = useCallback((id: string) => setActivePersonaIdState(id), []);
   const setCurrentCompanyId = useCallback((id: string) => setCurrentCompanyIdState(id), []);
 
@@ -128,10 +159,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const decrementApprovals = useCallback(() => setPendingApprovals(p => Math.max(0, p - 1)), []);
   const incrementApprovals = useCallback(() => setPendingApprovals(p => p + 1), []);
 
+  const [goals, setGoals] = useState<Goal[]>(GOAL_TREE);
+  const addGoal = useCallback((goal: Goal) => setGoals(prev => [...prev, goal]), []);
+  const addGoals = useCallback((newGoals: Goal[]) => setGoals(prev => [...prev, ...newGoals]), []);
+  const updateGoal = useCallback((id: string, patch: Partial<Goal>) => {
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, ...patch } : g));
+  }, []);
+
   return (
     <AppContext.Provider value={{
       workflows, addWorkflow, updateWorkflowStatus, pendingApprovals, decrementApprovals, incrementApprovals,
       persona, role: persona.role, currentBuId: persona.buId, setActivePersonaId,
+      previewPerson, startPreview, exitPreview,
+      goals, addGoal, addGoals, updateGoal,
       currentCompanyId, setCurrentCompanyId,
       authUser, isAuthenticated: authUser !== null, login, logout,
     }}>

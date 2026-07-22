@@ -7,16 +7,19 @@ import {
   Bot, GitBranch, BookOpen, ScrollText,
   Target, TerminalSquare, Radio, FileText, FlaskConical,
   ListChecks, History, Boxes, Plug, Cable, FolderKanban, Gauge, Rocket, Users, LineChart, BarChart3, Crosshair,
-  Files, ClipboardList,
+  Files, ClipboardList, Bug, X,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import onyxStar from "@/assets/onyx-star.png";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnyxCopilot } from "@/components/OnyxCopilot";
 import { PersonaSwitcher } from "@/components/layout/PersonaSwitcher";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
 import { COMPANIES } from "@/data/companies-data";
-import type { Role } from "@/lib/rbac";
+import { ROLE_LABEL, type Role } from "@/lib/rbac";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -64,7 +67,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { icon: Cpu,         path: "/workforce",      label: "AI Workforce",    roles: ["employee", "dept_manager", "developer"] },
       { icon: Users,       path: "/people",         label: "People",          roles: ["dept_manager", "abu_head", "cxo"] },
-      { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["dept_manager", "abu_head", "cxo"] },
+      { icon: BarChart3,   path: "/workforce-intelligence", label: "Workforce Intelligence", roles: ["dept_manager", "abu_head"] },
       { icon: Radio,       path: "/agentops",       label: "Mission Control", roles: ["employee", "dept_manager", "developer"] },
       { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["employee", "dept_manager", "developer"] },
       { icon: FileText,    path: "/agent-logs",     label: "Agent Logs", roles: ["employee", "dept_manager", "developer"] },
@@ -106,11 +109,25 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [hasOpened, setHasOpened] = useState(false);
-  const { role, currentCompanyId } = useAppContext();
+  const [showBugModal, setShowBugModal] = useState(false);
+  const [bugText, setBugText] = useState("");
+  const { role, currentCompanyId, previewPerson, exitPreview } = useAppContext();
   const activeCompany = COMPANIES.find((c) => c.id === currentCompanyId);
+  const { toast } = useToast();
+
+  const submitBug = () => {
+    setShowBugModal(false);
+    setBugText("");
+    toast({ title: "Bug reported", description: "Thanks — logged for review." });
+  };
+
+  const exitPreviewToPeople = () => {
+    exitPreview();
+    navigate("/people");
+  };
 
   const visibleSections = NAV_SECTIONS
     .map((section) => ({
@@ -125,7 +142,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden font-sans">
+    <div className="flex flex-col h-screen w-full bg-background overflow-hidden font-sans">
+      {previewPerson && (
+        <div className="h-8 shrink-0 bg-amber-500 text-white flex items-center justify-center gap-2 text-[11px] font-semibold z-30">
+          <span>Previewing as {previewPerson.name} ({ROLE_LABEL[role]})</span>
+          <button
+            onClick={exitPreviewToPeople}
+            className="uppercase tracking-widest text-[9px] font-bold border border-white/50 rounded-sm px-2 py-0.5 hover:bg-white/15 transition-colors"
+          >
+            Exit Preview
+          </button>
+        </div>
+      )}
+      <div className="flex flex-1 w-full overflow-hidden">
       <CommandPalette />
 
       {/* Sidebar */}
@@ -133,27 +162,37 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Logo / Copilot trigger */}
         <div className="mb-4 px-[11px] shrink-0 flex items-center h-8 gap-2">
-          <button
-            onClick={openCopilot}
-            title="Open Onyx Co Work"
-            className={cn(
-              "relative w-7 h-7 rounded-full shrink-0 p-0 overflow-visible",
-              "transition-all duration-200 ease-out",
-              "hover:shadow-[0_0_14px_rgba(99,102,241,0.65)] hover:scale-110",
-              copilotOpen && "shadow-[0_0_14px_rgba(99,102,241,0.8)] scale-105"
-            )}
-          >
-            <img
-              src={onyxStar}
-              alt="Onyx Co Work"
-              className="w-7 h-7 rounded-full object-cover"
-            />
-            {/* Notification dot */}
-            {!hasOpened && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-indigo-500 border border-white" />
-            )}
-          </button>
-
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={openCopilot}
+                title="Open Onyx Co Work"
+                className={cn(
+                  "relative w-7 h-7 rounded-full shrink-0 p-0 overflow-visible",
+                  "transition-all duration-200 ease-out",
+                  "hover:shadow-[0_0_14px_rgba(99,102,241,0.65)] hover:scale-110",
+                  copilotOpen && "shadow-[0_0_14px_rgba(99,102,241,0.8)] scale-105"
+                )}
+              >
+                {/* Subtle always-on pulse ring, separate from the icon so it stays crisp */}
+                {!copilotOpen && (
+                  <span className="absolute inset-0 rounded-full bg-indigo-400/40 animate-ping" />
+                )}
+                <img
+                  src={onyxStar}
+                  alt="Onyx Co Work"
+                  className="relative w-7 h-7 rounded-full object-cover"
+                />
+                {/* Notification dot */}
+                {!hasOpened && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-indigo-500 border border-white" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[11px]">
+              Have any question?
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Nav */}
@@ -203,6 +242,18 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           ))}
         </nav>
+
+        {/* Report a bug — deliberately tiny and unobtrusive */}
+        <button
+          onClick={() => setShowBugModal(true)}
+          title="Report a bug"
+          className="mt-auto w-full flex items-center gap-2.5 px-[16.5px] py-1.5 text-muted-foreground/30 hover:text-muted-foreground/70 transition-colors shrink-0"
+        >
+          <Bug size={11} className="shrink-0" />
+          <span className="text-[8px] uppercase tracking-widest whitespace-nowrap overflow-hidden transition-all duration-150 max-w-0 opacity-0 group-hover/sidebar:max-w-[160px] group-hover/sidebar:opacity-100">
+            Report a bug
+          </span>
+        </button>
       </div>
 
       {/* Main Content */}
@@ -227,6 +278,28 @@ export function AppLayout({ children }: AppLayoutProps) {
         onClose={() => setCopilotOpen(false)}
         currentPage={location}
       />
+
+      {showBugModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white border border-border rounded-sm shadow-xl w-[380px] p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5"><Bug size={12} /> Report a Bug</h3>
+              <button onClick={() => setShowBugModal(false)} className="text-muted-foreground hover:text-foreground"><X size={14} /></button>
+            </div>
+            <textarea
+              className="w-full border border-border rounded-sm px-3 py-2 text-xs min-h-[80px]"
+              placeholder="What went wrong?"
+              value={bugText}
+              onChange={(e) => setBugText(e.target.value)}
+            />
+            <div className="mt-3 flex gap-2 justify-end">
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowBugModal(false)}>Cancel</Button>
+              <Button size="sm" className="bg-foreground text-background hover:bg-foreground/90 text-xs" onClick={submitBug}>Submit</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

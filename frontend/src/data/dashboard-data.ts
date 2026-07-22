@@ -64,6 +64,22 @@ export const BUSINESS_VALUE_DATA = DAYS.map((day, i) => ({
   Revenue: round(s(i, 0, 40000, 62000) + i * 1800),
 }));
 
+// ─── Revenue (Executive Command — CXO) ────────────────────────────────────
+export const REVENUE_SNAPSHOT = {
+  today: "$412K",
+  todayTrend: "↑6%",
+  monthly: "$9.7M",
+  monthlyTrend: "↑11%",
+  quarterly: "$28.4M",
+  quarterlyTrend: "↑9%",
+};
+
+// ─── Current Business Stock (Executive Command — CXO) ─────────────────────
+export const CURRENT_STOCK = {
+  value: "$4.2M",
+  trend: "↓3%",
+};
+
 // ─── Top Performing Departments ────────────────────────────────────────────
 export const DEPT_PERF = [
   { dept: "Support",    score: 128 },
