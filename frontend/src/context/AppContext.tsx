@@ -4,6 +4,19 @@ import { login as apiLogin, type AuthUser } from "@/lib/auth";
 import type { Person } from "@/data/people-data";
 import { GOAL_TREE, type Goal } from "@/data/goals-data";
 
+// ─── Cost control ───────────────────────────────────────────────
+// Session-lived cap/lock state for BUs, departments, people and agents.
+// null cap = unlimited. Mirrors the workflows/goals pattern below — this is
+// a prototype with no backend persistence, so state lives here for the
+// duration of the session and is shared across every cost-control surface
+// (Cost Control page, Workforce Inventory, Harness, global kill switch).
+
+export interface CapState { cap: number | null; locked: boolean }
+export interface AgentCapState { sessionCap: number | null; totalCap: number | null; locked: boolean }
+
+const DEFAULT_CAP: CapState = { cap: null, locked: false };
+const DEFAULT_AGENT_CAP: AgentCapState = { sessionCap: null, totalCap: null, locked: false };
+
 export interface WorkflowInstance {
   id: string;
   title: string;
@@ -58,6 +71,24 @@ interface AppContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  // Cost control — session-lived caps/locks scoped to BU, department, person
+  // and agent, plus per-agent model/reasoning overrides and the global kill
+  // switch. See the "Cost control" comment block above for the model.
+  getBuCap: (id: string) => CapState;
+  getDeptCap: (id: string) => CapState;
+  getPersonCap: (id: string) => CapState;
+  getAgentCap: (id: string) => AgentCapState;
+  setBuCap: (id: string, cap: number | null, locked?: boolean) => void;
+  setDeptCap: (id: string, cap: number | null, locked?: boolean) => void;
+  setPersonCap: (id: string, cap: number | null, locked?: boolean) => void;
+  setAgentCap: (id: string, patch: Partial<AgentCapState>) => void;
+  agentModelOverride: Record<string, string>;
+  agentReasoningOverride: Record<string, string>;
+  setAgentModel: (id: string, modelId: string) => void;
+  setAgentReasoning: (id: string, level: string) => void;
+  killSwitchActive: boolean;
+  activateKillSwitch: () => void;
+  deactivateKillSwitch: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -166,6 +197,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGoals(prev => prev.map(g => g.id === id ? { ...g, ...patch } : g));
   }, []);
 
+  // Cost control — seeded with a few non-blank examples so every role's
+  // panel shows something real on first load rather than an empty state.
+  const [buCostCaps, setBuCostCaps] = useState<Record<string, CapState>>({
+    procurement: { cap: 150, locked: false },
+  });
+  const [deptCostCaps, setDeptCostCaps] = useState<Record<string, CapState>>({
+    "procurement:supplier-management": { cap: 50, locked: false },
+  });
+  const [personCostCaps, setPersonCostCaps] = useState<Record<string, CapState>>({
+    "per-5": { cap: 100, locked: false },
+  });
+  const [agentCostCaps, setAgentCostCaps] = useState<Record<string, AgentCapState>>({
+    ag11: { sessionCap: null, totalCap: 25, locked: false },
+    ag6: { sessionCap: null, totalCap: null, locked: true },
+  });
+  const [agentModelOverride, setAgentModelOverride] = useState<Record<string, string>>({});
+  const [agentReasoningOverride, setAgentReasoningOverride] = useState<Record<string, string>>({});
+  const [killSwitchActive, setKillSwitchActive] = useState(false);
+
+  const getBuCap = useCallback((id: string) => buCostCaps[id] ?? DEFAULT_CAP, [buCostCaps]);
+  const getDeptCap = useCallback((id: string) => deptCostCaps[id] ?? DEFAULT_CAP, [deptCostCaps]);
+  const getPersonCap = useCallback((id: string) => personCostCaps[id] ?? DEFAULT_CAP, [personCostCaps]);
+  const getAgentCap = useCallback((id: string) => {
+    const base = agentCostCaps[id] ?? DEFAULT_AGENT_CAP;
+    return killSwitchActive ? { ...base, locked: true } : base;
+  }, [agentCostCaps, killSwitchActive]);
+
+  const setBuCap = useCallback((id: string, cap: number | null, locked?: boolean) => {
+    setBuCostCaps(prev => ({ ...prev, [id]: { cap, locked: locked ?? (prev[id]?.locked ?? false) } }));
+  }, []);
+  const setDeptCap = useCallback((id: string, cap: number | null, locked?: boolean) => {
+    setDeptCostCaps(prev => ({ ...prev, [id]: { cap, locked: locked ?? (prev[id]?.locked ?? false) } }));
+  }, []);
+  const setPersonCap = useCallback((id: string, cap: number | null, locked?: boolean) => {
+    setPersonCostCaps(prev => ({ ...prev, [id]: { cap, locked: locked ?? (prev[id]?.locked ?? false) } }));
+  }, []);
+  const setAgentCap = useCallback((id: string, patch: Partial<AgentCapState>) => {
+    setAgentCostCaps(prev => ({ ...prev, [id]: { ...(prev[id] ?? DEFAULT_AGENT_CAP), ...patch } }));
+  }, []);
+  const setAgentModel = useCallback((id: string, modelId: string) => {
+    setAgentModelOverride(prev => ({ ...prev, [id]: modelId }));
+  }, []);
+  const setAgentReasoning = useCallback((id: string, level: string) => {
+    setAgentReasoningOverride(prev => ({ ...prev, [id]: level }));
+  }, []);
+
+  // Kill switch is an override layer, not a mutation of individual agent
+  // locks — getAgentCap ORs it in above, so deactivating restores whatever
+  // each agent's own lock state was before the switch was thrown.
+  const activateKillSwitch = useCallback(() => setKillSwitchActive(true), []);
+  const deactivateKillSwitch = useCallback(() => setKillSwitchActive(false), []);
+
   return (
     <AppContext.Provider value={{
       workflows, addWorkflow, updateWorkflowStatus, pendingApprovals, decrementApprovals, incrementApprovals,
@@ -174,6 +257,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       goals, addGoal, addGoals, updateGoal,
       currentCompanyId, setCurrentCompanyId,
       authUser, isAuthenticated: authUser !== null, login, logout,
+      getBuCap, getDeptCap, getPersonCap, getAgentCap,
+      setBuCap, setDeptCap, setPersonCap, setAgentCap,
+      agentModelOverride, agentReasoningOverride, setAgentModel, setAgentReasoning,
+      killSwitchActive, activateKillSwitch, deactivateKillSwitch,
     }}>
       {children}
     </AppContext.Provider>

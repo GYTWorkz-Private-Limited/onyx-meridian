@@ -34,3 +34,25 @@ export function monthlyCost(tokenUsage: number, costModelId: string, reasoningLe
   const reasoning = REASONING_LEVELS.find((r) => r.id === reasoningLevel) ?? REASONING_LEVELS[2];
   return (tokenUsage / 1_000_000) * model.rate * reasoning.mult;
 }
+
+// Shared quick-set cap presets for every cost-control surface (BU/Dept/
+// People panels, the Harness cost-control card, and the Hire wizard).
+// null = unlimited.
+export const CAP_PRESETS: { label: string; value: number | null }[] = [
+  { label: "$0 (Lock)", value: 0 },
+  { label: "$50", value: 50 },
+  { label: "$100", value: 100 },
+  { label: "$250", value: 250 },
+  { label: "$500", value: 500 },
+  { label: "Unlimited", value: null },
+];
+
+// Tighter presets for a single agent's per-session cap, where spend is much
+// smaller than a monthly/total figure.
+export const SESSION_CAP_PRESETS: { label: string; value: number | null }[] = [
+  { label: "$0 (Lock)", value: 0 },
+  { label: "$1", value: 1 },
+  { label: "$5", value: 5 },
+  { label: "$25", value: 25 },
+  { label: "Unlimited", value: null },
+];

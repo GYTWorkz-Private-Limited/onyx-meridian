@@ -73,7 +73,7 @@ export default function People() {
       id: `per-${Date.now()}`, name: form.name, email: form.email, title: form.title || "Team Member",
       buId: role === "abu_head" || role === "dept_manager" ? currentBuId : form.buId,
       deptId: role === "dept_manager" ? persona.deptId : undefined,
-      roleTier: "member", status: "invited",
+      roleTier: "member", status: "invited", costMtd: 0,
     };
     setPeople((prev) => [person, ...prev]);
     setShowModal(false);

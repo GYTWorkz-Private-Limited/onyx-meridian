@@ -99,7 +99,7 @@ export const FEATURE_ACCESS: Record<string, Partial<Record<Role, AccessLevel>>> 
   // Removed for CXO per explicit request; kept for Manager/ABU Head.
   "workforce-intelligence": { dept_manager: "scoped", abu_head: "scoped" },
   "governance":         { employee: "scoped", dept_manager: "scoped" },
-  "cost-control":       { employee: "scoped", dept_manager: "scoped", developer: "full" },
+  "cost-control":       { employee: "scoped", dept_manager: "scoped", abu_head: "scoped", cxo: "full", developer: "full" },
   "intelligence":       { employee: "view", dept_manager: "scoped", abu_head: "full", cxo: "full" },
   "documents":          { employee: "full", dept_manager: "full", abu_head: "full", cxo: "full", developer: "full" },
   "knowledge-studio":   { employee: "scoped", dept_manager: "scoped", developer: "full" },

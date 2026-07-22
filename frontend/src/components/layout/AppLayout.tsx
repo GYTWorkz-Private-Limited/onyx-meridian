@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/CommandPalette";
 import { OnyxCopilot } from "@/components/OnyxCopilot";
 import { PersonaSwitcher } from "@/components/layout/PersonaSwitcher";
+import { KillSwitchButton } from "@/components/shared/KillSwitch";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/context/AppContext";
@@ -71,6 +72,7 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
       { icon: Radio,       path: "/agentops",       label: "Mission Control", roles: ["employee", "dept_manager", "developer"] },
       { icon: FlaskConical,path: "/mission-replay", label: "Execution Intel", roles: ["employee", "dept_manager", "developer"] },
       { icon: FileText,    path: "/agent-logs",     label: "Agent Logs", roles: ["employee", "dept_manager", "developer"] },
+      { icon: Gauge,       path: "/cost-control",   label: "Cost Control", roles: ["employee", "dept_manager", "abu_head", "cxo", "developer"] },
     ],
   },
   {
@@ -84,7 +86,6 @@ const NAV_SECTIONS: { label: string; items: NavItem[] }[] = [
     items: [
       { icon: Target,      path: "/goals",         label: "Goals",         roles: ["employee", "dept_manager", "abu_head", "cxo"] },
       { icon: FolderKanban,path: "/projects",      label: "Projects",      roles: ["employee", "dept_manager", "abu_head", "cxo"] },
-      { icon: Gauge,       path: "/cost-control",  label: "Cost Control", roles: ["employee", "dept_manager", "developer"] },
     ],
   },
   {
@@ -271,6 +272,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </div>
       </div>
+
+      {/* Developer-only emergency stop — reachable from anywhere in the app */}
+      {role === "developer" && <KillSwitchButton variant="floating" />}
 
       {/* Onyx Copilot */}
       <OnyxCopilot

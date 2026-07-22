@@ -3,8 +3,14 @@ import { useLocation } from "wouter";
 import { HeaderBar } from "@/components/shared/HeaderBar";
 import { StatusBadge } from "@/components/shared/Badges";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter,
+  AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { MFG_AGENTS, BU_LIST, BU_INTELLIGENCE } from "@/data/enterprise-data";
+import { MFG_AGENTS, BU_LIST, BU_INTELLIGENCE, type AgentRecord } from "@/data/enterprise-data";
+import { MODEL_CATALOG, REASONING_LEVELS, monthlyCost, CAP_PRESETS, SESSION_CAP_PRESETS } from "@/data/cost-control-data";
 import { useAppContext } from "@/context/AppContext";
 import { cn } from "@/lib/utils";
 import { WorkforceManagement } from "@/components/command-center/WorkforceManagement";
@@ -14,7 +20,7 @@ import {
   Lightbulb, Settings, Eye, Plus, ArrowRight, CheckCircle2,
   AlertTriangle, Clock, BarChart3, DollarSign, Shield,
   Layers, GitBranch, User, Activity, TerminalSquare, FlaskConical,
-  TrendingUp, TrendingDown, Send, X, Edit3,
+  TrendingUp, TrendingDown, Send, X, Edit3, Lock, Unlock, Gauge, Check,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────
@@ -178,13 +184,37 @@ const HARNESS_OUTPUT = `## Analysis Result — MX-0441 Bearing Assessment
 
 **Confidence:** 96.4% | **EEI Impact if actioned:** +1.2 pts`;
 
+const HIRE_STEPS = ["Identity", "Model & Autonomy", "Cost Cap", "Review & Deploy"];
+
+interface HireForm {
+  name: string;
+  role: string;
+  buId: string;
+  deptId: string;
+  model: string;
+  autonomy: "assisted" | "supervised" | "full";
+  reasoning: string;
+  sessionCap: number | null;
+  totalCap: number | null;
+  startLocked: boolean;
+}
+
+function defaultHireForm(): HireForm {
+  const bu = BU_LIST[0];
+  return {
+    name: "", role: "", buId: bu.id, deptId: bu.departments[0]?.id ?? "",
+    model: "gpt-4o", autonomy: "supervised", reasoning: "Medium",
+    sessionCap: null, totalCap: 100, startLocked: false,
+  };
+}
+
 // ─── Helper components ─────────────────────────────────────────
 
-function HealthBar({ value }: { value: number }) {
-  const color = value >= 90 ? "bg-emerald-500" : value >= 80 ? "bg-amber-500" : "bg-red-500";
+function BudgetBar({ pct }: { pct: number }) {
+  const color = pct >= 40 ? "bg-emerald-500" : pct >= 15 ? "bg-amber-500" : "bg-red-500";
   return (
     <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-      <div className={cn("h-full rounded-full", color)} style={{ width: `${value}%` }} />
+      <div className={cn("h-full rounded-full", color)} style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -215,6 +245,15 @@ export default function Workforce() {
   const [search, setSearch] = useState("");
   const [buFilter, setBuFilter] = useState("all");
   const [showHireModal, setShowHireModal] = useState(false);
+  const [hireStep, setHireStep] = useState(0);
+  const [hireForm, setHireForm] = useState(() => defaultHireForm());
+
+  // Agents hired through the wizard, session-lived like the rest of this
+  // prototype's mutable state — merged with the static MFG_AGENTS catalog
+  // everywhere an agent list is read so a newly hired agent shows up
+  // immediately in Inventory/Harness/Overview.
+  const [hiredAgents, setHiredAgents] = useState<AgentRecord[]>([]);
+  const allAgents = [...MFG_AGENTS, ...hiredAgents];
 
   // Harness state
   const [harnessScenario, setHarnessScenario] = useState("h1");
@@ -223,23 +262,38 @@ export default function Workforce() {
   const [harnessOutput, setHarnessOutput] = useState("");
   const [harnessMetrics, setHarnessMetrics] = useState<{ tokens: number; latency: number; cost: string; confidence: number } | null>(null);
   const [harnessAgentId, setHarnessAgentId] = useState("ag2");
+  const [harnessCostPending, setHarnessCostPending] = useState<{ kind: "sessionCap" | "totalCap" | "lock" | "unlock" | "model" | "reasoning"; value?: any; label: string; desc: string } | null>(null);
 
   // Edit state
-  const agent = MFG_AGENTS.find(a => a.id === selectedAgent) || MFG_AGENTS[0];
+  const agent = allAgents.find(a => a.id === selectedAgent) || allAgents[0];
   const [editForm, setEditForm] = useState({ name: agent.name, role: agent.role, autonomy: agent.autonomy, model: agent.model, description: `${agent.role} for ${agent.department}` });
 
-  const { currentCompanyId, role, persona } = useAppContext();
+  const {
+    currentCompanyId, role, persona,
+    getAgentCap, setAgentCap, agentModelOverride, agentReasoningOverride, setAgentModel, setAgentReasoning,
+  } = useAppContext();
+
+  const modelOf = (a: AgentRecord) => agentModelOverride[a.id] ?? a.costModelId;
+  const reasoningOf = (a: AgentRecord) => agentReasoningOverride[a.id] ?? a.reasoningLevel;
+  const costFor = (a: AgentRecord) => monthlyCost(a.tokenUsage, modelOf(a), reasoningOf(a));
+  const budgetHeadroomPct = (a: AgentRecord) => {
+    const cap = getAgentCap(a.id);
+    if (cap.locked) return 0;
+    if (cap.totalCap == null) return 100;
+    if (cap.totalCap === 0) return 0;
+    return Math.max(0, Math.min(100, 100 - (costFor(a) / cap.totalCap) * 100));
+  };
 
   // Dept managers and employees are locked to their own department's agent
   // catalog (employee: "emp agent inv" — involvement in own agents only).
   // Most departments only have 1-2 hand-authored MFG_AGENTS entries, so fall
   // back to the full BU roster (with a banner) rather than showing an empty page.
   const isDeptScopedRole = role === "dept_manager" || role === "employee";
-  const deptCatalog = isDeptScopedRole ? MFG_AGENTS.filter(a => (a as any).deptId === persona.deptId) : null;
+  const deptCatalog = isDeptScopedRole ? allAgents.filter(a => (a as any).deptId === persona.deptId) : null;
   const deptFallback = isDeptScopedRole && (deptCatalog?.length ?? 0) === 0;
   const scopedAgents = isDeptScopedRole
-    ? (deptFallback ? MFG_AGENTS.filter(a => a.bu === persona.buId) : deptCatalog!)
-    : MFG_AGENTS;
+    ? (deptFallback ? allAgents.filter(a => a.bu === persona.buId) : deptCatalog!)
+    : allAgents;
   const canManageAgents = role !== "employee";
 
   const filteredAgents = scopedAgents.filter(a => {
@@ -251,10 +305,65 @@ export default function Workforce() {
 
   function selectAndView(id: string) {
     setSelectedAgent(id);
-    const a = MFG_AGENTS.find(ag => ag.id === id);
+    const a = allAgents.find(ag => ag.id === id);
     if (a) setEditForm({ name: a.name, role: a.role, autonomy: a.autonomy, model: a.model, description: `${a.role} for ${a.department}` });
     setActiveTab("overview");
     setOverviewSection("edit");
+  }
+
+  function onAgentRowClick(id: string) {
+    if (role === "developer") {
+      setHarnessAgentId(id);
+      setActiveTab("harness");
+    } else {
+      selectAndView(id);
+    }
+  }
+
+  function confirmHarnessCost() {
+    if (!harnessCostPending) return;
+    const p = harnessCostPending;
+    if (p.kind === "sessionCap") setAgentCap(harnessAgentId, { sessionCap: p.value });
+    else if (p.kind === "totalCap") setAgentCap(harnessAgentId, { totalCap: p.value });
+    else if (p.kind === "lock") setAgentCap(harnessAgentId, { locked: true });
+    else if (p.kind === "unlock") setAgentCap(harnessAgentId, { locked: false });
+    else if (p.kind === "model") setAgentModel(harnessAgentId, p.value);
+    else if (p.kind === "reasoning") setAgentReasoning(harnessAgentId, p.value);
+    setHarnessCostPending(null);
+    toast({ description: "Cost control updated." });
+  }
+
+  const hireBu = BU_LIST.find(b => b.id === hireForm.buId) ?? BU_LIST[0];
+  const hireDepts = hireBu.departments;
+  const canContinueHire = hireStep === 0 ? hireForm.name.trim().length > 0 && hireForm.role.trim().length > 0 : true;
+
+  function closeHireModal() {
+    setShowHireModal(false);
+    setHireStep(0);
+    setHireForm(defaultHireForm());
+  }
+
+  function deployHire() {
+    const dept = hireDepts.find(d => d.id === hireForm.deptId) ?? hireDepts[0];
+    const id = `hired-${Date.now()}`;
+    const newAgent: AgentRecord = {
+      id, companyId: currentCompanyId, name: hireForm.name.trim(), employeeId: `AIE-NEW-${hiredAgents.length + 1}`,
+      role: hireForm.role.trim(), department: dept?.name ?? hireBu.name, bu: hireBu.id, deptId: dept?.id ?? hireBu.id,
+      status: "active", autonomy: hireForm.autonomy, utilization: 0, sla: 100, costPerDay: 0, tasks: 0,
+      skills: [], systems: [], hoursSaved: 0, revenueProtected: "$0", downtimePrevented: "—", costSaved: "$0",
+      automationPct: 0, roi: "—", eeiContrib: "+0.0", kpisImproved: [],
+      health: 100, version: "v1.0", model: MODEL_CATALOG[hireForm.model]?.name ?? "GPT-4o",
+      latencyMs: 0, accuracy: 0, hallucination: 0, policyCompliance: 100,
+      tokenUsage: 0, costMtd: "$0",
+      adapterId: "codex", costModelId: hireForm.model, reasoningLevel: hireForm.reasoning,
+    };
+    setHiredAgents(prev => [...prev, newAgent]);
+    setAgentCap(id, { sessionCap: hireForm.sessionCap, totalCap: hireForm.totalCap, locked: hireForm.startLocked });
+    closeHireModal();
+    toast({
+      title: "Agent Deployed",
+      description: `${newAgent.name} is live in Inventory${hireForm.startLocked ? " — locked at $0 until you unlock it in the Harness." : "."}`,
+    });
   }
 
   function runHarness() {
@@ -384,7 +493,7 @@ export default function Workforce() {
                     <th className="px-4 py-3">Business Unit</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Autonomy</th>
-                    <th className="px-4 py-3">Health</th>
+                    <th className="px-4 py-3">Budget Left</th>
                     <th className="px-4 py-3">Utilization</th>
                     <th className="px-4 py-3">SLA</th>
                     <th className="px-4 py-3">ROI</th>
@@ -393,7 +502,7 @@ export default function Workforce() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filteredAgents.map((a) => (
-                    <tr key={a.id} className="hover:bg-muted/20 transition-colors group cursor-pointer" onClick={() => selectAndView(a.id)}>
+                    <tr key={a.id} className="hover:bg-muted/20 transition-colors group cursor-pointer" onClick={() => onAgentRowClick(a.id)}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
@@ -410,11 +519,18 @@ export default function Workforce() {
                       <td className="px-4 py-3">
                         <span className="text-[9px] uppercase tracking-widest bg-muted/40 border border-border/60 rounded-sm px-2 py-0.5 font-semibold">{a.autonomy}</span>
                       </td>
-                      <td className="px-4 py-3 w-28">
-                        <div className="flex items-center gap-2">
-                          <HealthBar value={a.health} />
-                          <span className={cn("text-[10px] font-mono font-bold shrink-0", a.health >= 90 ? "text-emerald-600" : "text-amber-600")}>{a.health}</span>
-                        </div>
+                      <td className="px-4 py-3 w-32">
+                        {(() => {
+                          const cap = getAgentCap(a.id);
+                          const pct = budgetHeadroomPct(a);
+                          const label = cap.locked ? "LOCKED" : cap.totalCap == null ? "Unlimited" : `$${Math.max(0, cap.totalCap - costFor(a)).toFixed(0)} left`;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <div className="w-14 shrink-0"><BudgetBar pct={pct} /></div>
+                              <span className={cn("text-[9px] font-mono font-bold shrink-0", cap.locked ? "text-red-600" : pct >= 40 ? "text-emerald-600" : pct >= 15 ? "text-amber-600" : "text-red-600")}>{label}</span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
@@ -484,11 +600,11 @@ export default function Workforce() {
                 ))}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => selectAndView(MFG_AGENTS[(MFG_AGENTS.findIndex(a => a.id === selectedAgent) - 1 + MFG_AGENTS.length) % MFG_AGENTS.length].id)}
+                <button onClick={() => selectAndView(allAgents[(allAgents.findIndex(a => a.id === selectedAgent) - 1 + allAgents.length) % allAgents.length].id)}
                   className="w-7 h-7 flex items-center justify-center rounded-sm border border-border hover:bg-muted/40 transition-colors text-muted-foreground">
                   ‹
                 </button>
-                <button onClick={() => selectAndView(MFG_AGENTS[(MFG_AGENTS.findIndex(a => a.id === selectedAgent) + 1) % MFG_AGENTS.length].id)}
+                <button onClick={() => selectAndView(allAgents[(allAgents.findIndex(a => a.id === selectedAgent) + 1) % allAgents.length].id)}
                   className="w-7 h-7 flex items-center justify-center rounded-sm border border-border hover:bg-muted/40 transition-colors text-muted-foreground">
                   ›
                 </button>
@@ -823,7 +939,7 @@ export default function Workforce() {
                   <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Agent Under Test</label>
                   <select value={harnessAgentId} onChange={e => setHarnessAgentId(e.target.value)}
                     className="w-full text-[10px] border border-border rounded-sm px-2 py-1.5 bg-muted/20 font-semibold">
-                    {MFG_AGENTS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    {allAgents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -835,6 +951,106 @@ export default function Workforce() {
                   </select>
                 </div>
               </div>
+
+              {/* ── Cost Control (developer's technical, agent-scoped controls) ── */}
+              {role === "developer" && (() => {
+                const hAgent = allAgents.find(a => a.id === harnessAgentId) ?? allAgents[0];
+                const hCap = getAgentCap(hAgent.id);
+                const hModel = modelOf(hAgent);
+                const hReasoning = reasoningOf(hAgent);
+                const hSpend = costFor(hAgent);
+                return (
+                  <div className="bg-white border border-border rounded-sm shadow-sm p-4 space-y-3">
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-1.5"><Gauge size={11} />Cost Control</div>
+
+                    <div>
+                      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Session Cap</label>
+                      <div className="flex flex-wrap gap-1">
+                        {SESSION_CAP_PRESETS.map(p => (
+                          <button key={p.label}
+                            onClick={() => setHarnessCostPending({ kind: "sessionCap", value: p.value, label: `Set ${hAgent.name}'s session cap to ${p.value == null ? "Unlimited" : `$${p.value}`}?`, desc: "Applies to this agent's next session only." })}
+                            className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-1 rounded-sm border transition-colors",
+                              !hCap.locked && hCap.sessionCap === p.value ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Total / Monthly Cap</label>
+                      <div className="flex flex-wrap gap-1">
+                        {CAP_PRESETS.map(p => (
+                          <button key={p.label}
+                            onClick={() => setHarnessCostPending({ kind: "totalCap", value: p.value, label: `Set ${hAgent.name}'s total cap to ${p.value == null ? "Unlimited" : `$${p.value}`}?`, desc: `Current projected spend is $${hSpend.toFixed(0)}/mo.` })}
+                            className={cn("text-[9px] uppercase tracking-widest font-bold px-1.5 py-1 rounded-sm border transition-colors",
+                              !hCap.locked && hCap.totalCap === p.value ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <span className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
+                        {hCap.locked ? <Lock size={10} className="text-red-600" /> : <Unlock size={10} className="text-muted-foreground" />}
+                        Lock Agent
+                      </span>
+                      <Switch checked={hCap.locked} onCheckedChange={(checked) => setHarnessCostPending({
+                        kind: checked ? "lock" : "unlock",
+                        label: checked ? `Lock ${hAgent.name} to $0 spending?` : `Unlock ${hAgent.name}?`,
+                        desc: checked ? "Blocks all further spend for this agent immediately." : "Restores this agent's previous cap.",
+                      })} />
+                    </div>
+
+                    <div className="pt-2 border-t border-border">
+                      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Model — quick switch</label>
+                      <select value={hModel}
+                        onChange={e => setHarnessCostPending({ kind: "model", value: e.target.value, label: `Switch ${hAgent.name} to ${MODEL_CATALOG[e.target.value]?.name}?`, desc: "Applies immediately for this agent." })}
+                        className="w-full text-[10px] border border-border rounded-sm px-2 py-1.5 bg-muted/20 font-semibold">
+                        {Object.values(MODEL_CATALOG).map(m => <option key={m.id} value={m.id}>{m.name} — ${m.rate}/Mtok</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Reasoning / Effort — quick switch</label>
+                      <div className="flex gap-1">
+                        {REASONING_LEVELS.map(lvl => (
+                          <button key={lvl.id}
+                            onClick={() => setHarnessCostPending({ kind: "reasoning", value: lvl.id, label: `Switch ${hAgent.name}'s effort to ${lvl.label}?`, desc: lvl.note })}
+                            className={cn("flex-1 text-[9px] uppercase tracking-widest font-bold px-1 py-1 rounded-sm border transition-colors",
+                              hReasoning === lvl.id ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                            {lvl.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Projected Spend</span>
+                      <span className="text-xs font-mono font-bold text-foreground">${hSpend.toFixed(2)}/mo</span>
+                    </div>
+
+                    <AlertDialog open={harnessCostPending !== null} onOpenChange={(open) => !open && setHarnessCostPending(null)}>
+                      <AlertDialogContent>
+                        {harnessCostPending && (
+                          <>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>{harnessCostPending.label}</AlertDialogTitle>
+                              <AlertDialogDescription>{harnessCostPending.desc}</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setHarnessCostPending(null)}>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={confirmHarnessCost}>Confirm</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </>
+                        )}
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                );
+              })()}
+
               <div className="bg-white border border-border rounded-sm shadow-sm p-4 space-y-2">
                 <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Evaluation Criteria</div>
                 {["Factual Accuracy", "Actionability", "Response Structure", "Context Relevance", "Safety Compliance"].map(c => (
@@ -896,47 +1112,181 @@ export default function Workforce() {
         )}
       </div>
 
-      {/* ── Hire Agent Modal ─── */}
+      {/* ── Hire Agent Wizard ─── */}
       {showHireModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-sm border border-border shadow-xl w-full max-w-md">
+          <div className="bg-white rounded-sm border border-border shadow-xl w-full max-w-lg">
             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
               <div className="text-sm font-bold tracking-widest uppercase text-foreground">Hire New Agent</div>
-              <button onClick={() => setShowHireModal(false)} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
+              <button onClick={closeHireModal} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
             </div>
-            <div className="px-6 py-4 space-y-4">
-              {[
-                { label: "Agent Name", placeholder: "e.g. Quality Controller AI" },
-                { label: "Role / Mission", placeholder: "e.g. Detect and classify production defects" },
-              ].map(f => (
-                <div key={f.label}>
-                  <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">{f.label}</label>
-                  <input placeholder={f.placeholder} className="w-full px-3 py-2 text-[11px] border border-border rounded-sm focus:outline-none focus:border-primary" />
+
+            {/* Stepper */}
+            <div className="flex items-center border-b border-border px-6 py-3 gap-1 overflow-x-auto">
+              {HIRE_STEPS.map((s, i) => (
+                <div key={s} className="flex items-center gap-1 shrink-0">
+                  <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                    i < hireStep ? "bg-emerald-500 text-white" : i === hireStep ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                    {i < hireStep ? <Check size={11} /> : i + 1}
+                  </div>
+                  <span className={cn("text-[9px] uppercase tracking-widest font-semibold whitespace-nowrap", i === hireStep ? "text-foreground" : "text-muted-foreground")}>{s}</span>
+                  {i < HIRE_STEPS.length - 1 && <ChevronRight size={11} className="text-muted-foreground mx-1 shrink-0" />}
                 </div>
               ))}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Business Unit</label>
-                  <select className="w-full text-[10px] border border-border rounded-sm px-2 py-2 focus:outline-none focus:border-primary">
-                    {BU_LIST.map(b => <option key={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Foundation Model</label>
-                  <select className="w-full text-[10px] border border-border rounded-sm px-2 py-2 focus:outline-none focus:border-primary">
-                    {["GPT-4o", "GPT-4o-mini", "Claude-3.5-Sonnet"].map(m => <option key={m}>{m}</option>)}
-                  </select>
-                </div>
-              </div>
             </div>
-            <div className="px-6 py-4 border-t border-border flex justify-end gap-2">
-              <button onClick={() => setShowHireModal(false)}
+
+            <div className="px-6 py-5 min-h-[280px]">
+              {/* ── Step 0: Identity ── */}
+              {hireStep === 0 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Agent Name *</label>
+                    <input value={hireForm.name} onChange={e => setHireForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder="e.g. Quality Controller AI"
+                      className="w-full px-3 py-2 text-[11px] border border-border rounded-sm focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Role / Mission *</label>
+                    <input value={hireForm.role} onChange={e => setHireForm(f => ({ ...f, role: e.target.value }))}
+                      placeholder="e.g. Detect and classify production defects"
+                      className="w-full px-3 py-2 text-[11px] border border-border rounded-sm focus:outline-none focus:border-primary" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Business Unit</label>
+                      <select value={hireForm.buId}
+                        onChange={e => { const bu = BU_LIST.find(b => b.id === e.target.value)!; setHireForm(f => ({ ...f, buId: bu.id, deptId: bu.departments[0]?.id ?? "" })); }}
+                        className="w-full text-[10px] border border-border rounded-sm px-2 py-2 focus:outline-none focus:border-primary">
+                        {BU_LIST.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Department</label>
+                      <select value={hireForm.deptId} onChange={e => setHireForm(f => ({ ...f, deptId: e.target.value }))}
+                        className="w-full text-[10px] border border-border rounded-sm px-2 py-2 focus:outline-none focus:border-primary">
+                        {hireDepts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Step 1: Model & Autonomy ── */}
+              {hireStep === 1 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Foundation Model</label>
+                    <select value={hireForm.model} onChange={e => setHireForm(f => ({ ...f, model: e.target.value }))}
+                      className="w-full text-[10px] border border-border rounded-sm px-2 py-2 focus:outline-none focus:border-primary">
+                      {Object.values(MODEL_CATALOG).map(m => <option key={m.id} value={m.id}>{m.name} — ${m.rate}/Mtok</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Autonomy Level</label>
+                    <div className="flex gap-2">
+                      {(["assisted", "supervised", "full"] as const).map(lvl => (
+                        <button key={lvl} onClick={() => setHireForm(f => ({ ...f, autonomy: lvl }))}
+                          className={cn("flex-1 text-[9px] uppercase tracking-widest font-bold px-2 py-2 rounded-sm border transition-colors capitalize",
+                            hireForm.autonomy === lvl ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                          {lvl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Default Reasoning / Effort</label>
+                    <div className="flex gap-1">
+                      {REASONING_LEVELS.map(lvl => (
+                        <button key={lvl.id} onClick={() => setHireForm(f => ({ ...f, reasoning: lvl.id }))}
+                          className={cn("flex-1 text-[9px] uppercase tracking-widest font-bold px-2 py-2 rounded-sm border transition-colors",
+                            hireForm.reasoning === lvl.id ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                          {lvl.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-[9px] text-muted-foreground mt-1">{REASONING_LEVELS.find(l => l.id === hireForm.reasoning)?.note}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Step 2: Cost Cap ── */}
+              {hireStep === 2 && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-100 rounded-sm px-3 py-2 text-[11px] text-blue-800 flex items-center gap-2">
+                    <Gauge size={13} className="shrink-0" />
+                    Set a spending guardrail before this agent goes live — adjust it any time from the Harness.
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Session Cap</label>
+                    <div className="flex flex-wrap gap-1">
+                      {SESSION_CAP_PRESETS.map(p => (
+                        <button key={p.label} onClick={() => setHireForm(f => ({ ...f, sessionCap: p.value }))}
+                          className={cn("text-[9px] uppercase tracking-widest font-bold px-2 py-1.5 rounded-sm border transition-colors",
+                            hireForm.sessionCap === p.value ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase tracking-widest text-muted-foreground block mb-1">Total / Monthly Cap</label>
+                    <div className="flex flex-wrap gap-1">
+                      {CAP_PRESETS.map(p => (
+                        <button key={p.label} onClick={() => setHireForm(f => ({ ...f, totalCap: p.value }))}
+                          className={cn("text-[9px] uppercase tracking-widest font-bold px-2 py-1.5 rounded-sm border transition-colors",
+                            hireForm.totalCap === p.value ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground border-border hover:bg-muted/60")}>
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <label className="flex items-center justify-between border-t border-border pt-3 cursor-pointer">
+                    <span className="text-[10px] font-semibold text-foreground">Start Locked <span className="text-muted-foreground font-normal">— deploy paused at $0</span></span>
+                    <Switch checked={hireForm.startLocked} onCheckedChange={(c) => setHireForm(f => ({ ...f, startLocked: c }))} />
+                  </label>
+                </div>
+              )}
+
+              {/* ── Step 3: Review & Deploy ── */}
+              {hireStep === 3 && (
+                <div className="space-y-3">
+                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Summary</div>
+                  <div className="bg-muted/20 border border-border rounded-sm p-3 space-y-1.5 text-[11px]">
+                    {[
+                      ["Name", hireForm.name || "—"],
+                      ["Mission", hireForm.role || "—"],
+                      ["Business Unit", hireBu.name],
+                      ["Department", hireDepts.find(d => d.id === hireForm.deptId)?.name ?? "—"],
+                      ["Model", MODEL_CATALOG[hireForm.model]?.name],
+                      ["Autonomy", hireForm.autonomy],
+                      ["Effort", hireForm.reasoning],
+                      ["Session Cap", hireForm.sessionCap == null ? "Unlimited" : `$${hireForm.sessionCap}`],
+                      ["Total Cap", hireForm.totalCap == null ? "Unlimited" : `$${hireForm.totalCap}`],
+                      ["Status at Deploy", hireForm.startLocked ? "Locked ($0)" : "Active"],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between gap-4">
+                        <span className="text-muted-foreground">{k}</span>
+                        <span className={cn("font-semibold text-foreground text-right capitalize", k === "Status at Deploy" && hireForm.startLocked && "text-red-600")}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    Finer details — skills, knowledge, tools, and policies — can be configured afterward in the Harness.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-border flex justify-between gap-2">
+              <button onClick={hireStep === 0 ? closeHireModal : () => setHireStep(s => s - 1)}
                 className="px-4 py-2 text-[9px] uppercase tracking-widest font-semibold border border-border rounded-sm hover:bg-muted/40 transition-colors">
-                Cancel
+                {hireStep === 0 ? "Cancel" : "Back"}
               </button>
-              <button onClick={() => { setShowHireModal(false); toast({ title: "Agent Created", description: "New agent added to inventory. Configure in Agent Studio." }); }}
-                className="px-4 py-2 text-[9px] uppercase tracking-widest font-bold bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors">
-                Create Agent
+              <button
+                disabled={!canContinueHire}
+                onClick={hireStep === HIRE_STEPS.length - 1 ? deployHire : () => setHireStep(s => s + 1)}
+                className="px-4 py-2 text-[9px] uppercase tracking-widest font-bold bg-primary text-white rounded-sm hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                {hireStep === HIRE_STEPS.length - 1 ? "Deploy Agent" : "Continue"}
               </button>
             </div>
           </div>
